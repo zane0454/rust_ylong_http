@@ -597,9 +597,9 @@ mod tls {
         mut conn: ProxyStream,
         host: &str,
         port: u16,
-        auth: Option<String>,
+        auth: Option<&ylong_http::headers::HeaderValue>,
     ) -> Result<ProxyStream, Error> {
-        let req = connect_request(host, port, auth.as_deref())?;
+        let req = connect_request(host, port, auth)?;
         conn.write_all(&req).await?;
 
         let mut buf = [0; MAX_TUNNEL_RESPONSE_SIZE];
@@ -609,7 +609,9 @@ mod tls {
             let n = conn.read(&mut buf[pos..]).await?;
 
             if n == 0 {
-                return Err(tunnel_io_error(crate::util::proxy::CreateTunnelErr::Unsuccessful));
+                return Err(tunnel_io_error(
+                    crate::util::proxy::CreateTunnelErr::Unsuccessful,
+                ));
             }
 
             pos += n;
@@ -669,12 +671,13 @@ mod tls {
         use std::net::SocketAddr;
         use std::str::FromStr;
 
+        use ylong_http::headers::HeaderValue;
         use ylong_runtime::io::AsyncWriteExt;
 
         use crate::async_impl::connector::tcp_stream;
         use crate::async_impl::connector::tls::tunnel;
-        use crate::async_impl::mix::ProxyStream;
         use crate::async_impl::dns::{EyeBallConfig, HappyEyeballs};
+        use crate::async_impl::mix::ProxyStream;
         use crate::start_tcp_server;
         use crate::util::proxy::{tunnel_io_error, CreateTunnelErr};
         use crate::util::test_utils::{format_header_str, TcpHandle};
@@ -702,13 +705,8 @@ mod tls {
 
             let handle = ylong_runtime::spawn(async move {
                 let tcp = tcp_stream(eyeballs).await.unwrap();
-                let res = tunnel(
-                    ProxyStream::Tcp(tcp),
-                    "ylong_http.com",
-                    443,
-                    Some(String::from("base64 bytes")),
-                )
-                .await;
+                let auth = HeaderValue::from_bytes(b"base64 bytes").unwrap();
+                let res = tunnel(ProxyStream::Tcp(tcp), "ylong_http.com", 443, Some(&auth)).await;
                 assert_eq!(
                     format!("{:?}", res.err()),
                     format!("{:?}", Some(tunnel_io_error(CreateTunnelErr::Unsuccessful)))
@@ -739,18 +737,15 @@ mod tls {
             );
             let handle = ylong_runtime::spawn(async move {
                 let tcp = tcp_stream(eyeballs).await.unwrap();
-                let res = tunnel(
-                    ProxyStream::Tcp(tcp),
-                    "ylong_http.com",
-                    443,
-                    Some(String::from("base64 bytes")),
-                )
-                .await;
+                let auth = HeaderValue::from_bytes(b"base64 bytes").unwrap();
+                let res = tunnel(ProxyStream::Tcp(tcp), "ylong_http.com", 443, Some(&auth)).await;
                 assert_eq!(
                     format!("{:?}", res.err()),
                     format!(
                         "{:?}",
-                        Some(tunnel_io_error(CreateTunnelErr::ProxyAuthenticationRequired))
+                        Some(tunnel_io_error(
+                            CreateTunnelErr::ProxyAuthenticationRequired
+                        ))
                     )
                 );
                 handle
@@ -779,13 +774,8 @@ mod tls {
             );
             let handle = ylong_runtime::spawn(async move {
                 let tcp = tcp_stream(eyeballs).await.unwrap();
-                let res = tunnel(
-                    ProxyStream::Tcp(tcp),
-                    "ylong_http.com",
-                    443,
-                    Some(String::from("base64 bytes")),
-                )
-                .await;
+                let auth = HeaderValue::from_bytes(b"base64 bytes").unwrap();
+                let res = tunnel(ProxyStream::Tcp(tcp), "ylong_http.com", 443, Some(&auth)).await;
                 assert_eq!(
                     format!("{:?}", res.err()),
                     format!("{:?}", Some(tunnel_io_error(CreateTunnelErr::Unsuccessful)))
@@ -826,13 +816,8 @@ mod tls {
             );
             let handle = ylong_runtime::spawn(async move {
                 let tcp = tcp_stream(eyeballs).await.unwrap();
-                let res = tunnel(
-                    ProxyStream::Tcp(tcp),
-                    "ylong_http.com",
-                    443,
-                    Some(String::from("base64 bytes")),
-                )
-                .await;
+                let auth = HeaderValue::from_bytes(b"base64 bytes").unwrap();
+                let res = tunnel(ProxyStream::Tcp(tcp), "ylong_http.com", 443, Some(&auth)).await;
                 assert!(res.is_ok());
                 handle
                     .server_shutdown
@@ -873,13 +858,8 @@ mod tls {
             );
             let handle = ylong_runtime::spawn(async move {
                 let tcp = tcp_stream(eyeballs).await.unwrap();
-                let res = tunnel(
-                    ProxyStream::Tcp(tcp),
-                    "ylong_http.com",
-                    443,
-                    Some(String::from("base64 bytes")),
-                )
-                .await;
+                let auth = HeaderValue::from_bytes(b"base64 bytes").unwrap();
+                let res = tunnel(ProxyStream::Tcp(tcp), "ylong_http.com", 443, Some(&auth)).await;
                 assert_eq!(
                     format!("{:?}", res.err()),
                     format!(

@@ -260,17 +260,24 @@ def run_benchmark(
             "YLONG_CURL_OUTPUT": "NUL" if os.name == "nt" else "/dev/null",
         }
     )
-    completed = subprocess.run(
-        [str(BENCH_BIN)],
-        cwd=ROOT,
-        env=env,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=True,
-    )
+    try:
+        completed = subprocess.run(
+            [str(BENCH_BIN)],
+            cwd=ROOT,
+            env=env,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
+    except subprocess.CalledProcessError as err:
+        raise RuntimeError(
+            "https_proxy_bench failed "
+            f"(requests={requests}, repeat={repeat}, exit={err.returncode}):\n"
+            f"{err.stdout}"
+        ) from err
     return parse_output(completed.stdout, requests, repeat), completed.stdout
 
 

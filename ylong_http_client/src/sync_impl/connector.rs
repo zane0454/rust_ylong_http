@@ -120,9 +120,8 @@ pub mod tls_conn {
 
             match *uri.scheme().unwrap() {
                 Scheme::HTTP => {
-                    let tcp_stream = TcpStream::connect(addr).map_err(|e| {
-                        HttpClientError::from_error(ErrorKind::Connect, e)
-                    })?;
+                    let tcp_stream = TcpStream::connect(addr)
+                        .map_err(|e| HttpClientError::from_error(ErrorKind::Connect, e))?;
                     if let Some(proxy_info) = proxy_info {
                         Ok(MixStream::Proxy(proxy_connect_stream(
                             tcp_stream,
@@ -192,9 +191,9 @@ pub mod tls_conn {
         mut conn: ProxyStream<TcpStream>,
         host: String,
         port: u16,
-        auth: Option<String>,
+        auth: Option<&ylong_http::headers::HeaderValue>,
     ) -> Result<ProxyStream<TcpStream>, HttpClientError> {
-        let req = connect_request(&host, port, auth.as_deref())
+        let req = connect_request(&host, port, auth)
             .map_err(|e| HttpClientError::from_error(ErrorKind::Connect, e))?;
 
         conn.write_all(&req)

@@ -223,8 +223,8 @@ impl ProxyInfo {
         self.scheme == Scheme::HTTPS
     }
 
-    pub(crate) fn basic_auth_value(&self) -> Option<String> {
-        self.basic_auth.as_ref().and_then(|v| v.to_string().ok())
+    pub(crate) fn basic_auth_value(&self) -> Option<&HeaderValue> {
+        self.basic_auth.as_ref()
     }
 
     #[cfg(feature = "__tls")]
@@ -236,9 +236,10 @@ impl ProxyInfo {
 pub(crate) fn connect_request(
     host: &str,
     port: u16,
-    auth: Option<&str>,
+    auth: Option<&HeaderValue>,
 ) -> Result<Vec<u8>, Error> {
-    let mut req = Vec::with_capacity(128);
+    let auth_len = auth.map(header_value_len).unwrap_or(0);
+    let mut req = Vec::with_capacity(host.len() * 2 + auth_len + 64);
 
     write!(
         &mut req,
@@ -246,11 +247,30 @@ pub(crate) fn connect_request(
     )?;
 
     if let Some(value) = auth {
-        write!(&mut req, "Proxy-Authorization: Basic {value}\r\n")?;
+        req.extend_from_slice(b"Proxy-Authorization: Basic ");
+        append_header_value(&mut req, value);
+        req.extend_from_slice(b"\r\n");
     }
 
-    write!(&mut req, "\r\n")?;
+    req.extend_from_slice(b"\r\n");
     Ok(req)
+}
+
+fn header_value_len(value: &HeaderValue) -> usize {
+    value
+        .iter()
+        .enumerate()
+        .map(|(idx, bytes)| bytes.len() + usize::from(idx != 0) * 2)
+        .sum()
+}
+
+fn append_header_value(buf: &mut Vec<u8>, value: &HeaderValue) {
+    for (idx, bytes) in value.iter().enumerate() {
+        if idx != 0 {
+            buf.extend_from_slice(b", ");
+        }
+        buf.extend_from_slice(bytes.as_slice());
+    }
 }
 
 pub(crate) enum TunnelResponse {
@@ -259,7 +279,8 @@ pub(crate) enum TunnelResponse {
 }
 
 pub(crate) fn parse_tunnel_response(buf: &[u8]) -> Result<TunnelResponse, CreateTunnelErr> {
-    let Some(line_end) = find_crlf(buf) else {
+    let (line_end, header_end) = response_boundaries(buf);
+    let Some(line_end) = line_end else {
         return if buf.len() >= MAX_TUNNEL_RESPONSE_SIZE {
             Err(CreateTunnelErr::ProxyHeadersTooLong)
         } else {
@@ -272,7 +293,7 @@ pub(crate) fn parse_tunnel_response(buf: &[u8]) -> Result<TunnelResponse, Create
 
     match code {
         b"200" => {
-            if contains_header_end(buf) {
+            if header_end.is_some() {
                 Ok(TunnelResponse::Complete)
             } else if buf.len() >= MAX_TUNNEL_RESPONSE_SIZE {
                 Err(CreateTunnelErr::ProxyHeadersTooLong)
@@ -285,9 +306,27 @@ pub(crate) fn parse_tunnel_response(buf: &[u8]) -> Result<TunnelResponse, Create
     }
 }
 
+fn response_boundaries(buf: &[u8]) -> (Option<usize>, Option<usize>) {
+    let mut line_end = None;
+    let mut idx = 0;
+
+    while idx + 1 < buf.len() {
+        if buf[idx] == b'\r' && buf[idx + 1] == b'\n' {
+            line_end.get_or_insert(idx);
+            if idx + 3 < buf.len() && buf[idx + 2] == b'\r' && buf[idx + 3] == b'\n' {
+                return (line_end, Some(idx + 4));
+            }
+            idx += 2;
+        } else {
+            idx += 1;
+        }
+    }
+
+    (line_end, None)
+}
+
 fn status_code(status: &[u8]) -> Result<&[u8], CreateTunnelErr> {
-    if status.len() < 12
-        || !(status.starts_with(b"HTTP/1.1 ") || status.starts_with(b"HTTP/1.0 "))
+    if status.len() < 12 || !(status.starts_with(b"HTTP/1.1 ") || status.starts_with(b"HTTP/1.0 "))
     {
         return Err(CreateTunnelErr::Unsuccessful);
     }
@@ -296,15 +335,12 @@ fn status_code(status: &[u8]) -> Result<&[u8], CreateTunnelErr> {
         return Err(CreateTunnelErr::Unsuccessful);
     }
 
-    Ok(&status[9..12])
-}
+    let code = &status[9..12];
+    if !code.iter().all(u8::is_ascii_digit) {
+        return Err(CreateTunnelErr::Unsuccessful);
+    }
 
-fn find_crlf(buf: &[u8]) -> Option<usize> {
-    buf.windows(2).position(|bytes| bytes == b"\r\n")
-}
-
-fn contains_header_end(buf: &[u8]) -> bool {
-    buf.windows(4).any(|bytes| bytes == b"\r\n\r\n")
+    Ok(code)
 }
 
 pub(crate) fn tunnel_io_error(err: CreateTunnelErr) -> Error {
@@ -420,6 +456,7 @@ impl NoProxy {
 
 #[cfg(test)]
 mod ut_proxy {
+    use ylong_http::headers::HeaderValue;
     use ylong_http::request::uri::{Scheme, Uri};
 
     use crate::util::proxy::{
@@ -534,7 +571,8 @@ mod ut_proxy {
     /// UT test cases for tunnel request and response parsing.
     #[test]
     fn ut_tunnel_request_and_response() {
-        let req = connect_request("www.example.com", 443, Some("token")).unwrap();
+        let auth = HeaderValue::from_bytes(b"token").unwrap();
+        let req = connect_request("www.example.com", 443, Some(&auth)).unwrap();
         assert_eq!(
             String::from_utf8(req).unwrap(),
             "CONNECT www.example.com:443 HTTP/1.1\r\nHost: www.example.com:443\r\nProxy-Authorization: Basic token\r\n\r\n"
@@ -553,7 +591,15 @@ mod ut_proxy {
             Err(CreateTunnelErr::Unsuccessful)
         ));
         assert!(matches!(
+            parse_tunnel_response(b"HTTP/1.1 20A Connection Established\r\n\r\n"),
+            Err(CreateTunnelErr::Unsuccessful)
+        ));
+        assert!(matches!(
             parse_tunnel_response(b"HTTP/1.1 200 Connection Established\r\n"),
+            Ok(TunnelResponse::Incomplete)
+        ));
+        assert!(matches!(
+            parse_tunnel_response(b"HTTP/1.1 200 Connection Established\r\nHeader: value\r\n"),
             Ok(TunnelResponse::Incomplete)
         ));
         assert!(matches!(

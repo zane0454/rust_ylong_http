@@ -5,3 +5,4 @@ target
 /.tools/
 /docs/benchmarks/results/*_env.json
 /docs/benchmarks/results/*_raw.txt
+/output/pdf/

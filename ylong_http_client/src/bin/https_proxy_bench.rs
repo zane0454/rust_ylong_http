@@ -62,6 +62,7 @@ async fn async_main() -> Result<(), Box<dyn Error + Send + Sync>> {
     run_ylong(&client, &url, warmup).await?;
     let ylong = run_ylong(&client, &url, requests).await?;
     println!("ylong_http_client: {:?} for {} requests", ylong, requests);
+    drop(client);
 
     if let Ok(curl) = env::var("YLONG_CURL") {
         run_curl(&curl, &proxy, &url, warmup)?;
