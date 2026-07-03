@@ -181,10 +181,16 @@ impl ProxyInfo {
         UriFormatter::new().format(&mut uri)?;
         let (scheme, authority, _, _) = uri.into_parts();
         // `scheme` and `authority` must have values after formatting.
+        let scheme = scheme.unwrap();
+        let authority = authority.unwrap();
+        if scheme != Scheme::HTTP && scheme != Scheme::HTTPS {
+            return err_from_msg!(Build, "Proxy only supports http and https schemes");
+        }
+
         Ok(Self {
             basic_auth: None,
-            scheme: scheme.unwrap(),
-            authority: authority.unwrap(),
+            scheme,
+            authority,
             #[cfg(feature = "__tls")]
             tls_config: None,
         })
@@ -262,13 +268,9 @@ pub(crate) fn parse_tunnel_response(buf: &[u8]) -> Result<TunnelResponse, Create
     };
 
     let status = &buf[..line_end];
-    if status.len() < 12
-        || !(status.starts_with(b"HTTP/1.1 ") || status.starts_with(b"HTTP/1.0 "))
-    {
-        return Err(CreateTunnelErr::Unsuccessful);
-    }
+    let code = status_code(status)?;
 
-    match &status[9..12] {
+    match code {
         b"200" => {
             if contains_header_end(buf) {
                 Ok(TunnelResponse::Complete)
@@ -281,6 +283,20 @@ pub(crate) fn parse_tunnel_response(buf: &[u8]) -> Result<TunnelResponse, Create
         b"407" => Err(CreateTunnelErr::ProxyAuthenticationRequired),
         _ => Err(CreateTunnelErr::Unsuccessful),
     }
+}
+
+fn status_code(status: &[u8]) -> Result<&[u8], CreateTunnelErr> {
+    if status.len() < 12
+        || !(status.starts_with(b"HTTP/1.1 ") || status.starts_with(b"HTTP/1.0 "))
+    {
+        return Err(CreateTunnelErr::Unsuccessful);
+    }
+
+    if status.len() > 12 && status[12] != b' ' {
+        return Err(CreateTunnelErr::Unsuccessful);
+    }
+
+    Ok(&status[9..12])
 }
 
 fn find_crlf(buf: &[u8]) -> Option<usize> {
@@ -495,6 +511,13 @@ mod ut_proxy {
         assert!(info.is_secure());
     }
 
+    /// UT test cases for proxy endpoint validation.
+    #[test]
+    fn ut_proxy_endpoint_validation() {
+        assert!(Proxy::http("ftp://www.example.com").is_err());
+        assert!(Proxy::all("http://").is_err());
+    }
+
     /// UT test cases for HTTPS proxy TLS config.
     #[cfg(feature = "__tls")]
     #[test]
@@ -520,6 +543,14 @@ mod ut_proxy {
         assert!(matches!(
             parse_tunnel_response(b"HTTP/1.1 200 Connection Established\r\n\r\n"),
             Ok(TunnelResponse::Complete)
+        ));
+        assert!(matches!(
+            parse_tunnel_response(b"HTTP/1.1 2000 Connection Established\r\n\r\n"),
+            Err(CreateTunnelErr::Unsuccessful)
+        ));
+        assert!(matches!(
+            parse_tunnel_response(b"HTTP/1.1 200Connection Established\r\n\r\n"),
+            Err(CreateTunnelErr::Unsuccessful)
         ));
         assert!(matches!(
             parse_tunnel_response(b"HTTP/1.1 200 Connection Established\r\n"),
