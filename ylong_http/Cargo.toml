@@ -1,0 +1,42 @@
+[package]
+name = "ylong_http"
+version = "1.0.0"
+edition = "2021"
+description = "HTTP utility implementation"
+license = "Apache-2.0"
+repository = "https://gitee.com/openharmony/commonlibrary_rust_ylong_http"
+keywords = ["ylong", "http"]
+
+[features]
+default = []
+full = [
+    "tokio_base",
+    "http1_1",
+    "http2",
+    "http3",
+    "huffman",
+]
+http1_1 = []        # Uses HTTP/1.1.
+http2 = []          # Uses HTTP/2.
+http3 = []          # Uses HTTP/3.
+huffman = []        # Uses Huffman encoding in `Hpack` and `Qpack`.
+
+tokio_base = ["tokio"]     # Uses asynchronous components of `tokio`
+ylong_base = ["ylong_runtime"]            # Uses asynchronous components of `ylong`
+
+[dependencies]
+tokio = { version = "1.20.1", features = ["io-util", "fs"], optional = true }
+ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git", features = ["fs", "sync"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.20.1", features = ["io-util", "rt-multi-thread", "macros"] }
+
+[[example]]
+name = "mimebody_multi"
+path = "./examples/mimebody_multi.rs"
+required-features = ["tokio_base"]
+
+[[example]]
+name = "mimebody_multi_then_async_data"
+path = "./examples/mimebody_multi_then_async_data.rs"
+required-features = ["tokio_base"]
