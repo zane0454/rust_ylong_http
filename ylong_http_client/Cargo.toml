@@ -1,0 +1,111 @@
+[package]
+name = "ylong_http_client"
+version = "1.0.0"
+edition = "2021"
+description = "Ylong HTTP Client implementation"
+license = "Apache-2.0"
+repository = "https://gitee.com/openharmony/commonlibrary_rust_ylong_http"
+keywords = ["ylong", "http", "client"]
+
+[dependencies]
+ylong_http = { path = "../ylong_http" }
+quiche = { version = "0.22.0", features = ["ffi"], optional = true }
+libc = { version = "0.2.134", optional = true }
+tokio = { version = "1.20.1", features = ["io-util", "net", "rt", "rt-multi-thread", "macros", "sync", "time"], optional = true }
+ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git", features = ["net", "sync", "fs", "macros", "time"], optional = true }
+
+[dev-dependencies]
+hyper = { version = "0.14.23", features = ["http1", "http2", "tcp", "server"] }
+openssl = { version = "0.10.29" }
+tokio-openssl = { version = "0.6.3" }
+
+[features]
+default = []
+full = [
+    "tokio_base",
+    "sync",
+    "async",
+    "http1_1",
+    "tls_default",
+]
+
+sync = []                               # Uses sync interfaces.
+async = []                              # Uses async interfaces.
+http1_1 = ["ylong_http/http1_1"]        # Uses HTTP/1.1.
+http2 = ["ylong_http/http2", "ylong_http/huffman"]               # Uses HTTP/2.
+http3 = ["ylong_http/http3", "quiche", "ylong_http/huffman"]     # Uses HTTP/3.
+
+tokio_base = ["tokio", "ylong_http/tokio_base"]                  # Uses tokio runtime.
+ylong_base = ["ylong_runtime", "ylong_http/ylong_base"]          # Uses ylong runtime.
+
+tls_default = ["c_openssl_3_0"]
+__tls = []                              # Not open to user, only mark to use tls for developer.
+__c_openssl = ["__tls", "libc"]         # Not open to user, only mark to use tls by C-openssl for developer.
+c_openssl_1_1 = ["__c_openssl"]         # Uses TLS by FFI of C-openssl 1.1.
+c_openssl_3_0 = ["__c_openssl"]         # Uses TLS by FFI of C-openssl 3.0.
+c_boringssl = ["__tls", "libc"]
+
+[[example]]
+name = "async_certs_adapter"
+path = "examples/async_certs_adapter.rs"
+required-features = ["async", "http1_1", "ylong_base", "__c_openssl"]
+
+[[example]]
+name = "async_http"
+path = "examples/async_http.rs"
+required-features = ["async", "http1_1", "ylong_base"]
+
+[[example]]
+name = "async_http_dns"
+path = "examples/async_http_dns.rs"
+required-features = ["async", "http1_1", "ylong_base"]
+
+[[example]]
+name = "async_http_doh"
+path = "examples/async_http_doh.rs"
+required-features = ["async", "http1_1", "ylong_base", "__c_openssl"]
+
+[[example]]
+name = "async_http_multi"
+path = "examples/async_http_multi.rs"
+required-features = ["async", "http1_1", "ylong_base"]
+
+[[example]]
+name = "async_https_outside"
+path = "./examples/async_https_outside.rs"
+required-features = ["async", "http1_1", "__tls", "tokio_base"]
+
+[[bin]]
+name = "https_proxy_bench"
+path = "src/bin/https_proxy_bench.rs"
+required-features = ["async", "http1_1", "ylong_base", "__c_openssl"]
+
+[[example]]
+name = "sync_https_outside"
+path = "./examples/sync_https_outside.rs"
+required-features = ["sync", "http1_1", "__tls"]
+
+[[example]]
+name = "async_proxy_http"
+path = "examples/async_proxy_http.rs"
+required-features = ["async", "http1_1", "tokio_base"]
+
+[[example]]
+name = "async_redirect_http"
+path = "examples/async_redirect_http.rs"
+required-features = ["async", "http1_1", "tokio_base"]
+
+[[example]]
+name = "sync_http"
+path = "examples/sync_http.rs"
+required-features = ["sync", "http1_1"]
+
+[[example]]
+name = "sync_redirect_http"
+path = "examples/sync_redirect_http.rs"
+required-features = ["sync", "http1_1"]
+
+[[example]]
+name = "sync_proxy_http"
+path = "examples/sync_proxy_http.rs"
+required-features = ["sync", "http1_1"]
