@@ -1,0 +1,83 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+
+ohos_rust_unittest("rust_ylong_runtime_test_ut") {
+  module_out_path = "ylong_runtime/ylong_runtime"
+
+  rustflags = [
+    "--cfg=feature=\"fs\"",
+    "--cfg=feature=\"macros\"",
+    "--cfg=feature=\"net\"",
+    "--cfg=feature=\"sync\"",
+    "--cfg=feature=\"time\"",
+  ]
+
+  sources = [ "../ylong_runtime/src/lib.rs" ]
+  deps = [
+    "../ylong_io:ylong_io",
+    "../ylong_runtime_macros:ylong_runtime_macros(${host_toolchain})",
+    "../ylong_signal:ylong_signal",
+  ]
+
+  external_deps = [ "rust_libc:lib" ]
+}
+
+ohos_rust_systemtest("rust_ylong_runtime_test_sdv") {
+  module_out_path = "ylong_runtime/ylong_runtime"
+
+  rustflags = [
+    "--cfg=gn_test",
+    "--cfg=feature=\"fs\"",
+    "--cfg=feature=\"macros\"",
+    "--cfg=feature=\"net\"",
+    "--cfg=feature=\"sync\"",
+    "--cfg=feature=\"time\"",
+  ]
+
+  sources = [ "../ylong_runtime/tests/entry.rs" ]
+  deps = [ "../ylong_runtime:ylong_runtime" ]
+
+  external_deps = [ "rust_libc:lib" ]
+}
+
+ohos_rust_systemtest("rust_ylong_signal_test_sdv") {
+  module_out_path = "ylong_runtime/ylong_runtime"
+
+  rustflags = [ "--cfg=gn_test" ]
+
+  sources = [ "../ylong_signal/tests/entry.rs" ]
+  deps = [ "../ylong_signal:ylong_signal" ]
+
+  external_deps = [ "rust_libc:lib" ]
+}
+
+group("unittest") {
+  testonly = true
+  deps = []
+  if (!use_clang_coverage) {
+    deps += [ ":rust_ylong_runtime_test_ut" ]
+  }
+}
+
+group("sdvtest") {
+  testonly = true
+  deps = []
+  if (!use_clang_coverage) {
+    deps += [
+      ":rust_ylong_runtime_test_sdv",
+      ":rust_ylong_signal_test_sdv",
+    ]
+  }
+}
