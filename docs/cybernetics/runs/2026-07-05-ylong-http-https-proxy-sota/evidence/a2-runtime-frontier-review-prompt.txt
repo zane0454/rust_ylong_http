@@ -1,0 +1,26 @@
+Independent Counterexample Gate review request for A2-runtime-frontier-review.
+
+Scope:
+- Review only, no file edits.
+- Target patch: amendments/gen-002-runtime-frontier-review.patch.json.
+
+Required reads:
+- requirements.control.json what_counts_as_done and SOTA hard thresholds.
+- gen-001/runtime.control.json required_steps.
+- A2 proposal patch.
+- evidence/runtime-dequeue-candidate-s9d-counterexample.json.
+- evidence/runtime-blockon-atomic-candidate-rejected.json.
+- evidence/ylong-client-production-lever-hard-negative.json.
+- evidence/performance-causality.json summary evidence that supports or refutes "no obvious remaining implementation candidate".
+
+Questions:
+1. verdict: approve / request_changes / reject.
+2. Does A2 preserve semantic_base, required outcomes, fixed SOTA thresholds, and authority?
+3. Could A2 S9E become a forbidden terminal blocked/non-SOTA state?
+4. Is there an evidence-supported candidate surface not covered by A2 and close enough to 2x throughput geomean, 1.5x every-cell throughput, p95, and CPU gates?
+5. List specific fields or sentences that require changes, if any.
+6. Provide concise evidence citations using file paths plus field or nearby-line descriptions.
+
+Constraints:
+- Do not treat failed S9D or rejected candidates as completion evidence.
+- Do not suggest weakening SOTA metrics.

@@ -1,0 +1,624 @@
+{
+  "evidence_id": "evidence.gen005-s8-candidate-counterexamples",
+  "runtime_generation": "gen-005",
+  "required_step": "S8-sota-20-percent-threshold-matrix",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "status": "candidate_counterexamples_recorded_s8_pass_found",
+  "verified_at": "2026-07-06T20:01:19+08:00",
+  "approved_threshold": {
+    "throughput_geomean_ratio": ">= 1.20",
+    "baseline": "same-process libcurl library",
+    "errors": "0",
+    "model": "same proxy/origin topology, TLS verification, mTLS material, request payload, connection reuse, concurrency, timeout policy, and response validation"
+  },
+  "candidates": [
+    {
+      "candidate_id": "gen005-ylong-base-canonical",
+      "client": "ylong_http_client",
+      "runtime": "ylong_base",
+      "concurrency": 1,
+      "result_dir": "docs/benchmarks/results/gen005-s8-sota20",
+      "throughput_geomean_ratio": 0.9028392373542251,
+      "throughput_min_ratio": 0.7258842991021456,
+      "throughput_max_ratio": 1.0824658866452315,
+      "errors_sum_total": 0,
+      "verdict": "rejected_below_20_percent"
+    },
+    {
+      "candidate_id": "gen005-tokio-base-canonical",
+      "client": "ylong_http_client",
+      "runtime": "tokio_base",
+      "concurrency": 1,
+      "result_dir": "docs/benchmarks/results/gen005-tokio-s8-sota20",
+      "throughput_geomean_ratio": 1.0876673383105162,
+      "throughput_min_ratio": 0.8870696405792673,
+      "throughput_max_ratio": 1.397169360971165,
+      "errors_sum_total": 0,
+      "verdict": "rejected_below_20_percent"
+    },
+    {
+      "candidate_id": "gen005-tokio-base-concurrency8-single-client",
+      "client": "ylong_http_client",
+      "runtime": "tokio_base",
+      "concurrency": 8,
+      "ylong_concurrency_model": "single-client",
+      "result_dir": "docs/benchmarks/results/gen005-tokio-concurrency8-s8-sota20",
+      "throughput_geomean_ratio": 0.9406630140390991,
+      "throughput_min_ratio": 0.7422023548431551,
+      "throughput_max_ratio": 1.2651227287906004,
+      "errors_sum_total": 0,
+      "verdict": "rejected_below_20_percent"
+    },
+    {
+      "candidate_id": "gen005-sync-canonical",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "result_dir": "docs/benchmarks/results/gen005-sync-s8-sota20",
+      "throughput_geomean_ratio": 1.117111972789497,
+      "throughput_min_ratio": 0.8633382536141421,
+      "throughput_max_ratio": 1.4150841994889372,
+      "errors_sum_total": 0,
+      "p95_latency_ratio_geomean": 0.8869593428140983,
+      "cpu_us_per_request_ratio_geomean": 0.6857462010910556,
+      "verdict": "best_current_full_gen005_candidate_but_rejected_below_20_percent"
+    },
+    {
+      "candidate_id": "gen005-sync-concurrency8",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 8,
+      "result_dir": "docs/benchmarks/results/gen005-sync-concurrency8-s8-sota20",
+      "throughput_geomean_ratio": 0.8488808029549425,
+      "throughput_min_ratio": 0.6062230148634798,
+      "throughput_max_ratio": 1.0840311744113118,
+      "errors_sum_total": 0,
+      "verdict": "rejected_below_20_percent_and_resource_regressed"
+    },
+    {
+      "candidate_id": "gen005-sync-tempbuf-stack-array",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_counterexample",
+      "result_dir": "docs/benchmarks/results/gen005-sync-tempbuf-s8-sota20",
+      "throughput_geomean_ratio": 0.9939000585540521,
+      "throughput_min_ratio": 0.7829209891106624,
+      "throughput_max_ratio": 1.2213688914581236,
+      "errors_sum_total": 0,
+      "verdict": "rejected_below_20_percent_and_worse_than_sync_canonical"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-borrowed-request-part",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_retained_as_best_observed_but_not_s8_passing",
+      "implementation_change": "sync HTTP/1 request part encoding uses RequestRefEncoder and releases the borrowed request part before borrowing the body, preserving the original shared 16KB write buffer shape",
+      "test_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-sync-ref-encoder-green cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_request_part_encoder_borrows_request_part",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dirs": [
+        "docs/benchmarks/results/gen005-sync-refencoder-http-focused",
+        "docs/benchmarks/results/gen005-sync-refencoder-https1000-focused",
+        "docs/benchmarks/results/gen005-sync-refencoder-mtls1000-focused"
+      ],
+      "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-s8-sota20",
+      "throughput_geomean_ratio": 1.1261954308512665,
+      "throughput_min_ratio": 0.8693404085201184,
+      "throughput_max_ratio": 1.6320975676628833,
+      "p95_latency_ratio_geomean": 0.892281723492633,
+      "cpu_us_per_request_ratio_geomean": 0.6845319684672863,
+      "rss_peak_bytes_ratio_geomean": 1.056329317573002,
+      "errors_sum_total": 0,
+      "verdict": "best_current_full_gen005_candidate_but_rejected_below_20_percent"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-prefetch-owned-prebody",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_counterexample",
+      "implementation_change": "sync HTTP/1 response body attempted to transfer the original response read buffer plus remainder range into HttpBody to avoid pre.to_vec() allocation/copy, on top of the retained borrowed request-part encoder candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-prefetch-green2 cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_http_body_text_from_prefetched_reads_remainder_range",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-refencoder-green cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_request_part_encoder_borrows_request_part"
+      ],
+      "focused_result_dirs": [
+        "docs/benchmarks/results/gen005-sync-refencoder-prefetch-http-focused",
+        "docs/benchmarks/results/gen005-sync-refencoder-prefetch-https1000-focused",
+        "docs/benchmarks/results/gen005-sync-refencoder-prefetch-mtls1000-focused"
+      ],
+      "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-prefetch-s8-sota20",
+      "throughput_geomean_ratio": 1.1194896451894134,
+      "throughput_min_ratio": 0.8795660201988932,
+      "throughput_max_ratio": 1.329859448189643,
+      "p95_latency_ratio_geomean": 0.8756280802219663,
+      "cpu_us_per_request_ratio_geomean": 0.6891113978660909,
+      "rss_peak_bytes_ratio_geomean": 1.0589502063634801,
+      "errors_sum_total": 0,
+      "verdict": "rejected_below_20_percent_and_worse_than_refencoder_throughput_geomean"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-origin-form-borrowed-path",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_counterexample",
+      "implementation_change": "RequestRefEncoder attempted to borrow origin-form path bytes without allocating a Vec when the request URI had no query, on top of the retained borrowed request-part encoder candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-origin-ref-red cargo test -p ylong_http --lib --features http1_1 ut_request_ref_encoder_borrows_origin_form_without_query",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-origin-ref-green cargo test -p ylong_http --lib --features http1_1 ut_request_ref_encoder_borrows_origin_form_without_query",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-origin-ref-green cargo test -p ylong_http --lib --features http1_1 ut_request_ref_encoder_matches_owned_encoder",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-origin-ref-green-client cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_request_part_encoder_borrows_request_part"
+      ],
+      "focused_result_dirs": [
+        "docs/benchmarks/results/gen005-sync-refencoder-origin-borrow-https1000-focused",
+        "docs/benchmarks/results/gen005-sync-refencoder-origin-borrow-mtls1000-focused",
+        "docs/benchmarks/results/gen005-sync-refencoder-origin-borrow-mtls200-focused"
+      ],
+      "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-origin-borrow-s8-sota20",
+      "throughput_geomean_ratio": 1.074744788591629,
+      "throughput_min_ratio": 0.835716420350563,
+      "throughput_max_ratio": 1.623333736869513,
+      "p95_latency_ratio_geomean": 0.852897973548164,
+      "cpu_us_per_request_ratio_geomean": 0.712499139802801,
+      "rss_peak_bytes_ratio_geomean": 1.057685759533666,
+      "errors_sum_total": 0,
+      "verdict": "rejected_below_20_percent_and_worse_than_refencoder_throughput_geomean_despite_focused_wins"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-reusable-drain-buffer",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_retained_as_best_observed_but_not_s8_passing",
+      "implementation_change": "sync BodyReader exposes read_all_with_buf so callers can reuse a temporary body drain buffer; the HTTPS proxy benchmark sync path reuses one 16KB drain buffer across requests, on top of retained borrowed request-part encoder candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-bodyreader-green2 cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_body_reader_read_all_with_buf_uses_caller_buffer",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-bodyreader-compat2 cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_body_reader_read_all",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-bodyreader-ref2 cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_request_part_encoder_borrows_request_part"
+      ],
+      "format_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dirs": [
+        "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-http-focused",
+        "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-mtls1000-focused"
+      ],
+      "focused_http_throughput_geomean_ratio": 1.0877610430182743,
+      "focused_mtls1000_throughput_ratio": 1.1809921033510844,
+      "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-s8-sota20",
+      "throughput_geomean_ratio": 1.1875958553767474,
+      "throughput_min_ratio": 0.9170117630792779,
+      "throughput_max_ratio": 1.6799268284827704,
+      "p95_latency_ratio_geomean": 0.8174067799010496,
+      "cpu_us_per_request_ratio_geomean": 0.6425587410684873,
+      "rss_peak_bytes_ratio_geomean": 1.059639384856465,
+      "errors_sum_total": 0,
+      "required_throughput_geomean_ratio": 1.2,
+      "verdict": "best_current_full_gen005_candidate_but_rejected_below_20_percent"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-headerparse-response-classification",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_full_matrix_counterexample",
+      "implementation_change": "sync HTTP/1 response body classification temporarily parsed Transfer-Encoding and Content-Length from borrowed HeaderValue parts without allocating strings, on top of retained refencoder plus BodyReader reusable drain-buffer candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-sync-headerparse-red cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::conn::http1::ut_sync_http1::ut_response_header_helpers_use_borrowed_header_values",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-http1-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-reader-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "format_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerparse-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_http_throughput_geomean_ratio": 1.1269435142859425,
+      "focused_http200_ratio": 1.0822496274995164,
+      "focused_http1000_ratio": 1.0314925613890817,
+      "focused_http3000_ratio": 1.2820734305019088,
+      "bodybuf_prior_http_focused_geomean_ratio": 1.0877610430182743,
+      "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerparse-s8-sota20",
+      "throughput_geomean_ratio": 1.1435640442574557,
+      "throughput_min_ratio": 0.9153967098677204,
+      "throughput_max_ratio": 1.5029150489852439,
+      "p95_latency_ratio_geomean": 0.8074166407817354,
+      "cpu_us_per_request_ratio_geomean": 0.67924910171486,
+      "rss_peak_bytes_ratio_geomean": 1.06246281107115,
+      "errors_sum_total": 0,
+      "required_throughput_geomean_ratio": 1.2,
+      "bodybuf_current_best_full_throughput_geomean_ratio": 1.1875958553767474,
+      "full_matrix_cells": [
+        {
+          "scenario": "http-over-https-proxy",
+          "requests": 200,
+          "throughput_rps_ratio": 1.4764639935514825,
+          "p95_us_ratio": 0.603988603988604,
+          "cpu_us_per_request_ratio": 0.5720943679888979,
+          "rss_peak_bytes_ratio": 1.067773543821448,
+          "errors_sum": 0
+        },
+        {
+          "scenario": "http-over-https-proxy",
+          "requests": 1000,
+          "throughput_rps_ratio": 1.0994726494096043,
+          "p95_us_ratio": 0.9456928838951311,
+          "cpu_us_per_request_ratio": 0.6985934768576106,
+          "rss_peak_bytes_ratio": 1.0672474816226518,
+          "errors_sum": 0
+        },
+        {
+          "scenario": "http-over-https-proxy",
+          "requests": 3000,
+          "throughput_rps_ratio": 1.5029150489852439,
+          "p95_us_ratio": 0.6523736600306279,
+          "cpu_us_per_request_ratio": 0.5619298014022119,
+          "rss_peak_bytes_ratio": 1.0651289009497964,
+          "errors_sum": 0
+        },
+        {
+          "scenario": "https-over-https-proxy",
+          "requests": 200,
+          "throughput_rps_ratio": 1.0594274355863234,
+          "p95_us_ratio": 0.7027827116637063,
+          "cpu_us_per_request_ratio": 0.7195637971757374,
+          "rss_peak_bytes_ratio": 1.0696854663774404,
+          "errors_sum": 0
+        },
+        {
+          "scenario": "https-over-https-proxy",
+          "requests": 1000,
+          "throughput_rps_ratio": 1.1471078302651807,
+          "p95_us_ratio": 0.8102297998517419,
+          "cpu_us_per_request_ratio": 0.6465788720297739,
+          "rss_peak_bytes_ratio": 1.057366011311608,
+          "errors_sum": 0
+        },
+        {
+          "scenario": "https-over-https-proxy",
+          "requests": 3000,
+          "throughput_rps_ratio": 1.0982344608425108,
+          "p95_us_ratio": 0.8582866293034427,
+          "cpu_us_per_request_ratio": 0.7398205972890654,
+          "rss_peak_bytes_ratio": 1.053225806451613,
+          "errors_sum": 0
+        },
+        {
+          "scenario": "proxy-mtls-https-origin",
+          "requests": 200,
+          "throughput_rps_ratio": 0.9684788746186637,
+          "p95_us_ratio": 0.9526864474739374,
+          "cpu_us_per_request_ratio": 0.7606939813735725,
+          "rss_peak_bytes_ratio": 1.0636977058029689,
+          "errors_sum": 0
+        },
+        {
+          "scenario": "proxy-mtls-https-origin",
+          "requests": 1000,
+          "throughput_rps_ratio": 0.9153967098677204,
+          "p95_us_ratio": 0.9307553956834532,
+          "cpu_us_per_request_ratio": 0.7980336301860855,
+          "rss_peak_bytes_ratio": 1.0601240226476139,
+          "errors_sum": 0
+        },
+        {
+          "scenario": "proxy-mtls-https-origin",
+          "requests": 3000,
+          "throughput_rps_ratio": 1.158597740847104,
+          "p95_us_ratio": 0.903143585386576,
+          "cpu_us_per_request_ratio": 0.6559020452569289,
+          "rss_peak_bytes_ratio": 1.0580333154218162,
+          "errors_sum": 0
+        }
+      ],
+      "postrollback_tests": [
+        "sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "postrollback_format": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "postrollback_build": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "verdict": "rejected_below_20_percent_and_worse_than_bodybuf_full_matrix_despite_focused_http_gain"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-proxy-fastpath",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_full_matrix_counterexample",
+      "implementation_change": "Proxies::match_proxy temporarily added a single all-proxy/no_proxy-none fast path, on top of retained refencoder plus BodyReader reusable drain-buffer candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-proxy-fast-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" util::proxy::ut_proxy::ut_proxies_single_all_proxy"
+      ],
+      "format_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-proxy-fastpath-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_http_throughput_geomean_ratio": 1.33321309594278,
+      "focused_http200_ratio": 1.411107948,
+      "focused_http1000_ratio": 1.565563558,
+      "focused_http3000_ratio": 1.072674043,
+      "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-proxy-fastpath-s8-sota20",
+      "throughput_geomean_ratio": 1.1166729470263914,
+      "throughput_min_ratio": 0.9626581828373223,
+      "throughput_max_ratio": 1.2778755074427908,
+      "p95_latency_ratio_geomean": 0.8517747659462184,
+      "cpu_us_per_request_ratio_geomean": 0.6764713500093561,
+      "rss_peak_bytes_ratio_geomean": 1.0604338311800012,
+      "errors_sum_total": 0,
+      "required_throughput_geomean_ratio": 1.2,
+      "bodybuf_current_best_full_throughput_geomean_ratio": 1.1875958553767474,
+      "postrollback_source_diff": "git diff -- ylong_http_client/src/util/proxy.rs produced no retained proxy-fastpath source changes after rollback",
+      "verdict": "rejected_below_20_percent_and_worse_than_bodybuf_full_matrix_despite_focused_http_gain"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-headerref-no-prebuffer",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_retained_as_s8_passing_pending_s9_s10",
+      "implementation_change": "On top of retained sync RequestRefEncoder and reusable BodyReader drain buffer changes, RequestRefEncoder header emission now borrows HeaderValue iterator parts instead of prebuffering each header value into a Vec.",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-headerref-test cargo test -p ylong_http --lib --features http1_1 h1::request::encoder::ut_request_encoder::",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-headerref-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-reader-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "format_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dirs": [
+        "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-http-focused"
+      ],
+      "focused_http_throughput_geomean_ratio": 1.128190774395434,
+      "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20",
+      "throughput_geomean_ratio": 1.2280045027021633,
+      "throughput_min_ratio": 0.8902749490026741,
+      "throughput_max_ratio": 1.6102275256800507,
+      "p95_latency_ratio_geomean": 0.8156450869386029,
+      "p50_latency_ratio_geomean": 0.7820610380372038,
+      "cpu_us_per_request_ratio_geomean": 0.6225675136831784,
+      "rss_peak_bytes_ratio_geomean": 1.061341347842923,
+      "errors_sum_total": 0,
+      "required_throughput_geomean_ratio": 1.2,
+      "verdict": "s8_pass_pending_s9_real_client_and_causal_evidence"
+    }
+  ],
+  "phase_observations": [
+    {
+      "result_dir": "docs/benchmarks/results/gen005-ylong-http200-phase",
+      "scenario": "http-over-https-proxy",
+      "requests": 200,
+      "client": "ylong_http_client",
+      "observation": "response body was already captured as response pre-read bytes during client.request; body drain itself was negligible. Each request still had one response-read pending event, pointing to response readiness/runtime wake cost rather than user body-copy cost."
+    },
+    {
+      "result_dir": "docs/benchmarks/results/gen005-ylong-mtls1000-phase",
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 1000,
+      "client": "ylong_http_client",
+      "observation": "response_read dominated request_execute; pre-read events equaled request count and body_drain remained negligible."
+    }
+  ],
+  "conclusion": {
+    "status": "s8_pass_pending_s9_s10",
+    "best_candidate_id": "gen005-sync-refencoder-bodybuf-headerref-no-prebuffer",
+    "throughput_geomean_ratio": 1.2280045027021633,
+    "required_throughput_geomean_ratio": 1.2,
+    "errors_sum_total": 0,
+    "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20",
+    "remaining_required_steps": [
+      "S9-causal-performance-evidence",
+      "S10-final-counterexample-gate"
+    ]
+  },
+  "best_observed_candidate": "gen005-sync-refencoder-bodybuf-headerref-no-prebuffer",
+  "focused_rejections": [
+    {
+      "candidate_id": "gen005-sync-refencoder-uri-normalizer-fastpath",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_focused_counterexample",
+      "implementation_change": "RequestFormatter/UriFormatter skipped URI rebuild when URI already had host, scheme, valid port, and path, on top of the retained borrowed request-part encoder candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-uri-fastpath-green cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_uri_needs_format_false_for_absolute_uri_with_port_and_path",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-uri-format-green cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_uri_format"
+      ],
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-uri-fastpath-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_throughput_geomean_ratio": 1.078271,
+      "focused_http200_ratio": 0.780606,
+      "focused_http1000_ratio": 1.106557,
+      "focused_http3000_ratio": 1.451369,
+      "refencoder_only_http_focused_geomean_from_full_matrix": 1.206509,
+      "errors_sum_total": 0,
+      "verdict": "rejected_before_full_matrix_below_refencoder_http_focused_gate"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-textbody-remaining-counter",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_focused_counterexample",
+      "implementation_change": "sync HttpBody::Text temporarily replaced TextBodyDecoder with a remaining-byte counter and fail-closed surplus pre-read boundary check, on top of the retained borrowed request-part encoder candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-textbody-red cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_http_body_text_rejects_surplus_pre_bytes_at_content_length_boundary",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-textbody-green-postfmt cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_http_body_text_rejects_surplus_pre_bytes_at_content_length_boundary",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-textbody-postrollback-empty cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_http_body_empty",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-textbody-postrollback-ref cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_request_part_encoder_borrows_request_part"
+      ],
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-textremaining-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_throughput_geomean_ratio": 1.031272724128202,
+      "focused_http200_ratio": 0.993998523499063,
+      "focused_http1000_ratio": 0.88752679876483,
+      "focused_http3000_ratio": 1.243234495144991,
+      "refencoder_only_http_focused_geomean_from_full_matrix": 1.206509,
+      "errors_sum_total": 0,
+      "postrollback_source_diff": "git diff -- ylong_http_client/src/sync_impl/http_body.rs produced no output",
+      "verdict": "rejected_before_full_matrix_below_refencoder_http_focused_gate_and_regressed_http1000"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-borrowed-uri-connect",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_focused_counterexample",
+      "implementation_change": "sync ConnPool::connect_to temporarily accepted &Uri and sync Client borrowed the request URI during connection checkout to avoid cloning the request URI before each send, on top of retained refencoder plus BodyReader reusable drain-buffer candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-connpool-uri-red cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_conn_pool_accepts_borrowed_uri",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-connpool-uri-green cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_conn_pool_accepts_borrowed_uri",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-borrowuri-postrollback-ref cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_request_part_encoder_borrows_request_part",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-borrowuri-postrollback-body cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-borrowuri-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_throughput_geomean_ratio": 1.0826279300865196,
+      "focused_http200_ratio": 1.2819385867900537,
+      "focused_http1000_ratio": 0.8703983341162091,
+      "focused_http3000_ratio": 1.1372407412339554,
+      "bodybuf_current_best_full_throughput_geomean_ratio": 1.1875958553767474,
+      "bodybuf_prior_http_focused_geomean_ratio": 1.0877610430182743,
+      "errors_sum_total": 0,
+      "postrollback_source_diff": "git diff -- ylong_http_client/src/sync_impl/client.rs ylong_http_client/src/sync_impl/pool.rs produced no output",
+      "verdict": "rejected_before_full_matrix_below_bodybuf_http_focused_gate_and_regressed_http1000"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-directdrain",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_focused_counterexample",
+      "implementation_change": "HTTPS proxy benchmark sync path temporarily bypassed BodyReader/BodyProcessor glue and drained response bodies directly through sync Body::data into shared BodyStats, on top of retained refencoder plus BodyReader reusable drain-buffer candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-sync-drain-red cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\" ut_drain_ylong_sync_body_records_stats",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-sync-drain-red cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\" ut_drain_ylong_sync_body_records_stats",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-reader-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-http1-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part"
+      ],
+      "format_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-directdrain-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_throughput_geomean_ratio": 0.8288696933040282,
+      "focused_http200_ratio": 0.6313738279824772,
+      "focused_http1000_ratio": 1.0464749129837982,
+      "focused_http3000_ratio": 0.861873216484598,
+      "bodybuf_current_best_full_throughput_geomean_ratio": 1.1875958553767474,
+      "bodybuf_prior_http_focused_geomean_ratio": 1.0877610430182743,
+      "errors_sum_total": 0,
+      "postrollback_source_diff": "git diff -- ylong_http_client/src/bin/https_proxy_bench.rs shows only retained BodyReader::read_all_with_buf body buffer change",
+      "postrollback_tests": [
+        "sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer",
+        "sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part"
+      ],
+      "verdict": "rejected_before_full_matrix_below_bodybuf_http_focused_gate_and_regressed_http200_and_http3000"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-poolkey-hot",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_focused_counterexample",
+      "implementation_change": "sync ConnPool/Pool temporarily added a single-entry cached-key lookup path to avoid constructing an owned PoolKey on hot pool hits, on top of retained refencoder plus BodyReader reusable drain-buffer candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-poolkey-hot-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" util::pool::ut_pool::ut_pool_cached_hit_does_not_build_owned_key",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-syncpool-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::pool::tests::ut_conn_preserves_list_capacity",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-http1-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-reader-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "format_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-poolkey-hot-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_throughput_geomean_ratio": 1.069709260704982,
+      "focused_http200_ratio": 1.4312491432253631,
+      "focused_http1000_ratio": 0.9090007759406022,
+      "focused_http3000_ratio": 0.9408443325518852,
+      "focused_p95_ratio_geomean": 0.9322663961958395,
+      "focused_cpu_us_per_request_ratio_geomean": 0.7255103587081411,
+      "focused_rss_peak_bytes_ratio_geomean": 1.0591328769879835,
+      "bodybuf_current_best_full_throughput_geomean_ratio": 1.1875958553767474,
+      "bodybuf_prior_http_focused_geomean_ratio": 1.0877610430182743,
+      "required_throughput_geomean_ratio": 1.2,
+      "errors_sum_total": 0,
+      "postrollback_source_diff": "git diff -- ylong_http_client/src/sync_impl/pool.rs ylong_http_client/src/util/pool.rs produced no output",
+      "postrollback_tests": [
+        "sync_impl::pool::tests::ut_conn_preserves_list_capacity",
+        "sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "verdict": "rejected_before_full_matrix_below_bodybuf_http_focused_gate_and_regressed_http1000_and_http3000"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-request-template",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_focused_counterexample",
+      "implementation_change": "HTTPS proxy benchmark sync path temporarily pre-parsed the target URL into a RequestPart template and constructed each GET request from the cloned template plus a fresh EmptyBody, on top of retained refencoder plus BodyReader reusable drain-buffer candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-sync-template-test cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\" ut_ylong_sync_request_template_reuses_parsed_request_part",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-http1-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-reader-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "format_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-request-template-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_throughput_geomean_ratio": 1.0297990785668742,
+      "focused_http200_ratio": 1.1593962251277699,
+      "focused_http1000_ratio": 1.1468760599870549,
+      "focused_http3000_ratio": 0.8213138137939457,
+      "focused_p95_ratio_geomean": 0.8867377817471478,
+      "focused_cpu_us_per_request_ratio_geomean": 0.7676068620627033,
+      "focused_rss_peak_bytes_ratio_geomean": 1.0621813404309592,
+      "bodybuf_current_best_full_throughput_geomean_ratio": 1.1875958553767474,
+      "bodybuf_prior_http_focused_geomean_ratio": 1.0877610430182743,
+      "required_throughput_geomean_ratio": 1.2,
+      "errors_sum_total": 0,
+      "postrollback_source_diff": "git diff -- ylong_http_client/src/bin/https_proxy_bench.rs shows only retained BodyReader::read_all_with_buf body buffer change",
+      "postrollback_tests": [
+        "sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "verdict": "rejected_before_full_matrix_below_bodybuf_http_focused_gate_and_regressed_http3000"
+    },
+    {
+      "candidate_id": "gen005-sync-refencoder-bodybuf-absolute-form-uri-borrow",
+      "client": "ylong_http_client_sync",
+      "runtime": "sync",
+      "concurrency": 1,
+      "source_state": "candidate_rolled_back_after_focused_counterexample",
+      "implementation_change": "RequestRefEncoder temporarily encoded absolute-form URIs from borrowed URI segments instead of populating the absolute URI Vec, on top of retained refencoder plus BodyReader reusable drain-buffer candidate",
+      "test_commands": [
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-absolute-uri-red cargo test -p ylong_http --lib --features http1_1 ut_request_ref_encoder_borrows_absolute_form_without_allocating_uri",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-absolute-uri-green cargo test -p ylong_http --lib --features http1_1 ut_request_ref_encoder_borrows_absolute_form_without_allocating_uri",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-absolute-uri-compat cargo test -p ylong_http --lib --features http1_1 ut_request_ref_encoder_matches_owned_encoder",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-http1-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=target/codex-reader-test cargo test -p ylong_http_client --lib --no-default-features --features \"sync,http1_1,ylong_base,c_openssl_3_0\" sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "format_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all --check",
+      "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features \"async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench\"",
+      "focused_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-absolute-uri-http-focused",
+      "focused_scope": "http-over-https-proxy requests 200,1000,3000",
+      "focused_throughput_geomean_ratio": 1.082593335099383,
+      "focused_http200_ratio": 0.907472459,
+      "focused_http1000_ratio": 0.912896824,
+      "focused_http3000_ratio": 1.531584271,
+      "focused_p95_ratio_geomean": 0.877668575,
+      "focused_cpu_us_per_request_ratio_geomean": 0.694459074,
+      "focused_rss_peak_bytes_ratio_geomean": 1.05811737,
+      "bodybuf_current_best_full_throughput_geomean_ratio": 1.1875958553767474,
+      "bodybuf_prior_http_focused_geomean_ratio": 1.0877610430182743,
+      "required_throughput_geomean_ratio": 1.2,
+      "errors_sum_total": 0,
+      "postrollback_source_diff": "git diff -- ylong_http/src/h1/request/encoder.rs produced no output",
+      "postrollback_tests": [
+        "sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+        "sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
+      ],
+      "verdict": "rejected_before_full_matrix_below_bodybuf_http_focused_gate_and_regressed_http200_and_http1000"
+    }
+  ]
+}

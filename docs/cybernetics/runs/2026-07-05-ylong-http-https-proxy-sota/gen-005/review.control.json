@@ -1,0 +1,209 @@
+{
+  "artifact_type": "review.control",
+  "schema_version": "1.0.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json",
+    "run": "run.control.json",
+    "runtime": "gen-005/runtime.control.json",
+    "human_reapproval": "evidence/human-reapproval-sota-20-percent.json",
+    "impact_recheck": "evidence/sota-20-percent-reapproval-impact.json"
+  },
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:045c1e71e92b1249c51321c8ca0356eccc2708674995633135e6b993eff0c1ea"
+  },
+  "approved_control_hashes": {
+    "requirements.control.json": "sha256:19f872138ab890ca62bd47e21440fb742565959b0f9ed2a12a7bc0458b1e31ce",
+    "run.control.json": "sha256:4e8c25d433e245c66517ccff12eab58bbe3add03df677c170848d925e6a62795",
+    "evidence/human-reapproval-sota-20-percent.json": "sha256:e9f2ee0ec7e06344699d4124079cce6281160b2eabd66704335bf586534eceec",
+    "evidence/sota-20-percent-reapproval-impact.json": "sha256:733c96507192e91776e9c4e6d978294dc505a54fc27d56d504eeabd800a6096b"
+  },
+  "review_checks": [
+    {
+      "check_id": "intent-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "evidence/human-reapproval-sota-20-percent.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "user_reapproval:SOTA_20_percent->requirements.what_counts_as_done",
+        "old_SOTA_above_contest_floor_requirement->superseded",
+        "fairness_causality_security_tests_counterexample->preserved"
+      ]
+    },
+    {
+      "check_id": "obligation-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "evidence/sota-20-percent-reapproval-impact.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "S1-S7.completed_evidence->imported_only_for_same_outcomes",
+        "old_performance_evidence->invalidated_as_20_percent_completion",
+        "S8/S9/S10->remain_required"
+      ]
+    },
+    {
+      "check_id": "required-outcome-coverage",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "gen-005/runtime.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "O-current-audit->S1-current-audit",
+        "O-protocol-correctness->S2-protocol-correctness",
+        "O-proxy-tls-mtls->S3-proxy-tls-mtls",
+        "O-sync-async-proxy-semantics->S4-sync-async-proxy-semantics",
+        "O-test-matrix->S5-test-matrix",
+        "O-benchmark-fairness->S6-benchmark-fairness",
+        "O-report-evidence-chain->S7-report-evidence-chain",
+        "O-sota-threshold-matrix->S8-sota-20-percent-threshold-matrix",
+        "O-causal-performance-evidence->S9-causal-performance-evidence",
+        "O-final-counterexample-gate->S10-final-counterexample-gate"
+      ]
+    },
+    {
+      "check_id": "source-requirement-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "evidence/human-reapproval-sota-20-percent.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "SR-performance-threshold-20-percent-sota->O-sota-threshold-matrix",
+        "SR-sota-hard-metrics->O-sota-threshold-matrix",
+        "SR-benchmark-fairness->O-benchmark-fairness/O-sota-threshold-matrix/O-causal-performance-evidence",
+        "SR-counterexample-gate->O-final-counterexample-gate",
+        "SR-no-intermediate-terminal-statuses->completion_logic.preserved",
+        "SR-no-planned-stop-exit->remaining_required_work_not_terminal"
+      ]
+    },
+    {
+      "check_id": "horizon-authority",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "evidence/human-reapproval-sota-20-percent.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "semantic_base_change->human_reapproved",
+        "required_outcomes->preserved",
+        "authority_for_recompile->approved",
+        "subagent_review_authority->approved"
+      ]
+    },
+    {
+      "check_id": "counterexample-gate",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "run.control.json",
+        "gen-005/runtime.control.json",
+        "evidence/human-reapproval-sota-20-percent.json",
+        "evidence/sota-20-percent-reapproval-impact.json",
+        "evidence/sota-20-percent-recompile-review-transcript.txt"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "CONNECT_RFC_semantics->parser_tests",
+        "all_outcomes->SOTA_claim",
+        "all_result_paths->SOTA_claim",
+        "benchmark_harness->real_client_path",
+        "benchmark_matrix->numeric_threshold_verdict",
+        "benchmark_result->numeric_SOTA_threshold_verdict",
+        "benchmark_result->performance_claim",
+        "blocked_or_goal_achieved",
+        "causal_explanation->final_SOTA_status",
+        "causal_performance_evidence->final_SOTA_status",
+        "completion_or_remaining_required_work",
+        "evidence->report_claims",
+        "forbidden_terminal_statuses->final_answer",
+        "libcurl_baseline->same_model_semantics",
+        "numeric_SOTA_threshold_verdict->causal_performance_evidence",
+        "numeric_SOTA_threshold_verdict->final_SOTA_status",
+        "numeric_threshold_result->causal_explanation",
+        "numeric_threshold_verdict->final_SOTA_status",
+        "numeric_threshold_verdict->goal_achieved_status",
+        "numeric_threshold_verdict->report_claims",
+        "pre_runtime_compile",
+        "proxy_tls_config->endpoint_evidence",
+        "real_client_path_evidence->numeric_threshold_verdict",
+        "remaining_required_work->next_required_action",
+        "report_claims->SOTA_claim",
+        "result_path:RP-current-audit-to-workplan->completion_gate",
+        "result_path:RP-current-audit-to-workplan->required_steps",
+        "required_outcome:O-benchmark-fairness->completion_gate",
+        "required_outcome:O-causal-performance-evidence->completion_gate",
+        "required_outcome:O-current-audit->completion_gate",
+        "required_outcome:O-final-counterexample-gate->completion_gate",
+        "required_outcome:O-protocol-correctness->completion_gate",
+        "required_outcome:O-proxy-tls-mtls->completion_gate",
+        "required_outcome:O-report-evidence-chain->completion_gate",
+        "required_outcome:O-sota-threshold-matrix->completion_gate",
+        "required_outcome:O-sync-async-proxy-semantics->completion_gate",
+        "required_outcome:O-test-matrix->completion_gate",
+        "required_outcomes->required_steps",
+        "required_result_paths->required_steps",
+        "required_steps->runtime_steps",
+        "required_steps->work_packages",
+        "result_path:RP-fair-benchmark-to-report->completion_gate",
+        "result_path:RP-fair-benchmark-to-report->required_steps",
+        "result_path:RP-final-counterexample-to-sota-claim->completion_gate",
+        "result_path:RP-final-counterexample-to-sota-claim->required_steps",
+        "result_path:RP-http-over-https-proxy->completion_gate",
+        "result_path:RP-http-over-https-proxy->required_steps",
+        "result_path:RP-https-over-https-proxy->completion_gate",
+        "result_path:RP-https-over-https-proxy->required_steps",
+        "result_path:RP-proxy-tls-fail-closed->completion_gate",
+        "result_path:RP-proxy-tls-fail-closed->required_steps",
+        "result_path:RP-real-client-causal-performance->completion_gate",
+        "result_path:RP-real-client-causal-performance->required_steps",
+        "result_path:RP-shared-proxy-semantics->completion_gate",
+        "result_path:RP-shared-proxy-semantics->required_steps",
+        "result_path:RP-sota-threshold-verdict->completion_gate",
+        "result_path:RP-sota-threshold-verdict->required_steps",
+        "source_audit->work_packages",
+        "source_requirements->required_outcomes",
+        "source_requirements->required_result_paths",
+        "source_requirements:SOTA_metrics->benchmark_matrix",
+        "test_matrix->SOTA_claim",
+        "human_reapproval:SOTA_20_percent->requirements_semantic_base",
+        "approved_20_percent_threshold->S8-sota-20-percent-threshold-matrix",
+        "old_strict_thresholds->not_current_completion_standard",
+        "old_below_20_percent_evidence->not_completion_evidence",
+        "gen-005.S8->O-sota-threshold-matrix",
+        "gen-005.S9->O-causal-performance-evidence",
+        "gen-005.S10->O-final-counterexample-gate"
+      ],
+      "reviewer": {
+        "kind": "subagent",
+        "id": "sota-20-percent-recompile-reviewer-v1",
+        "evidence_ref": "evidence/sota-20-percent-recompile-counterexample-gate.json",
+        "summary": "Independent pre-runtime review must approve that gen-005 faithfully encodes the user-approved 20% SOTA threshold while preserving fairness, causality, security, and final Counterexample Gate obligations."
+      }
+    }
+  ]
+}

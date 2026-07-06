@@ -1,0 +1,919 @@
+{
+  "chains": [
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 48312,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 66588,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 49891,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 70420,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 105062,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 171749,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 353701,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 551438,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 51368,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 50154,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 10580,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 45725,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 19363,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 45207,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 40720,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 57373,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 17385,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 380130,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 521355,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 104796,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 59437,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 56392,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 72414,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 92254,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 102823,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 157360,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 163984,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 90126,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 162719,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 202120,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 263671,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 339454,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 389314,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 779441,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 888264,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 1,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 110434,
+      "wake_worker_id": 1
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 111125,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 15334,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 38789,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 9521,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 821705,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 114811,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 109388,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 44008,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 17,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 16766,
+      "wake_worker_id": 17
+    },
+    {
+      "enqueue_worker_id": 18,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 19320,
+      "wake_worker_id": 18
+    },
+    {
+      "enqueue_worker_id": 18,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 17293,
+      "wake_worker_id": 18
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 19427,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 117644,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 91349,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 319123,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 111197,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 204599,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 87896,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 16,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 16,
+      "target_worker_id": 16,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 179164,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 18857,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 13131,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 158380,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 19,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 201479,
+      "wake_worker_id": 19
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 26790,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 95491,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 15494,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 139038,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 27576,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 81085,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 91287,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 16273,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 24414,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 29048,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 12174,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 56848,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 15428,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 15261,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 13377,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 12453,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 19480,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 17821,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 16975,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 6709,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 7802,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 8279,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 5675,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 6186,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 19,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 19,
+      "target_worker_id": 19,
+      "task_id": 102671157197888,
+      "wake_to_next_poll_ns": 33327,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157406608,
+      "wake_to_next_poll_ns": 21876,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157281376,
+      "wake_to_next_poll_ns": 19144,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157114400,
+      "wake_to_next_poll_ns": 20143,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 14,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 14,
+      "target_worker_id": 14,
+      "task_id": 102671157323120,
+      "wake_to_next_poll_ns": 44480,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 15,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 15,
+      "target_worker_id": 15,
+      "task_id": 102671157364864,
+      "wake_to_next_poll_ns": 30030,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 18,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 18,
+      "target_worker_id": 18,
+      "task_id": 102671157239632,
+      "wake_to_next_poll_ns": 36493,
+      "wake_worker_id": 13
+    },
+    {
+      "enqueue_worker_id": 13,
+      "last_poll_worker_id": 17,
+      "locality_mismatch": false,
+      "next_poll_worker_id": 17,
+      "target_worker_id": 17,
+      "task_id": 102671157156144,
+      "wake_to_next_poll_ns": 16232,
+      "wake_worker_id": 13
+    }
+  ],
+  "complete_chains": 91,
+  "incomplete_chains": 0,
+  "io_wake_enqueue_chains": 91,
+  "locality_mismatches": 0,
+  "mismatch_ratio": 0.0
+}

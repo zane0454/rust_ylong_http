@@ -1,0 +1,139 @@
+{
+  "evidence_id": "evidence.runtime-dequeue-candidate-focused",
+  "runtime_generation": "gen-001",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "required_step": "S9D-runtime-canonical-matrix",
+  "status": "focused_candidate_insufficient",
+  "verified_at": "2026-07-06T12:58:00+08:00",
+  "summary": "A second behavior-preserving ylong_runtime scheduler candidate lets dequeue() immediately run a task made local by driver.run_once() or wake_yield(), instead of returning None and waiting for the outer worker loop. The RED/GREEN unit test passes and focused 1000-request benchmarks show local CPU and HTTP-over-proxy gains, but HTTPS-origin and proxy-mTLS cells still fail SOTA gates, so this is not S9D completion evidence.",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+      "summary": "After driver.run_once() and wake_yield(), dequeue() now checks local/global queues again and returns a ready task immediately."
+    },
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+      "summary": "Adds ut_executor_mng_info_dequeue_runs_yield_woken_local_task_immediately, which failed before the change and passes after it."
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_dequeue_red cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_executor_mng_info_dequeue_runs_yield_woken_local_task_immediately",
+      "result": "red",
+      "observed": "assertion failed: dequeued.is_some()"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_dequeue_green cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_executor_mng_info_",
+      "result": "pass",
+      "observed": "12 passed; 0 failed"
+    },
+    {
+      "command": "source ~/.cargo/env && rustfmt ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+      "result": "pass",
+      "observed": "Only existing nightly-only rustfmt.toml option warnings were emitted."
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_dequeue_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --offline",
+      "result": "pass"
+    },
+    {
+      "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 1000 --repeats 3 --warmup 50 --concurrency 1 --bench-bin /tmp/ylong_http_target_s9d_dequeue_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-dequeue-candidate-focused --figure-dir docs/figures/ylong-runtime-dequeue-candidate-focused",
+      "result": "pass",
+      "observed": "Focused non-phase matrix completed with zero errors."
+    },
+    {
+      "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 1000 --repeats 3 --warmup 50 --concurrency 1 --phase-timing --bench-bin /tmp/ylong_http_target_s9d_dequeue_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-dequeue-candidate-phase --figure-dir docs/figures/ylong-runtime-dequeue-candidate-phase",
+      "result": "pass",
+      "observed": "Focused phase diagnostic completed with zero errors."
+    }
+  ],
+  "focused_non_phase": {
+    "result_dir": "docs/benchmarks/results/ylong-runtime-dequeue-candidate-focused",
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "concurrency": 1,
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.1400193219218637,
+      "throughput_min_ratio_ylong_over_libcurl": 0.8200434863796552,
+      "p50_max_ratio_ylong_over_libcurl": 1.194331983805668,
+      "p95_max_ratio_ylong_over_libcurl": 1.1900269541778974,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.7746541946071488,
+      "cpu_max_ratio_ylong_over_libcurl": 1.0318428096393253,
+      "rss_max_ratio_ylong_over_libcurl": 1.0678978815860944,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "scenario_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "throughput_rps_ratio": 2.048144,
+        "p50_us_ratio": 0.441088,
+        "p95_us_ratio": 0.801075,
+        "cpu_us_per_request_ratio": 0.543801,
+        "rss_peak_bytes_ratio": 1.066703
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "throughput_rps_ratio": 0.882144,
+        "p50_us_ratio": 1.194332,
+        "p95_us_ratio": 1.003851,
+        "cpu_us_per_request_ratio": 1.031843,
+        "rss_peak_bytes_ratio": 1.067898
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "throughput_rps_ratio": 0.820043,
+        "p50_us_ratio": 0.972763,
+        "p95_us_ratio": 1.190027,
+        "cpu_us_per_request_ratio": 0.828457,
+        "rss_peak_bytes_ratio": 1.05994
+      }
+    ]
+  },
+  "focused_phase": {
+    "result_dir": "docs/benchmarks/results/ylong-runtime-dequeue-candidate-phase",
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "phase_timing": true,
+    "response_read_us_per_request": {
+      "http-over-https-proxy": 56.393,
+      "https-over-https-proxy": 141.21633333333335,
+      "proxy-mtls-https-origin": 145.67966666666666
+    },
+    "response_read_polls_per_request": {
+      "http-over-https-proxy": 2.0,
+      "https-over-https-proxy": 2.0,
+      "proxy-mtls-https-origin": 2.0
+    },
+    "response_read_pending_per_request": {
+      "http-over-https-proxy": 1.0,
+      "https-over-https-proxy": 1.0,
+      "proxy-mtls-https-origin": 1.0
+    }
+  },
+  "hashes": {
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-focused/https_proxy_bench_results.csv": "sha256:a7fec55eaae724ad957cd2c5a1f5e04e26923c8a27c439a499491c08fbea6658",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-focused/https_proxy_bench_summary.csv": "sha256:4b94856f5df5b1126cfc9fc48dcff437f779e3f6927f7af338942a2b3ce578a3",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-focused/https_proxy_bench_comparison.csv": "sha256:de67610f3abb9fae01e2f10eadb22a54c54bc768e84dc65b28fb916b013a9c38",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-focused/https_proxy_bench_env.json": "sha256:c34f4216a54d11bcd34010d9353416cf833540b69f2231406b35fb1d5898b6cb",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-focused/https_proxy_bench_raw.txt": "sha256:869cfa4d36df21bf0d4f9a78b9f14d28161dcc81e1f5267edfd499ef088ca28e",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-phase/https_proxy_bench_results.csv": "sha256:1c885120c129fb5d6b570dbd257395287c6b4a19af7e6fc87d914660f40c7b9f",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-phase/https_proxy_bench_summary.csv": "sha256:41018ba8d7cd32a1e4c928233f8e1a948de2e76d1cfeaa4a7739be084ef9be5f",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-phase/https_proxy_bench_comparison.csv": "sha256:8079a34f8421b96ffe218fcce6be84be912ebf6b0298524246cbea9cc9e63f90",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-phase/https_proxy_bench_env.json": "sha256:03c2577d899b0d3982425ba0f7e6f137ee9e4affae35cc012a9001afa21411ed",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-phase/https_proxy_bench_raw.txt": "sha256:ccc2d69e9d8c1d46136e902cce7c56fb951931d30fe34472a1cb2324de7c5e14",
+    "/tmp/ylong_http_target_s9d_dequeue_release/release/https_proxy_bench": "sha256:cab297826026901e9d6646d5961f71bee084ecc2b7eb20275e3e795e4a07237e"
+  },
+  "verdict": {
+    "sota_verified": false,
+    "reason": "The candidate is behaviorally justified and improves the focused CPU geomean, but it still fails throughput, p50, p95, and CPU worst-cell gates on HTTPS-origin proxy paths. It is retained as a stacked runtime-readiness candidate for further S9D work, not as completion evidence."
+  },
+  "completion_effect": {
+    "S9D-runtime-canonical-matrix": "not complete",
+    "O-causal-performance-evidence": "not satisfied",
+    "S10-final-counterexample-gate": "not allowed",
+    "goal_achieved": false
+  }
+}

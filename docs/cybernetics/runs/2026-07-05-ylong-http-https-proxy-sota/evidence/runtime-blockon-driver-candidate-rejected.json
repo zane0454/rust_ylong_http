@@ -1,0 +1,92 @@
+{
+  "evidence_id": "evidence.runtime-blockon-driver-candidate-rejected",
+  "runtime_generation": "gen-001",
+  "required_step": "S9D-runtime-canonical-matrix",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "status": "candidate_rejected",
+  "recorded_at": "2026-07-06T13:50:39+08:00",
+  "candidate": {
+    "name": "multi-thread block_on drives shared IO driver while waiting",
+    "hypothesis": "For canonical concurrency=1, ylong_runtime::block_on waits on a condvar while global runtime workers drive IO. Letting block_on directly drive the shared IO driver could reduce wake-to-poll latency for HTTPS proxy response reads.",
+    "changed_files_during_candidate": [
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/block_on.rs",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/mod.rs"
+    ],
+    "safety_test": {
+      "test_name": "ut_block_on_with_driver_observes_external_wake",
+      "red": {
+        "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_blockon_red_full cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime --features full ut_block_on_with_driver_observes_external_wake --offline",
+        "result": "failed as expected before implementation: unresolved import block_on_with_driver"
+      },
+      "green": {
+        "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_blockon_green_full cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime --features full ut_block_on_with_driver_observes_external_wake --offline",
+        "result": "passed after implementation before benchmark rejection"
+      }
+    }
+  },
+  "focused_benchmark": {
+    "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 1000 --repeats 3 --warmup 50 --concurrency 1 --bench-bin /tmp/ylong_http_target_s9d_blockon_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-blockon-driver-focused --figure-dir docs/figures/ylong-runtime-blockon-driver-focused",
+    "result_dir": "docs/benchmarks/results/ylong-runtime-blockon-driver-focused",
+    "errors_sum_total": 0,
+    "aggregate": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.8742579984969208,
+      "throughput_min_ratio_ylong_over_libcurl": 0.6408755864817385,
+      "p50_max_ratio_ylong_over_libcurl": 1.5141509433962264,
+      "p95_max_ratio_ylong_over_libcurl": 1.6348547717842326,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.0737043898076812,
+      "cpu_max_ratio_ylong_over_libcurl": 1.4249530319835217,
+      "rss_max_ratio_ylong_over_libcurl": 1.0687787706471703
+    },
+    "scenario_ratios": [
+      {
+        "scenario": "http-over-https-proxy",
+        "throughput_rps_ratio": 0.6408755864817385,
+        "p50_us_ratio": 1.5141509433962264,
+        "p95_us_ratio": 1.6348547717842326,
+        "cpu_us_per_request_ratio": 1.4249530319835217,
+        "rss_peak_bytes_ratio": 1.068082788671024
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "throughput_rps_ratio": 1.0178951841457515,
+        "p50_us_ratio": 0.9805825242718447,
+        "p95_us_ratio": 1.0204081632653061,
+        "cpu_us_per_request_ratio": 0.9773740544692504,
+        "rss_peak_bytes_ratio": 1.0687787706471703
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "throughput_rps_ratio": 1.0243351020263842,
+        "p50_us_ratio": 0.9640831758034026,
+        "p95_us_ratio": 0.9513212795549375,
+        "cpu_us_per_request_ratio": 0.8887770472629323,
+        "rss_peak_bytes_ratio": 1.0611637347767253
+      }
+    ],
+    "phase_diagnostic": {
+      "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 1000 --repeats 3 --warmup 50 --concurrency 1 --phase-timing --bench-bin /tmp/ylong_http_target_s9d_blockon_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-blockon-driver-phase --figure-dir docs/figures/ylong-runtime-blockon-driver-phase",
+      "result_dir": "docs/benchmarks/results/ylong-runtime-blockon-driver-phase",
+      "finding": "Phase run remained mixed and did not overturn the non-phase focused counterexample. HTTP-over-HTTPS-proxy still failed the SOTA entry bar, and HTTPS-over-HTTPS-proxy phase throughput was below libcurl."
+    }
+  },
+  "decision": {
+    "sota_verified": false,
+    "candidate_retained": false,
+    "reason": "The candidate slightly helped HTTPS-origin proxy cells in the non-phase focused run, but it severely regressed HTTP-over-HTTPS-proxy throughput, p50, p95, and CPU. It fails every-cell throughput, p50, p95, CPU geomean, and flagship gates, so it must not enter full S9D or S10.",
+    "source_changes": "rolled_back",
+    "s9d_status_after_candidate": "incomplete",
+    "s10_allowed": false
+  },
+  "post_reject_verification": [
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_blockon_post_reject cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_executor_mng_info_ --offline",
+      "result": "pass: 12 executor manager tests passed"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_blockon_client_check cargo check -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --offline",
+      "result": "pass"
+    }
+  ],
+  "not_a_completion_claim": true
+}

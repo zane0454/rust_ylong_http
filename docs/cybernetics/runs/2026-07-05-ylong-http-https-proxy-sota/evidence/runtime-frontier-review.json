@@ -1,0 +1,276 @@
+{
+  "artifact_type": "runtime.frontier_review.evidence",
+  "schema_version": "1.0.0",
+  "evidence_id": "evidence.runtime-frontier-review",
+  "runtime_generation": "gen-002",
+  "required_step": "S9E-runtime-frontier-review",
+  "created_at": "2026-07-06T14:33:31+08:00",
+  "status": "completed_not_sota_evidence",
+  "not_a_completion_claim": true,
+  "goal_achieved_permitted": false,
+  "s9f_allowed": true,
+  "s10_allowed": false,
+  "fixed_sota_gate": {
+    "source": "requirements.control.json approved_control.what_counts_as_done",
+    "throughput_geomean_lower_ci": ">= 2.00",
+    "throughput_every_scenario_lower_ci": ">= 1.50",
+    "p50_every_scenario_upper_ci": "<= 0.60",
+    "p95_every_scenario_upper_ci": "<= 0.70",
+    "flagship": "throughput >= 3.00 or p95 <= 0.50",
+    "cpu_geomean": "<= 0.80",
+    "cpu_every_scenario": "<= 1.00",
+    "rss_every_scenario": "<= 1.10",
+    "errors": "0",
+    "repetitions": ">= 5 after warmup"
+  },
+  "current_gap_summary": {
+    "canonical_s8_baseline": {
+      "evidence": "evidence.sota-threshold-matrix",
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9911078683235877,
+      "throughput_min_ratio_ylong_over_libcurl": 0.7693578086403419,
+      "p50_max_ratio_ylong_over_libcurl": 1.249367088607595,
+      "p95_max_ratio_ylong_over_libcurl": 1.0695238095238095,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.9318700058881665,
+      "rss_max_ratio_ylong_over_libcurl": 1.0665753424657534,
+      "errors_sum_total": 0,
+      "threshold_effect": "fails throughput geomean, every-scenario throughput, p50, p95, flagship, and CPU gates"
+    },
+    "best_retained_runtime_candidate": {
+      "evidence": "evidence.runtime-dequeue-candidate-s9d-counterexample",
+      "candidate": "stacked FIFO wake suppression plus dequeue driver/wake_yield fast path",
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.1057178257457998,
+      "throughput_min_ratio_ylong_over_libcurl": 0.9344353474147318,
+      "p50_max_ratio_ylong_over_libcurl": 1.162037037037037,
+      "p95_max_ratio_ylong_over_libcurl": 1.3256880733944953,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.8565957153286522,
+      "cpu_max_ratio_ylong_over_libcurl": 0.938437346925084,
+      "rss_max_ratio_ylong_over_libcurl": 1.0693989071038252,
+      "errors_sum_total": 0,
+      "threshold_effect": "still fails throughput geomean, every-scenario throughput, p50, p95, and flagship gates"
+    },
+    "best_substrate_counterexample": {
+      "evidence": "evidence.tokio-dynamic-candidate",
+      "candidate": "tokio_base dynamic-budget same public client path",
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.1330784654917987,
+      "throughput_min_ratio_ylong_over_libcurl": 0.8090742221009196,
+      "p50_max_ratio_ylong_over_libcurl": 1.26994301994302,
+      "p95_max_ratio_ylong_over_libcurl": 1.1417081577939485,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.7791098777418566,
+      "cpu_max_ratio_ylong_over_libcurl": 0.9638943108493684,
+      "rss_max_ratio_ylong_over_libcurl": 1.0729193506828136,
+      "errors_sum_total": 0,
+      "threshold_effect": "runtime substrate can improve CPU but still fails throughput and latency gates"
+    },
+    "minimum_additional_effect_from_best_retained_candidate": {
+      "throughput_geomean_multiplier_needed": 1.808772551257852,
+      "worst_throughput_multiplier_needed": 1.6052485782723646,
+      "p50_max_reduction_factor_needed": 1.9367283950617284,
+      "p95_max_reduction_factor_needed": 1.893840104849279,
+      "cpu_geomean_reduction_factor_needed": 1.0707446441619953,
+      "interpretation": "A remaining candidate must be architecture-scale: another micro-optimization in request formatting, pool checkout, or TLS wrapper polling cannot plausibly close this gap."
+    }
+  },
+  "completion_gate_coverage": {
+    "enumerated_remaining_surfaces": true,
+    "classified_every_surface": true,
+    "plausible_surfaces_have_measurable_hypotheses": true,
+    "no_surface_case_has_external_next_decision": "not applicable because one S9F surface remains conditionally implementation-plausible"
+  },
+  "surface_inventory": [
+    {
+      "surface_id": "ylong_http_client_protocol_tls_connect",
+      "area": "ylong_http_client",
+      "classification": "too_small_or_not_performance_lever",
+      "decision": "do_not_enter_s9f_from_this_surface",
+      "evidence": [
+        "evidence.connect-2xx-tests",
+        "evidence.proxy-tls-mtls-tests",
+        "evidence.sync-async-proxy-tests",
+        "evidence.performance-causality"
+      ],
+      "reason": "Protocol, proxy TLS, mTLS, and shared semantics are correctness/security surfaces already covered by S1-S7 evidence. Changing them would risk semantics and cannot explain the remaining nested HTTPS-origin response-read gap."
+    },
+    {
+      "surface_id": "request_format_pool_body_drain",
+      "area": "ylong_http_client",
+      "classification": "too_small_by_measured_upper_bound",
+      "decision": "do_not_enter_s9f_from_this_surface",
+      "evidence": [
+        "evidence.performance-causality",
+        "evidence.ylong-client-production-lever-hard-negative",
+        "evidence.pool-capacity-candidate"
+      ],
+      "measured_bounds": {
+        "pool_checkout_us_per_request": "about 3 us in failing concurrent phase diagnostics",
+        "body_drain_us_per_request": "about 1.5 us in failing concurrent phase diagnostics",
+        "response_read_us_per_request": "about 1.0-1.3 ms in failing HTTPS-origin proxy cells"
+      },
+      "reason": "Even perfect elimination of pool checkout, request formatting, or body drain is far below the roughly 1.6x-1.9x throughput/tail-latency correction still required after the best retained candidate."
+    },
+    {
+      "surface_id": "nested_tls_wrapper_and_proxy_stream_shape",
+      "area": "ylong_http_client",
+      "classification": "rejected_or_refuted",
+      "decision": "do_not_enter_s9f_from_this_surface",
+      "evidence": [
+        "evidence.nested-tls-variant-candidate",
+        "evidence.progress-retry-candidate",
+        "evidence.runtime-readiness-profile",
+        "evidence.performance-causality"
+      ],
+      "metrics": {
+        "nested_tls_variant_throughput_geomean": 0.912976,
+        "nested_tls_variant_worst_throughput": 0.650132,
+        "progress_retry_throughput_geomean": 0.729120909873468,
+        "corrected_tls_shape": "HTTPS-origin proxy cells average about 5 SSL_read calls and 2 SSL-read pendings per request, not a call-count explosion"
+      },
+      "reason": "The dedicated nested TLS stream variant and progress-aware retry were tested and rejected. ylong_base and tokio_base also show identical nested pending counts in the readiness profile, so OpenSSL wrapper pending amplification is not a ylong-specific SOTA lever."
+    },
+    {
+      "surface_id": "benchmark_harness_model",
+      "area": "benchmark harness",
+      "classification": "benchmark_only_or_rejected",
+      "decision": "do_not_enter_s9f_from_this_surface",
+      "evidence": [
+        "evidence.single-driver-candidate",
+        "evidence.async-single-client-concurrency-candidate",
+        "evidence.async-single-client-maxh1-candidate",
+        "evidence.sync-client-candidate",
+        "evidence.real-client-path"
+      ],
+      "metrics": {
+        "single_driver_throughput_geomean": 0.9510120079327155,
+        "single_driver_cpu_geomean": 0.7092263234552487,
+        "single_client_maxh1_throughput_geomean": 1.022212,
+        "single_client_maxh1_worst_throughput": 0.675795
+      },
+      "reason": "Benchmark-only scheduling rewrites cannot support real-client-path SOTA evidence, and fair public-client model variants still fail throughput/tail gates. Harness work may improve measurement clarity, not the S9F performance outcome."
+    },
+    {
+      "surface_id": "dependency_tls_configuration",
+      "area": "dependency configuration",
+      "classification": "rejected_or_refuted",
+      "decision": "do_not_enter_s9f_from_this_surface",
+      "evidence": [
+        "evidence.tls-fingerprint-diagnostic",
+        "evidence.release-buffers-candidate",
+        "evidence.tokio-dynamic-candidate",
+        "evidence.performance-causality"
+      ],
+      "metrics": {
+        "release_buffers_throughput_geomean": 0.9683811453508115,
+        "release_buffers_worst_throughput": 0.6518086474926296,
+        "tokio_dynamic_throughput_geomean": 1.1330784654917987,
+        "tokio_dynamic_worst_throughput": 0.8090742221009196
+      },
+      "reason": "TLS version/cipher mismatch is refuted by fingerprint diagnostics, OpenSSL release-buffers regresses, and swapping runtime substrate improves CPU but does not meet fixed SOTA thresholds."
+    },
+    {
+      "surface_id": "ylong_runtime_micro_scheduling_knobs",
+      "area": "ylong_runtime",
+      "classification": "rejected",
+      "decision": "do_not_reuse_rejected_micro_knobs",
+      "evidence": [
+        "evidence.runtime-readiness-candidate-s9d-counterexample",
+        "evidence.runtime-dequeue-candidate-s9d-counterexample",
+        "evidence.runtime-blockon-driver-candidate-rejected",
+        "evidence.runtime-blockon-atomic-candidate-rejected",
+        "evidence.runtime-periodic-candidate-rejected",
+        "evidence.runtime-sleeper-steal-candidates-rejected",
+        "evidence.a2-optimistic-readiness-candidate-rejected",
+        "evidence.a2-no-yield-parker-candidate-rejected",
+        "evidence.a2-no-steal-sleep-candidate-rejected"
+      ],
+      "metrics": {
+        "best_retained_throughput_geomean": 1.1057178257457998,
+        "best_retained_worst_throughput": 0.9344353474147318,
+        "blockon_driver_throughput_geomean": 0.8742579984969208,
+        "blockon_atomic_throughput_geomean": 0.888817692896418,
+        "periodic_driver_throughput_geomean": 0.8989611910804547,
+        "sleeper_only_throughput_geomean": 1.050425,
+        "optimistic_readiness_nonphase_geomean": 0.8232239643361664,
+        "no_yield_parker_nonphase_geomean": 0.87023,
+        "no_steal_sleep_nonphase_geomean": 0.836509
+      },
+      "reason": "Worker count, block_on driving, periodic driver checks, generic park/yield/steal tweaks, and optimistic readiness-before-wait have all been rejected or fall far short. Repeating them would violate A2 forbidden substitutes."
+    },
+    {
+      "surface_id": "ylong_runtime_io_wake_worker_affinity",
+      "area": "ylong_runtime",
+      "classification": "still_implementation_plausible",
+      "decision": "enter_s9f_only_with_diagnostic_red_green_gate",
+      "evidence": [
+        "evidence.runtime-readiness-profile",
+        "evidence.strace-diagnostic",
+        "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/net/schedule_io.rs",
+        "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs"
+      ],
+      "causal_basis": {
+        "worker_migration": "27/32 requests touched multiple workers and 8/8 measured task ids appeared on multiple workers",
+        "correlation": "write_done_to_response_ready correlates with park events r=0.9587 and steal/search events r=0.9404",
+        "wake_to_poll_latency": "wake-to-next-poll p95 is only 145.871 us, so the issue is not post-wake dispatch alone",
+        "syscall_shape": "ylong has comparable recvfrom/sendto counts to libcurl but much higher futex, clock_nanosleep, epoll_wait, and sched_yield counts under strace",
+        "source_observation": "ScheduleIO::wake0 calls stored task wakers with wake_by_ref; the task schedule path enqueues based on current runtime context and can place IO-woken work on the driver/current worker rather than a stable task-local worker"
+      },
+      "minimum_measurable_hypothesis_for_s9f": {
+        "hypothesis": "A worker-affine IO readiness wake path that preserves HTTP/TLS semantics and reduces cross-worker migration/steal/park churn around nested TLS response-read can close a SOTA-scale part of the remaining gap.",
+        "required_red_diagnostic": "Before production change, trace IO readiness wake worker, task last-polled worker, enqueue worker, and next poll worker for HTTPS-over-HTTPS-proxy concurrency=8; show same-task wake locality mismatch or cross-worker migration in the slow cells.",
+        "candidate_shape": "Attach or derive task-locality information for IO readiness wake scheduling, then prefer enqueueing IO-woken tasks to the last-polled/home worker without changing readiness bits, TLS reads, CONNECT semantics, or public client API.",
+        "focused_pass_bar_before_canonical": {
+          "scenario": "https-over-https-proxy and proxy-mTLS-https-origin",
+          "requests": 1000,
+          "repeats": ">=3 focused before canonical",
+          "throughput_geomean_ratio_ylong_over_libcurl": ">= 1.50 focused and improving toward 2.00 canonical",
+          "worst_throughput_ratio_ylong_over_libcurl": ">= 1.20 focused before full S9F canonical",
+          "p95_max_ratio_ylong_over_libcurl": "<= 0.90 focused before full S9F canonical",
+          "cpu_geomean_ratio_ylong_over_libcurl": "<= 0.85",
+          "rss_max_ratio_ylong_over_libcurl": "<= 1.10",
+          "errors_sum_total": 0
+        },
+        "canonical_pass_bar": "unchanged fixed SOTA gate from requirements.control.json; no focused run can replace S9F canonical matrix"
+      },
+      "risk": "This is architecture-level runtime scheduling work. A narrow micro-tweak is unlikely to satisfy the hypothesis; if the red diagnostic does not show locality mismatch, S9F must reject this surface rather than patching."
+    }
+  ],
+  "frontier_decision": {
+    "s9e_completed": true,
+    "s9f_next_action": "Start S9F by adding a diagnostic-only red test/trace for IO readiness wake worker locality in ylong_runtime nested HTTPS-over-HTTPS-proxy. Do not change production scheduling before the diagnostic reproduces the mismatch.",
+    "surfaces_rejected_or_too_small": [
+      "ylong_http_client_protocol_tls_connect",
+      "request_format_pool_body_drain",
+      "nested_tls_wrapper_and_proxy_stream_shape",
+      "benchmark_harness_model",
+      "dependency_tls_configuration",
+      "ylong_runtime_micro_scheduling_knobs"
+    ],
+    "surfaces_still_plausible": [
+      "ylong_runtime_io_wake_worker_affinity"
+    ],
+    "forbidden_followups": [
+      "Do not weaken SOTA thresholds.",
+      "Do not mark O-causal-performance-evidence complete from this S9E evidence.",
+      "Do not run S10.",
+      "Do not re-run rejected micro-candidates without new contradictory evidence.",
+      "Do not use benchmark-only single-driver or runtime-substrate substitution as real-client SOTA evidence."
+    ]
+  },
+  "source_evidence": [
+    "requirements.control.json",
+    "run.control.json",
+    "gen-002/runtime.control.json",
+    "amendments/gen-002-runtime-frontier-review.patch.json",
+    "evidence.sota-threshold-matrix",
+    "evidence.performance-causality",
+    "evidence.runtime-readiness-profile",
+    "evidence.runtime-readiness-candidate-s9d-counterexample",
+    "evidence.runtime-dequeue-candidate-s9d-counterexample",
+    "evidence.runtime-blockon-driver-candidate-rejected",
+    "evidence.runtime-blockon-atomic-candidate-rejected",
+    "evidence.runtime-periodic-candidate-rejected",
+    "evidence.runtime-sleeper-steal-candidates-rejected",
+    "evidence.a2-optimistic-readiness-candidate-rejected",
+    "evidence.a2-no-yield-parker-candidate-rejected",
+    "evidence.a2-no-steal-sleep-candidate-rejected",
+    "evidence.ylong-client-production-lever-hard-negative"
+  ]
+}

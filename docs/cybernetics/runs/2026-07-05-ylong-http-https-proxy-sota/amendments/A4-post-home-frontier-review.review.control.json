@@ -1,0 +1,222 @@
+{
+  "artifact_type": "review.control",
+  "schema_version": "1.0.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json",
+    "parent_run": "amendments/A4-post-home-frontier-review.parent-run.control.json",
+    "parent_runtime": "gen-003/runtime.control.json",
+    "amendment": "amendments/gen-004-post-home-frontier-review.patch.json",
+    "candidate_generation": "amendments/A4-post-home-frontier-review.candidate-generation.json"
+  },
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+  },
+  "registry_bindings": {
+    "selected_agent_workflow": "superpowers-dispatching-parallel-agents"
+  },
+  "approved_control_hashes": {
+    "requirements.control.json": "sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc",
+    "run.control.json": "sha256:a7aa609e3f0da67ca6c0abbf24234270d3df4f4aee08970e3fbc18dfc924f655",
+    "gen-003/runtime.control.json": "sha256:de74d71f6cec97ad07b7135e6aa7f70404e0ee32bb4120fd7f5c2cf2ef7806c2",
+    "amendments/gen-004-post-home-frontier-review.patch.json": "sha256:58fa2a140c46b75aaca892a91c5f96ed2ebf58c5ac01eb87cd437a5824d812bc",
+    "amendments/A4-post-home-frontier-review.candidate-generation.json": "sha256:b3683ccb895edfc95457299b3051ec2e5dc254a3042bfdbad3cc8880da68e012"
+  },
+  "review_checks": [
+    {
+      "check_id": "intent-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "evidence/a4-post-home-frontier-review-transcript.txt"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "A4.patch->gen-004.strategy-refinement-only",
+        "fixed_SOTA_target->gen-004.preserved",
+        "numeric_hard_threshold_policy->gen-004.preserved",
+        "real_client_path_standard->gen-004.preserved",
+        "public_HTTP_TLS_proxy_semantics->gen-004.preserved"
+      ]
+    },
+    {
+      "check_id": "obligation-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "evidence/a4-post-home-frontier-review-transcript.txt"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "gen-003.S9H-rejected->gen-004.S9I-S9J",
+        "S10.final_counterexample_gate->gen-004.S10.preserved",
+        "rejected_home_stickiness_candidate->counterexample_not_completion_evidence",
+        "imported_historical_performance_evidence->background_until_S9J_revalidates"
+      ]
+    },
+    {
+      "check_id": "required-outcome-coverage",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "evidence/a4-post-home-frontier-review-transcript.txt"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "O-current-audit->S1-current-audit",
+        "O-protocol-correctness->S2-protocol-correctness",
+        "O-proxy-tls-mtls->S3-proxy-tls-mtls",
+        "O-sync-async-proxy-semantics->S4-sync-async-proxy-semantics",
+        "O-test-matrix->S5-test-matrix",
+        "O-benchmark-fairness->S6-benchmark-fairness",
+        "O-report-evidence-chain->S7-report-evidence-chain",
+        "O-sota-threshold-matrix->S8/S9I",
+        "O-causal-performance-evidence->S9J-post-home-frontier-candidate",
+        "O-final-counterexample-gate->S10-final-counterexample-gate"
+      ]
+    },
+    {
+      "check_id": "source-requirement-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "evidence/a4-post-home-frontier-review-transcript.txt"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "SR-sota-fixed-target->gen-004.preserved",
+        "SR-sota-hard-metrics->gen-004.preserved",
+        "SR-performance-threshold-above-contest-floor->gen-004.preserved",
+        "SR-implementation-level-convergence->post_home_frontier_candidate_only_after_review",
+        "SR-no-intermediate-terminal-statuses->S9I.not_terminal",
+        "SR-no-planned-stop-exit->gen-004.continues_execution"
+      ]
+    },
+    {
+      "check_id": "horizon-authority",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "evidence/a4-post-home-frontier-review-transcript.txt"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "gen-003.authority->gen-004.same_authority",
+        "authority_expanded->false",
+        "semantic_base_change->false",
+        "required_outcomes_changed->false",
+        "live_external_authority->unchanged"
+      ]
+    },
+    {
+      "check_id": "counterexample-gate",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "amendments/gen-004-post-home-frontier-review.patch.json",
+        "amendments/A4-post-home-frontier-review.candidate-generation.json",
+        "evidence/runtime-io-home-stickiness-candidate-rejected.json",
+        "evidence/a4-post-home-frontier-review-transcript.txt"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "CONNECT_RFC_semantics->parser_tests",
+        "all_outcomes->SOTA_claim",
+        "all_result_paths->SOTA_claim",
+        "benchmark_harness->real_client_path",
+        "benchmark_matrix->numeric_threshold_verdict",
+        "benchmark_result->numeric_SOTA_threshold_verdict",
+        "benchmark_result->performance_claim",
+        "blocked_or_goal_achieved",
+        "causal_explanation->final_SOTA_status",
+        "causal_performance_evidence->final_SOTA_status",
+        "completion_or_remaining_required_work",
+        "evidence->report_claims",
+        "forbidden_terminal_statuses->final_answer",
+        "libcurl_baseline->same_model_semantics",
+        "numeric_SOTA_threshold_verdict->causal_performance_evidence",
+        "numeric_SOTA_threshold_verdict->final_SOTA_status",
+        "numeric_threshold_result->causal_explanation",
+        "numeric_threshold_verdict->final_SOTA_status",
+        "numeric_threshold_verdict->goal_achieved_status",
+        "numeric_threshold_verdict->report_claims",
+        "pre_runtime_compile",
+        "proxy_tls_config->endpoint_evidence",
+        "real_client_path_evidence->numeric_threshold_verdict",
+        "remaining_required_work->next_required_action",
+        "report_claims->SOTA_claim",
+        "result_path:RP-current-audit-to-workplan->completion_gate",
+        "result_path:RP-current-audit-to-workplan->required_steps",
+        "required_outcome:O-benchmark-fairness->completion_gate",
+        "required_outcome:O-causal-performance-evidence->completion_gate",
+        "required_outcome:O-current-audit->completion_gate",
+        "required_outcome:O-final-counterexample-gate->completion_gate",
+        "required_outcome:O-protocol-correctness->completion_gate",
+        "required_outcome:O-proxy-tls-mtls->completion_gate",
+        "required_outcome:O-report-evidence-chain->completion_gate",
+        "required_outcome:O-sota-threshold-matrix->completion_gate",
+        "required_outcome:O-sync-async-proxy-semantics->completion_gate",
+        "required_outcome:O-test-matrix->completion_gate",
+        "required_outcomes->required_steps",
+        "required_result_paths->required_steps",
+        "required_steps->runtime_steps",
+        "required_steps->work_packages",
+        "result_path:RP-fair-benchmark-to-report->completion_gate",
+        "result_path:RP-fair-benchmark-to-report->required_steps",
+        "result_path:RP-final-counterexample-to-sota-claim->completion_gate",
+        "result_path:RP-final-counterexample-to-sota-claim->required_steps",
+        "result_path:RP-http-over-https-proxy->completion_gate",
+        "result_path:RP-http-over-https-proxy->required_steps",
+        "result_path:RP-https-over-https-proxy->completion_gate",
+        "result_path:RP-https-over-https-proxy->required_steps",
+        "result_path:RP-proxy-tls-fail-closed->completion_gate",
+        "result_path:RP-proxy-tls-fail-closed->required_steps",
+        "result_path:RP-real-client-causal-performance->completion_gate",
+        "result_path:RP-real-client-causal-performance->required_steps",
+        "result_path:RP-shared-proxy-semantics->completion_gate",
+        "result_path:RP-shared-proxy-semantics->required_steps",
+        "result_path:RP-sota-threshold-verdict->completion_gate",
+        "result_path:RP-sota-threshold-verdict->required_steps",
+        "source_audit->work_packages",
+        "source_requirements->required_outcomes",
+        "source_requirements->required_result_paths",
+        "source_requirements:SOTA_metrics->benchmark_matrix",
+        "test_matrix->SOTA_claim",
+        "A4.patch->gen-004.strategy-refinement-only",
+        "semantic_base->preserved",
+        "source_requirements->preserved",
+        "required_outcomes->preserved",
+        "required_result_paths->preserved",
+        "numeric_hard_threshold_policy->preserved",
+        "sota_fixed_target->preserved",
+        "same_process_libcurl_baseline->preserved",
+        "public_HTTP_TLS_proxy_semantics->preserved",
+        "authority->not_expanded",
+        "S9H.rejected_evidence->counterexample_not_completion_evidence",
+        "S9I.post_home_frontier_review->non_terminal_repetition_gate",
+        "S9J.post_home_frontier_candidate->O-causal-performance-evidence_only_after_unchanged_gates",
+        "S10.final_counterexample_gate->forbidden_until_S9J_passes_focused_canonical_and_runtime_counterexample_gate",
+        "unresolved_A4->goal_achieved_false_until_reviewed_and_orchestrated"
+      ],
+      "reviewer": {
+        "kind": "subagent",
+        "id": "019f366b-e2f5-7921-9df5-441fd854c895",
+        "evidence_ref": "evidence/a4-post-home-frontier-review-counterexample-gate.json",
+        "summary": "A4 is anchor-preserving and approved for compilation to gen-004; S9H rejection remains invalidating/background evidence and S9I/S9J must not weaken hard SOTA gates."
+      }
+    }
+  ]
+}

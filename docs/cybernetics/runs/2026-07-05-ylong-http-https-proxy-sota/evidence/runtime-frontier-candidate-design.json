@@ -1,0 +1,138 @@
+{
+  "artifact_type": "runtime.frontier_candidate.diagnostic_design",
+  "schema_version": "1.0.0",
+  "evidence_id": "evidence.runtime-frontier-candidate-design",
+  "runtime_generation": "gen-002",
+  "required_step": "S9F-runtime-frontier-candidate",
+  "created_at": "2026-07-06T14:46:09+08:00",
+  "status": "diagnostic_design_only_not_s9f_completion",
+  "not_a_completion_claim": true,
+  "goal_achieved_permitted": false,
+  "s10_allowed": false,
+  "authority_source": [
+    "run.control.json current_generation=gen-002",
+    "gen-002/runtime.control.json S9F-runtime-frontier-candidate",
+    "evidence.runtime-frontier-review frontier_decision.s9f_next_action"
+  ],
+  "s9e_selected_surface": {
+    "surface_id": "ylong_runtime_io_wake_worker_affinity",
+    "minimum_red_gate": "Trace IO readiness wake worker, task last-polled worker, enqueue worker, and next poll worker for HTTPS-over-HTTPS-proxy concurrency=8; show same-task wake locality mismatch or cross-worker migration in slow cells before any production scheduling patch.",
+    "forbidden_substitutes": [
+      "old runtime-readiness-profile traces without IO wake -> enqueue -> next-poll linkage",
+      "client-only TLS read/pending traces",
+      "benchmark-only single-driver or runtime-substrate substitution",
+      "another generic park/yield/steal micro-tweak without diagnostic red evidence",
+      "any S10 or goal_achieved claim before S9F canonical SOTA gates pass"
+    ]
+  },
+  "approaches_considered": [
+    {
+      "approach": "reuse existing a1-runtime-readiness-profile-warm traces",
+      "decision": "rejected_for_s9f_red_gate",
+      "reason": "Those traces show task migration and runtime park/steal/driver churn, but the current source no longer contains the trace helper and the old trace does not link IO readiness wake origin to scheduler enqueue and next poll for the same task."
+    },
+    {
+      "approach": "add more ylong_http_client TLS/read phase counters only",
+      "decision": "rejected_for_s9f_red_gate",
+      "reason": "Client counters can identify response-read waiting but cannot prove whether the task was enqueued on the IO driver/current worker, its last-polled worker, or another worker."
+    },
+    {
+      "approach": "add diagnostic-only ylong_runtime JSONL trace points around IO wake, task wake, enqueue, and task poll",
+      "decision": "selected",
+      "reason": "This is the narrowest behavior-preserving way to test the S9E hypothesis before changing scheduler behavior. The trace is opt-in by environment variable and does not change readiness bits, TLS I/O, CONNECT semantics, public APIs, or scheduling choices."
+    },
+    {
+      "approach": "implement worker-affine scheduling patch first",
+      "decision": "forbidden_now",
+      "reason": "S9E explicitly requires diagnostic red evidence before any production scheduling patch."
+    }
+  ],
+  "selected_diagnostic_design": {
+    "runtime_trace_control": {
+      "env_var": "YLONG_RUNTIME_TRACE_FILE",
+      "disabled_behavior": "No file is opened and trace calls return immediately when the environment variable is absent.",
+      "enabled_behavior": "Append one JSON object per line to the configured file; failures to open or write the diagnostic file must not affect runtime scheduling or HTTP behavior."
+    },
+    "trace_points": [
+      {
+        "event": "task_poll_enter",
+        "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/task_handle.rs",
+        "location": "TaskHandle::run before polling the future",
+        "fields": ["ts_ns", "event", "thread", "worker_id", "task_id"]
+      },
+      {
+        "event": "task_poll_pending",
+        "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/task_handle.rs",
+        "location": "TaskHandle::run when the future returns Poll::Pending",
+        "fields": ["ts_ns", "event", "thread", "worker_id", "task_id"]
+      },
+      {
+        "event": "task_wake_by_ref",
+        "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/waker.rs",
+        "location": "raw waker wake_by_ref(ptr)",
+        "fields": ["ts_ns", "event", "thread", "worker_id", "task_id", "wake_origin"]
+      },
+      {
+        "event": "task_wake_enqueue",
+        "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/task_handle.rs",
+        "location": "TaskHandle::wake_by_ref when need_enqueue(prev) is true",
+        "fields": ["ts_ns", "event", "thread", "worker_id", "task_id", "wake_origin"]
+      },
+      {
+        "event": "scheduler_enqueue_local",
+        "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+        "location": "MultiThreadScheduler::enqueue_under_ctx local worker queue push",
+        "fields": ["ts_ns", "event", "thread", "worker_id", "task_id", "target_worker_id", "lifo", "wake_origin"]
+      },
+      {
+        "event": "scheduler_enqueue_global",
+        "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+        "location": "MultiThreadScheduler::enqueue when no current worker or different runtime",
+        "fields": ["ts_ns", "event", "thread", "worker_id", "task_id", "lifo", "wake_origin"]
+      },
+      {
+        "event": "io_readiness_wake",
+        "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/net/schedule_io.rs",
+        "location": "ScheduleIO::wake0 around each reader/writer/list waker wake_by_ref call",
+        "fields": ["ts_ns", "event", "thread", "worker_id", "ready", "shutdown"]
+      }
+    ],
+    "correlation_method": [
+      "Use task_id as the raw ylong task Header pointer observed by the ylong raw waker and TaskHandle.",
+      "Use task_poll_enter/pending to derive each task's last-polled worker before a wake.",
+      "Use wake_origin=io_readiness on task_wake_by_ref/task_wake_enqueue events emitted under ScheduleIO::wake0 to distinguish IO readiness wakes from join/timer/channel wakes.",
+      "Use scheduler_enqueue_* to capture the worker context that enqueued the task and the target worker when local queueing occurs.",
+      "Use the next task_poll_enter after task_wake_enqueue to capture next-poll worker and wake-to-next-poll latency.",
+      "Join with existing client-trace response-read events by time window for HTTPS-over-HTTPS-proxy concurrency=8 slow cells."
+    ],
+    "red_gate_pass_condition": {
+      "scenario": "https-over-https-proxy",
+      "requests": 32,
+      "warmup": 8,
+      "concurrency": 8,
+      "ylong_concurrency_model": "single-client",
+      "required_trace_evidence": [
+        "At least one same-task IO-readiness wake chain with last_poll_worker_id, wake_worker_id, enqueue_worker_id or enqueue target, and next_poll_worker_id.",
+        "A material fraction of slow response-read cells must show last_poll_worker_id != enqueue_worker_id or last_poll_worker_id != next_poll_worker_id, or repeated cross-worker migration immediately around IO-readiness wake.",
+        "If no locality mismatch appears, S9F must reject this surface instead of applying a production scheduler patch."
+      ]
+    },
+    "green_candidate_preconditions": [
+      "Only after the red diagnostic is satisfied, a worker-affine IO readiness scheduling candidate may be designed.",
+      "The candidate must keep readiness status/ticks unchanged and must not alter TLS reads, CONNECT parsing, proxy TLS configuration, or public client APIs.",
+      "Focused performance must pass the S9E focused bar before any canonical S9F matrix can be treated as candidate evidence."
+    ]
+  },
+  "planned_verification_commands": [
+    "cargo test -p ylong_runtime --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml runtime_trace --features net,sync,fs,macros,time",
+    "cargo build -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io --release",
+    "YLONG_RUNTIME_TRACE_FILE=<result-dir>/ylong/runtime-frontier-trace.jsonl python3 docs/benchmarks/run_https_proxy_bench.py --clients ylong_http_client --baseline libcurl --scenarios https-over-https-proxy --requests 32 --warmup 8 --repeats 1 --concurrency 8 --ylong-concurrency-model single-client --phase-timing --result-dir docs/benchmarks/results/s9f-runtime-frontier-red",
+    "python3 <to-be-added analyzer> <result-dir>/ylong/runtime-frontier-trace.jsonl <result-dir>/ylong/client-trace.jsonl"
+  ],
+  "completion_effect": {
+    "S9F-runtime-frontier-candidate": "not_complete",
+    "O-causal-performance-evidence": "not_satisfied",
+    "S10-final-counterexample-gate": "disallowed",
+    "goal_achieved": false
+  }
+}

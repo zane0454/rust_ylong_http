@@ -1,0 +1,177 @@
+{
+  "artifact_type": "runtime.io_home_stickiness_review.evidence",
+  "schema_version": "1.0.0",
+  "evidence_id": "evidence.runtime-io-home-stickiness-review",
+  "runtime_generation": "gen-003",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "required_step": "S9G-runtime-io-home-stickiness-review",
+  "created_at": "2026-07-06T15:29:50+08:00",
+  "status": "completed_not_sota_evidence",
+  "not_a_completion_claim": true,
+  "goal_achieved_permitted": false,
+  "s9h_allowed": true,
+  "s10_allowed": false,
+  "review_question": "After the rejected S9F target-only IO-affinity candidate, is the remaining implementation surface specifically post-enqueue steal/search migration before first local poll, and can S9H be constrained to test that surface without weakening HTTP, CONNECT, TLS, mTLS, public client API, libcurl baseline, or fixed SOTA gates?",
+  "answer": "Yes. The original S9F red diagnostic showed IO-readiness wake locality mismatch in the real HTTPS-over-HTTPS-proxy slow path. The rejected target-only candidate then proved that changing only the enqueue target is insufficient: in the candidate smoke trace all 22/89 mismatches had target_worker_id equal to last_poll_worker_id while next_poll_worker_id differed. Therefore the remaining narrowed surface is not generic wake targeting; it is whether an IO-woken home-worker task can be protected from post-enqueue steal/search until its first local poll. This is a valid S9H candidate surface only if it is guarded by RED/GREEN evidence and then by the unchanged focused and canonical benchmark gates.",
+  "source_evidence": [
+    {
+      "evidence": "evidence.runtime-frontier-review",
+      "path": "evidence/runtime-frontier-review.json",
+      "role": "S9E architecture frontier and fixed gate source"
+    },
+    {
+      "evidence": "evidence.runtime-frontier-candidate-red-diagnostic",
+      "path": "evidence/runtime-frontier-candidate-red-diagnostic.json",
+      "role": "Original IO readiness locality mismatch red diagnostic"
+    },
+    {
+      "evidence": "evidence.runtime-frontier-candidate-io-affinity-rejected",
+      "path": "evidence/runtime-frontier-candidate-io-affinity-rejected.json",
+      "role": "Target-only IO-affinity candidate rejection and rollback evidence"
+    },
+    {
+      "evidence": "amendment.A3-runtime-io-home-stickiness.review",
+      "path": "amendments/A3-runtime-io-home-stickiness.review.control.json",
+      "role": "Independent review approval for the narrowed gen-003 strategy"
+    }
+  ],
+  "code_surface_review": {
+    "schedule_io": {
+      "path": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/net/schedule_io.rs",
+      "sha256": "84b91d578dd4fe9267a2fe1d064a3d71beb94fe0d4e3980f660649b360acf8ee",
+      "finding": "ScheduleIO::wake0 records io_readiness and calls waker.wake_by_ref without changing readiness bits. This is the correct origin marker; S9H must not change readiness semantics."
+    },
+    "task_wake_path": {
+      "path": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/task_handle.rs",
+      "sha256": "ecf923fa0aa82ad2dc973736725f46420113e02a9f2c5b3930f8c7985e69c790",
+      "finding": "TaskHandle::wake_by_ref records task_wake_enqueue and schedules the task with lifo=false when the task transitions to scheduling. This is the point where an IO-origin wake can be marked as a home-worker candidate without changing future polling semantics."
+    },
+    "enqueue_path": {
+      "path": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+      "sha256": "8498b376c00f4fa26dd55329dba3966b0b5561adce26cef533cd8dd1575e29d4",
+      "finding": "MultiThreadScheduler::enqueue_under_ctx currently enqueues same-runtime non-lifo tasks into the current worker local queue. The rejected target-only candidate modified this surface and was rolled back. S9H must not re-enter this as a target-only enqueue change; it must prove first-local-poll protection after a home-target enqueue."
+    },
+    "steal_path": {
+      "path": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+      "sha256": "8498b376c00f4fa26dd55329dba3966b0b5561adce26cef533cd8dd1575e29d4",
+      "finding": "MultiThreadScheduler::dequeue falls through to get_task_from_searching and steal after local/global/driver/wake_yield checks fail. This is the post-enqueue migration surface that can move a task away from its intended home before the home worker polls it."
+    },
+    "local_queue_steal": {
+      "path": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/queue.rs",
+      "sha256": "b124080d070e0d7e3bc9d4068b82f8260443a5b334c72caf5f074c8ede20e6b8",
+      "finding": "LocalQueue::steal_into steals half of the source queue when src_front_steal equals src_front_real. It has no task-level notion of first-local-poll protection, so a newly home-targeted IO task can be part of a steal batch before its home worker polls it."
+    }
+  },
+  "trace_findings": {
+    "original_red_diagnostic": {
+      "analysis_path": "docs/benchmarks/results/s9f-runtime-frontier-red/runtime-frontier-analysis.json",
+      "sha256": "eb1b9df1ef2d4a1b066f1744edfe06b121f54ff4c543073828a6f52185a54829",
+      "io_wake_enqueue_chains": 89,
+      "complete_chains": 89,
+      "locality_mismatches": 22,
+      "mismatch_ratio": 0.24719101123595505,
+      "interpretation": "The current runtime path has real same-task IO wake locality mismatch. This supported entering S9F but did not identify whether target enqueue or post-enqueue migration was responsible."
+    },
+    "target_only_candidate_smoke": {
+      "analysis_path": "docs/benchmarks/results/s9f-io-affinity-smoke/runtime-frontier-analysis.json",
+      "sha256": "9569cb2549583f89fb6f273ad0e92cf9eb1d53e99cbc9223011d55135ec8e5fd",
+      "io_wake_enqueue_chains": 89,
+      "complete_chains": 89,
+      "locality_mismatches": 22,
+      "mismatch_ratio": 0.24719101123595505,
+      "target_worker_equals_last_poll_but_next_poll_differs": 22,
+      "sample": [
+        {
+          "last_poll_worker_id": 15,
+          "wake_worker_id": 0,
+          "enqueue_worker_id": 0,
+          "target_worker_id": 15,
+          "next_poll_worker_id": 17,
+          "wake_to_next_poll_ns": 312729
+        },
+        {
+          "last_poll_worker_id": 16,
+          "wake_worker_id": 0,
+          "enqueue_worker_id": 0,
+          "target_worker_id": 16,
+          "next_poll_worker_id": 15,
+          "wake_to_next_poll_ns": 319093
+        },
+        {
+          "last_poll_worker_id": 17,
+          "wake_worker_id": 0,
+          "enqueue_worker_id": 0,
+          "target_worker_id": 17,
+          "next_poll_worker_id": 12,
+          "wake_to_next_poll_ns": 49615
+        }
+      ],
+      "interpretation": "The target-only patch got the target worker right for every remaining mismatch sample, yet another worker still performed the next poll. This is direct evidence that S9H must test post-enqueue steal/search protection rather than retesting target selection."
+    }
+  },
+  "rejected_target_only_candidate": {
+    "evidence": "evidence.runtime-frontier-candidate-io-affinity-rejected",
+    "focused_result_dir": "docs/benchmarks/results/s9f-io-affinity-focused",
+    "comparison_sha256": "3a66a8398630c84f94d2fde445e931acf5bdae960c10b6cfc2e74cafbc263083",
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.8936493002087945,
+      "throughput_min_ratio_ylong_over_libcurl": 0.7178252937857689,
+      "p50_max_ratio_ylong_over_libcurl": 1.4527588813303098,
+      "p95_max_ratio_ylong_over_libcurl": 1.2777020447906524,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.5334860361843325,
+      "rss_max_ratio_ylong_over_libcurl": 1.1636316337148804,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "invalidated_as_s9h_support": [
+      "IO-readiness worker-affine enqueue focused matrix as SOTA proof",
+      "scheduler_enqueue_io_affine target-worker trace as proof of home-worker stickiness",
+      "any target-only IO wake affinity candidate without anti-steal first-local-poll evidence"
+    ]
+  },
+  "s9h_candidate_contract": {
+    "candidate_surface": "ylong_runtime IO home-worker stickiness with anti-steal first-local-poll evidence",
+    "allowed_implementation_shape": [
+      "May attach task-local home-worker information only for IO-readiness wake scheduling.",
+      "May enqueue IO-woken tasks to the recorded home worker only when the home local queue has capacity and the scheduler is the same runtime.",
+      "May mark such a task or queue position as protected until the home worker performs its first local poll or the task is otherwise canceled/finished.",
+      "May make steal/search skip protected first-local-poll tasks while still allowing normal local pop, global queue work, cancellation, and later steals."
+    ],
+    "forbidden_implementation_shape": [
+      "Do not weaken or bypass Ready bits, ScheduleIO readiness, TLS/OpenSSL polling, CONNECT semantics, proxy TLS/mTLS behavior, request formatting, or public client API.",
+      "Do not globally disable stealing, globally reduce worker count, change block_on behavior, change periodic driver checks, or repeat rejected park/yield/sleeper micro-candidates.",
+      "Do not change benchmark baseline mechanics or rely on benchmark-only runtime substitution.",
+      "Do not treat focused-only results as canonical SOTA evidence."
+    ],
+    "required_red_green_gate": [
+      "RED: a unit or trace test must fail on current gen-003 source because an IO-woken home-targeted task can be stolen or next-polled by a non-home worker before first local poll.",
+      "GREEN: after the candidate, the same test must prove the protected IO-home task is either first polled by its home worker or remains available to the home worker, while ordinary non-protected tasks remain stealable.",
+      "Analyzer/trace gate: runtime trace must distinguish target-worker correctness from first-local-poll protection; target_worker_id alone is insufficient.",
+      "Safety gate: existing async_pool queue tests and benchmark harness tests must still pass; any full runtime --lib abort from pre-existing IO-safety tests is not pass evidence."
+    ],
+    "focused_pass_bar_before_canonical": {
+      "scenarios": [
+        "https-over-https-proxy",
+        "proxy-mTLS-https-origin"
+      ],
+      "requests": 1000,
+      "repeats": ">=3",
+      "throughput_geomean_ratio_ylong_over_libcurl": ">= 1.50 focused and improving toward 2.00 canonical",
+      "worst_throughput_ratio_ylong_over_libcurl": ">= 1.20",
+      "p95_max_ratio_ylong_over_libcurl": "<= 0.90",
+      "cpu_geomean_ratio_ylong_over_libcurl": "<= 0.85",
+      "rss_max_ratio_ylong_over_libcurl": "<= 1.10",
+      "errors_sum_total": 0
+    },
+    "canonical_gate": "Unchanged fixed SOTA gate from requirements.control.json: geomean throughput >=2.00 lower CI, every-scenario throughput >=1.50 lower CI, p50 <=0.60, p95 <=0.70, flagship throughput >=3.00 or p95 <=0.50, CPU geomean <=0.80, CPU every-scenario <=1.00, RSS every-scenario <=1.10, errors 0, repetitions >=5 after warmup."
+  },
+  "decision": {
+    "s9g_complete": true,
+    "s9h_allowed": true,
+    "s9h_next_action": "Use TDD to implement a narrow IO-home first-local-poll protection candidate in ylong_runtime, starting with a failing test that a home-targeted IO task is not stolen before the home worker polls it.",
+    "o_causal_performance_evidence_satisfied": false,
+    "s10_allowed": false,
+    "goal_achieved": false,
+    "reason": "S9G narrows the implementation surface and defines the next RED/GREEN and benchmark gates. It is not performance causality evidence and cannot satisfy S9H, S10, or the final SOTA claim."
+  }
+}

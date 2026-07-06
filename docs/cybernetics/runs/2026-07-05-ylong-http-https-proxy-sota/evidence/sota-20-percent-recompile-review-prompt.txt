@@ -1,0 +1,39 @@
+Review task: independent Counterexample Gate for requirements information sufficiency and gen-005 pre-runtime compilation of ylong_http HTTPS proxy SOTA control run.
+
+Reviewer id: `sota-20-percent-recompile-reviewer-v1`.
+
+Important provenance instruction:
+- Do not reject solely because `evidence/information_sufficiency_sota_20_percent_recompile.json`, `evidence/sota-20-percent-recompile-counterexample-gate.json`, or `evidence/sota-20-percent-recompile-review-transcript.txt` do not exist yet.
+- Your final response is the independent review transcript that will be materialized into those evidence files after you return.
+- Do reject if any semantic/control counterexample exists in the reviewed artifacts.
+
+User reapproval being encoded:
+- "SOTA按照20%,别的批准"
+
+Artifacts to review in this run directory:
+- requirements.control.json
+- run.control.json
+- gen-005/runtime.control.json
+- gen-005/review.control.json
+- evidence/human-reapproval-sota-20-percent.json
+- evidence/sota-20-percent-reapproval-impact.json
+
+Review two layers:
+A. information_sufficiency_check: does the new fact `F-sota-20-percent-human-reapproval` correctly supply the pre-design/pre-runtime fact needed to revise SOTA from the old stricter threshold to 20%, without inventing a weaker executor-only assumption?
+B. gen-005 pre-runtime chain: try to find a counterexample where these artifacts all look structurally valid but the run could still falsely claim SOTA, weaken the user's fixed goal, import old below-threshold performance as completion, skip fairness/real-client/causal evidence, or bypass the final runtime Counterexample Gate.
+
+Approval criteria:
+1. The old requirement treating 20% as only a contest floor is actually superseded by the user's latest approval.
+2. gen-005 requires the approved 20% threshold through S8 and does not count old 0.991x/1.106x/rejected S9H evidence as passing SOTA.
+3. gen-005 preserves S1-S7 completed evidence only for the same baseline outcomes.
+4. gen-005 still requires fair same-model libcurl-library benchmark evidence, real-client-path evidence, causal performance evidence, and S10 final runtime Counterexample Gate before goal_achieved.
+5. No non-SOTA terminal status or planned stop is introduced.
+
+Return a concise verdict with exactly these fields:
+- status: pass/fail
+- verdict: approved/needs_revision/blocked
+- smallest_counterexample: ...
+- required_fixes: ...
+- checked_transformations_for_A: ...
+- checked_transformations_for_B: ...
+- reason: ...

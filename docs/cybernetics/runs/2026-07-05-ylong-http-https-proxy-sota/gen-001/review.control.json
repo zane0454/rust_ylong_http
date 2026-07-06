@@ -1,0 +1,194 @@
+{
+  "artifact_type": "review.control",
+  "schema_version": "1.0.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json",
+    "parent_run": "amendments/A1-runtime-readiness-s9.parent-run.control.json",
+    "parent_runtime": "gen-000/runtime.control.json",
+    "amendment": "amendments/gen-001-runtime-readiness-authority.patch.json"
+  },
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+  },
+  "registry_bindings": {
+    "selected_agent_workflow": "superpowers-dispatching-parallel-agents"
+  },
+  "approved_control_hashes": {
+    "requirements.control.json": "sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc",
+    "run.control.json": "sha256:0416ee4a2f69c343ab244f8a8723e1b76e7e75e7428bbea7248f06837e183bce",
+    "gen-000/runtime.control.json": "sha256:de27499d29081e616c88d4df369ea30191b8eaf444b0dde24c92b60673d49048",
+    "amendments/gen-001-runtime-readiness-authority.patch.json": "sha256:c68075dcc6f54a4a881b7f046a03353752e6b8e0e9442b86662a3108a0fb9b4b"
+  },
+  "review_checks": [
+    {
+      "check_id": "intent-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "human.approval.A1-gen-001.intent-preserved"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "A1.patch->gen-001.authority-expansion-only",
+        "fixed_SOTA_target->gen-001.preserved",
+        "numeric_hard_threshold_policy->gen-001.preserved"
+      ]
+    },
+    {
+      "check_id": "obligation-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "human.approval.A1-gen-001.obligations-preserved"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "gen-000.S9->gen-001.S9A-S9D",
+        "S10.final_counterexample_gate->gen-001.S10.preserved",
+        "rejected_A2_candidates->counterexamples_not_production_fixes"
+      ]
+    },
+    {
+      "check_id": "required-outcome-coverage",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "human.approval.A1-gen-001.outcome-coverage-preserved"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "O-current-audit->S1-current-audit",
+        "O-protocol-correctness->S2-protocol-correctness",
+        "O-proxy-tls-mtls->S3-proxy-tls-mtls",
+        "O-sync-async-proxy-semantics->S4-sync-async-proxy-semantics",
+        "O-test-matrix->S5-test-matrix",
+        "O-benchmark-fairness->S6-benchmark-fairness",
+        "O-report-evidence-chain->S7-report-evidence-chain",
+        "O-sota-threshold-matrix->S8-sota-threshold-matrix",
+        "O-causal-performance-evidence->S9D-runtime-canonical-matrix",
+        "O-final-counterexample-gate->S10-final-counterexample-gate"
+      ]
+    },
+    {
+      "check_id": "source-requirement-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "human.approval.A1-gen-001.source-requirements-preserved"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "SR-sota-fixed-target->gen-001.preserved",
+        "SR-sota-hard-metrics->gen-001.preserved",
+        "SR-implementation-level-convergence->runtime-source-authority-expanded"
+      ]
+    },
+    {
+      "check_id": "horizon-authority",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "human.approval.A1-gen-001.authority-expanded"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "gen-000.authority->gen-001.pinned_ylong_runtime_authority",
+        "human_approval->authority_expansion_allowed",
+        "live_external_authority->unchanged"
+      ]
+    },
+    {
+      "check_id": "counterexample-gate",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "human.approval.A1-gen-001.counterexample-reviewed",
+        "review.counterexample-gate.no-counterexample-found"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "CONNECT_RFC_semantics->parser_tests",
+        "all_outcomes->SOTA_claim",
+        "all_result_paths->SOTA_claim",
+        "benchmark_harness->real_client_path",
+        "benchmark_matrix->numeric_threshold_verdict",
+        "benchmark_result->numeric_SOTA_threshold_verdict",
+        "benchmark_result->performance_claim",
+        "blocked_or_goal_achieved",
+        "causal_explanation->final_SOTA_status",
+        "causal_performance_evidence->final_SOTA_status",
+        "completion_or_remaining_required_work",
+        "evidence->report_claims",
+        "forbidden_terminal_statuses->final_answer",
+        "libcurl_baseline->same_model_semantics",
+        "numeric_SOTA_threshold_verdict->causal_performance_evidence",
+        "numeric_SOTA_threshold_verdict->final_SOTA_status",
+        "numeric_threshold_result->causal_explanation",
+        "numeric_threshold_verdict->final_SOTA_status",
+        "numeric_threshold_verdict->goal_achieved_status",
+        "numeric_threshold_verdict->report_claims",
+        "pre_runtime_compile",
+        "proxy_tls_config->endpoint_evidence",
+        "real_client_path_evidence->numeric_threshold_verdict",
+        "remaining_required_work->next_required_action",
+        "report_claims->SOTA_claim",
+        "result_path:RP-current-audit-to-workplan->completion_gate",
+        "result_path:RP-current-audit-to-workplan->required_steps",
+        "required_outcome:O-benchmark-fairness->completion_gate",
+        "required_outcome:O-causal-performance-evidence->completion_gate",
+        "required_outcome:O-current-audit->completion_gate",
+        "required_outcome:O-final-counterexample-gate->completion_gate",
+        "required_outcome:O-protocol-correctness->completion_gate",
+        "required_outcome:O-proxy-tls-mtls->completion_gate",
+        "required_outcome:O-report-evidence-chain->completion_gate",
+        "required_outcome:O-sota-threshold-matrix->completion_gate",
+        "required_outcome:O-sync-async-proxy-semantics->completion_gate",
+        "required_outcome:O-test-matrix->completion_gate",
+        "required_outcomes->required_steps",
+        "required_result_paths->required_steps",
+        "required_steps->runtime_steps",
+        "required_steps->work_packages",
+        "result_path:RP-fair-benchmark-to-report->completion_gate",
+        "result_path:RP-fair-benchmark-to-report->required_steps",
+        "result_path:RP-final-counterexample-to-sota-claim->completion_gate",
+        "result_path:RP-final-counterexample-to-sota-claim->required_steps",
+        "result_path:RP-http-over-https-proxy->completion_gate",
+        "result_path:RP-http-over-https-proxy->required_steps",
+        "result_path:RP-https-over-https-proxy->completion_gate",
+        "result_path:RP-https-over-https-proxy->required_steps",
+        "result_path:RP-proxy-tls-fail-closed->completion_gate",
+        "result_path:RP-proxy-tls-fail-closed->required_steps",
+        "result_path:RP-real-client-causal-performance->completion_gate",
+        "result_path:RP-real-client-causal-performance->required_steps",
+        "result_path:RP-shared-proxy-semantics->completion_gate",
+        "result_path:RP-shared-proxy-semantics->required_steps",
+        "result_path:RP-sota-threshold-verdict->completion_gate",
+        "result_path:RP-sota-threshold-verdict->required_steps",
+        "source_audit->work_packages",
+        "source_requirements->required_outcomes",
+        "source_requirements->required_result_paths",
+        "source_requirements:SOTA_metrics->benchmark_matrix",
+        "test_matrix->SOTA_claim"
+      ],
+      "reviewer": {
+        "kind": "human",
+        "id": "user",
+        "evidence_ref": "evidence/gen-001-amendment-counterexample-gate.json"
+      }
+    }
+  ]
+}

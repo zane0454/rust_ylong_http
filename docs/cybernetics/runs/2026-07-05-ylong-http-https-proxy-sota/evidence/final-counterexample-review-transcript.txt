@@ -1,0 +1,13 @@
+verdict: approved
+
+No blocking counterexample found.
+
+S8 is supported by `evidence/sota-threshold-matrix.json` and `docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20/https_proxy_bench_comparison.csv`: throughput geomean `1.2280045027021633 >= 1.20`, total errors `0`, 9 ylong/libcurl cells, same-process `libcurl` baseline, scenarios `http-over-https-proxy`, `https-over-https-proxy`, and `proxy-mtls-https-origin`.
+
+S9 is supported. The passing benchmark uses the public sync path at [https_proxy_bench.rs](/home/ender/Workspace/rust_ylong_http/ylong_http_client/src/bin/https_proxy_bench.rs:517): `Request::get(...)`, `client.request(request)`, then public `BodyReader::read_all_with_buf`. That routes through [client.rs](/home/ender/Workspace/rust_ylong_http/ylong_http_client/src/sync_impl/client.rs:108), [http1.rs](/home/ender/Workspace/rust_ylong_http/ylong_http_client/src/sync_impl/conn/http1.rs:29), [reader.rs](/home/ender/Workspace/rust_ylong_http/ylong_http_client/src/sync_impl/reader.rs:128), and [encoder.rs](/home/ender/Workspace/rust_ylong_http/ylong_http/src/h1/request/encoder.rs:860). `performance-causality.json` gives an ablation chain `1.117 -> 1.126 -> 1.188 -> 1.228`, and the libcurl harness uses in-process `curl_easy_perform`, response-code checks, TLS/mTLS env parity, and body byte accounting.
+
+S10 coverage is sufficient for the runtime counterexample event: I reviewed S8, S9, all 10 required steps, all 10 required outcomes, and all 9 required result paths: `RP-current-audit-to-workplan`, `RP-final-counterexample-to-sota-claim`, `RP-http-over-https-proxy`, `RP-https-over-https-proxy`, `RP-proxy-tls-fail-closed`, `RP-shared-proxy-semantics`, `RP-fair-benchmark-to-report`, `RP-sota-threshold-verdict`, `RP-real-client-causal-performance`.
+
+Current files still have no recorded `counterexample.review.completed` event, so `verify_runtime_progress.py` correctly fails until this review is recorded and the verifier is rerun. Residual risks are non-blocking: the approved threshold is geomean, so weak cells like `http-over-https-proxy/1000 = 0.890x` do not fail S8; ylong does not explicitly inspect response status in the benchmark, but the local servers emit 200 and body bytes/chunks match.
+
+reviewer id: `independent-s10-reviewer-orion`

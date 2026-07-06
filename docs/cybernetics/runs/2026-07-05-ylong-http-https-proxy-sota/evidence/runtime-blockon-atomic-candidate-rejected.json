@@ -1,0 +1,124 @@
+{
+  "artifact_type": "runtime_candidate_rejection_evidence",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-001",
+  "created_at": "2026-07-06T13:57:32+08:00",
+  "candidate": {
+    "id": "runtime-blockon-atomic",
+    "scope": "ylong_runtime multi-thread block_on notification fast path",
+    "retained_baseline_changes": [
+      "S9C local FIFO enqueue wake suppression",
+      "dequeue fast path that runs the worker IO driver once after a wake-yield before sleeping",
+      "Rust 1.96-compatible JoinSet pointer comparison/hash fix"
+    ],
+    "tested_change": {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/block_on.rs",
+      "summary": "Replace the block_on Parker Mutex<bool> notification state with AtomicBool plus a Mutex<()> used only for condvar waiting. The candidate intended to avoid taking the block_on mutex on already-notified wakeups without letting block_on drive the IO driver."
+    }
+  },
+  "pre_benchmark_verification": [
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_blockon_atomic_tests cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime --lib block_on --offline",
+      "status": "pass",
+      "summary": "3 block_on tests passed."
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_blockon_atomic_exec cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_executor_mng_info_ --offline",
+      "status": "pass",
+      "summary": "12 executor manager tests passed."
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_blockon_atomic_release cargo build -p ylong_http_client --bin https_proxy_bench --release --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --offline",
+      "status": "pass",
+      "summary": "Release benchmark binary built successfully."
+    }
+  ],
+  "focused_benchmark": {
+    "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 1000 --repeats 3 --warmup 50 --concurrency 1 --bench-bin /tmp/ylong_http_target_s9d_blockon_atomic_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-blockon-atomic-focused --figure-dir docs/figures/ylong-runtime-blockon-atomic-focused",
+    "status": "pass",
+    "result_dir": "docs/benchmarks/results/ylong-runtime-blockon-atomic-focused",
+    "figure_dir": "docs/figures/ylong-runtime-blockon-atomic-focused",
+    "baseline": "libcurl",
+    "ylong_client": "async",
+    "ylong_concurrency_model": "threaded",
+    "concurrency": 1,
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "phase_timing": false,
+    "artifacts": [
+      {
+        "path": "docs/benchmarks/results/ylong-runtime-blockon-atomic-focused/https_proxy_bench_comparison.csv",
+        "sha256": "3f0a6f51b9c529a1f700646381eddc9e99b19dd4b4dc8b0b9f2193045a4f94de"
+      },
+      {
+        "path": "docs/benchmarks/results/ylong-runtime-blockon-atomic-focused/https_proxy_bench_summary.csv",
+        "sha256": "365a67d0894448767776bd30c1f2d2ecbeba3614072e1589570f78b84f235834"
+      },
+      {
+        "path": "docs/benchmarks/results/ylong-runtime-blockon-atomic-focused/https_proxy_bench_env.json",
+        "sha256": "fd124750fcc531b81afde941ee3f28a0a8402459b63140f720d2eecf80682b04"
+      }
+    ]
+  },
+  "focused_results": {
+    "scenario_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "throughput_rps_ratio_ylong_over_libcurl": 0.8228234813393146,
+        "p50_us_ratio_ylong_over_libcurl": 1.2105263157894735,
+        "p95_us_ratio_ylong_over_libcurl": 1.2282608695652173,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 1.2366362409815612,
+        "rss_peak_bytes_ratio_ylong_over_libcurl": 1.0632121540965818,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "throughput_rps_ratio_ylong_over_libcurl": 1.0204732110172223,
+        "p50_us_ratio_ylong_over_libcurl": 0.9693053311793215,
+        "p95_us_ratio_ylong_over_libcurl": 1.0143472022955522,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9280036823689906,
+        "rss_peak_bytes_ratio_ylong_over_libcurl": 1.0693391115926327,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "throughput_rps_ratio_ylong_over_libcurl": 0.8362377872171411,
+        "p50_us_ratio_ylong_over_libcurl": 1.1741176470588237,
+        "p95_us_ratio_ylong_over_libcurl": 1.153448275862069,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9715738683003983,
+        "rss_peak_bytes_ratio_ylong_over_libcurl": 1.0605489773950485,
+        "errors_sum": 0
+      }
+    ],
+    "aggregate": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.888817692896418,
+      "throughput_min_ratio_ylong_over_libcurl": 0.8228234813393146,
+      "throughput_max_ratio_ylong_over_libcurl": 1.0204732110172223,
+      "p50_max_ratio_ylong_over_libcurl": 1.2105263157894735,
+      "p95_max_ratio_ylong_over_libcurl": 1.2282608695652173,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.036945262032338,
+      "cpu_max_ratio_ylong_over_libcurl": 1.2366362409815612,
+      "rss_max_ratio_ylong_over_libcurl": 1.0693391115926327,
+      "errors_sum_total": 0
+    }
+  },
+  "sota_gate_assessment": {
+    "fixed_target": "S9D focused candidate must plausibly lead to the approved SOTA matrix before running a full canonical matrix.",
+    "status": "rejected_before_full_s9d",
+    "reasons": [
+      "Focused throughput geomean is 0.889x, below both libcurl parity and the approved 2.00x geomean lower-bound target.",
+      "Worst focused throughput ratio is 0.823x, below libcurl parity and far below the approved 1.50x every-scenario lower-bound target.",
+      "Focused p50 and p95 both regress in at least one scenario, with p50 max 1.211x and p95 max 1.228x.",
+      "CPU/request regresses, with CPU geomean 1.037x and HTTP-over-HTTPS-proxy CPU 1.237x.",
+      "The only throughput win is 1.020x in HTTPS-over-HTTPS-proxy, not a plausible flagship gap."
+    ]
+  },
+  "decision": {
+    "candidate_status": "rejected",
+    "source_changes": "must_be_rolled_back",
+    "s9d_status": "incomplete",
+    "s10_allowed": false,
+    "goal_achieved_allowed": false
+  }
+}

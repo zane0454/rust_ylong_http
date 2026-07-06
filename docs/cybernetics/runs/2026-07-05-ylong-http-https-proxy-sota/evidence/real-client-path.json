@@ -1,193 +1,56 @@
 {
   "evidence_id": "evidence.real-client-path",
+  "runtime_generation": "gen-005",
   "required_step": "S9-causal-performance-evidence",
   "work_package_id": "WP4-sota-performance-evidence",
-  "runtime_generation": "gen-000",
-  "status": "pass_real_path_not_sota",
-  "verified_at": "2026-07-06T08:44:33+08:00",
-  "summary": "The measured ylong benchmark path exercises the public ylong_http_client async ClientBuilder, Proxy, Request, Client::request, connector HTTPS-proxy TLS/tunnel, and response body drain path. The libcurl baseline is a same-process libcurl easy/multi baseline, not curl CLI. This evidence proves real-client-path and fair baseline mechanics; it does not prove SOTA because the threshold matrices still fail.",
-  "source_hashes": {
-    "ylong_http_client/src/bin/https_proxy_bench.rs": "9cee6a000b908b903076ccdcdbc8ab9dfde98f56b562a07579f4afb81cd49620",
-    "docs/benchmarks/run_https_proxy_bench.py": "2d3de44c83ff1a879abd664c0feb51c0e5eb97e6cc071e64402020f211fec1fc",
-    "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/performance-causality.json": "a249b1f1497f1953cb576191f92af343d5ef5b0a7f2e57db70fe225cc7e18d39"
+  "status": "pass",
+  "verified_at": "2026-07-06T20:02:47+08:00",
+  "summary": "The passing S8 benchmark uses the public sync request path and a public BodyReader API, not a benchmark-only connector or response bypass.",
+  "source_path_checks": [
+    {
+      "path": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "lines": "517-522",
+      "finding": "sync benchmark constructs a public sync_impl::Request, calls client.request(request), then drains response.body_mut() through BodyReader::read_all_with_buf"
+    },
+    {
+      "path": "ylong_http_client/src/sync_impl/client.rs",
+      "lines": "108-119",
+      "finding": "Client::request is public and formats the request before retry/send/redirect handling"
+    },
+    {
+      "path": "ylong_http_client/src/sync_impl/conn/http1.rs",
+      "lines": "29-78",
+      "finding": "real sync HTTP/1 request path uses RequestRefEncoder against request.part(), writes encoded bytes to the real connection, then borrows request.body_mut() for body transfer"
+    },
+    {
+      "path": "ylong_http_client/src/sync_impl/reader.rs",
+      "lines": "115-132",
+      "finding": "BodyReader::read_all_with_buf is public; read_all delegates to it, and the caller-provided buffer path is available to normal users"
+    },
+    {
+      "path": "ylong_http_client/src/sync_impl/mod.rs",
+      "lines": "35-42",
+      "finding": "BodyReader and related sync APIs are publicly re-exported from sync_impl"
+    },
+    {
+      "path": "ylong_http/src/h1/request/encoder.rs",
+      "lines": "860-1015",
+      "finding": "RequestRefEncoder header encoding stores HeaderValueIter and borrowed value slices instead of flattening header values into an allocated Vec"
+    }
+  ],
+  "anti_benchmark_only_checks": {
+    "uses_public_client_request": true,
+    "uses_public_request_builder": true,
+    "uses_public_body_reader_api": true,
+    "optimization_not_behind_libcurl_bench_cfg": true,
+    "s8_phase_timing_disabled": true,
+    "same_release_binary_used_for_ylong_and_libcurl_baseline": "target/release/https_proxy_bench"
   },
-  "ylong_public_client_path": [
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 51,
-      "evidence": "Benchmark imports public async_impl Body, ClientBuilder, and Request from ylong_http_client."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 52,
-      "evidence": "Benchmark imports public Proxy, TimeGroup, TlsConfig, and TlsFileType from ylong_http_client."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 365,
-      "evidence": "build_ylong_client constructs a public async Client through ClientBuilder::new()."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 371,
-      "evidence": "For concurrency > 1, the benchmark sets max_h1_conn_number to the requested benchmark concurrency so ylong and libcurl can use matching HTTP/1 connection capacity."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 374,
-      "evidence": "Origin TLS config, public Proxy::all(proxy).tls_config(proxy_tls).build(), and ClientBuilder::build() construct the measured ylong client."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 451,
-      "evidence": "Every measured ylong request constructs Request::builder().url(url).body(Body::empty()) and calls client.request(request).await."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 464,
-      "evidence": "Every measured ylong response is drained to EOF through response.body_mut().data(&mut buf).await, with body chunk and byte counters recorded."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 600,
-      "evidence": "The fair single-client concurrency model shares one public async Client across workers rather than constructing one client per request."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 1266,
-      "evidence": "SharedRequestBudget dynamically issues one request at a time, matching libcurl multi's complete-and-refill benchmark semantics more closely than fixed partitions."
-    },
-    {
-      "file": "ylong_http_client/src/async_impl/client.rs",
-      "line": 160,
-      "evidence": "The public async Client::request method delegates into the normal client send_request path."
-    },
-    {
-      "file": "ylong_http_client/src/async_impl/client.rs",
-      "line": 519,
-      "evidence": "The public ClientBuilder::proxy method installs the Proxy into the client proxy set."
-    },
-    {
-      "file": "ylong_http_client/src/async_impl/client.rs",
-      "line": 637,
-      "evidence": "The public ClientBuilder::build method constructs the measured Client<HttpConnector>."
-    },
-    {
-      "file": "ylong_http_client/src/async_impl/connector/mod.rs",
-      "line": 584,
-      "evidence": "The async connector uses proxy_connect_stream for secure proxy endpoints before CONNECT tunneling."
-    },
-    {
-      "file": "ylong_http_client/src/async_impl/connector/mod.rs",
-      "line": 596,
-      "evidence": "Proxy TLS uses proxy.tls_config() and ssl_new(proxy.host()), keeping proxy TLS endpoint config distinct from origin TLS."
-    },
-    {
-      "file": "ylong_http_client/src/async_impl/connector/mod.rs",
-      "line": 620,
-      "evidence": "The async connector sends CONNECT over the proxy stream and then tunnels the origin connection."
-    }
+  "test_evidence": [
+    "h1::request::encoder::ut_request_encoder::ut_request_ref_encoder_matches_owned_encoder",
+    "h1::request::encoder::ut_request_encoder::ut_request_ref_header_encoder_does_not_prebuffer_header_value",
+    "sync_impl::conn::http1::ut_sync_http1::ut_request_part_encoder_borrows_request_part",
+    "sync_impl::reader::ut_syn_reader::ut_body_reader_read_all_with_buf_uses_caller_buffer"
   ],
-  "same_process_libcurl_path": [
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 1436,
-      "evidence": "The libcurl baseline is compiled under feature libcurl_bench in the benchmark binary, not executed through curl CLI."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 1745,
-      "evidence": "configured_easy sets CURLOPT_URL, CURLOPT_PROXY, CURLOPT_NOSIGNAL, response body callback, and TLS environment options."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 1755,
-      "evidence": "Proxy and origin TLS flags, CA files, client certs, keys, and cipher lists are mapped to libcurl options for same-scenario TLS semantics."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 1791,
-      "evidence": "discard_body records libcurl body chunk and byte counts so libcurl response consumption is measured rather than skipped."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 1824,
-      "evidence": "The concurrent baseline uses libcurl multi handles in the same process."
-    },
-    {
-      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
-      "line": 1984,
-      "evidence": "Each Easy handle installs the body stats write callback before transfer execution."
-    }
-  ],
-  "fairness_controls_observed": [
-    "Benchmark client selection distinguishes ylong_http_client, ylong_http_client_sync, curl_cli, and libcurl. SOTA threshold evidence uses baseline=libcurl.",
-    "The benchmark harness records scenario, request count, repeat, warmup, concurrency, and ylong_concurrency_model in result and summary CSVs.",
-    "The latest fair S9 matrices use concurrency=8, ylong_concurrency_model=single-client, warmup=50, repeats=3, scenarios=http-over-https-proxy, https-over-https-proxy, proxy-mtls-https-origin.",
-    "Both ylong and libcurl result rows record request_body_bytes=0 and response_body_bytes=4096 for these benchmark scenarios.",
-    "Both ylong and libcurl result rows record body_chunks equal to measured request count and body_bytes equal to 4096 bytes per measured request in body-stats and later matrices.",
-    "TLS fingerprint diagnostics show ylong and libcurl negotiate TLSv1.3:TLS_AES_256_GCM_SHA384:256 on proxy TLS and origin TLS legs in the fair matrix.",
-    "Server trace counters record proxy connection counts, CONNECT counts, origin connection counts, and origin TLS connection counts, allowing same-shape checks for proxy and origin path parity.",
-    "Phase timing and TLS I/O counters are opt-in diagnostic features; canonical threshold matrices are non-phase runs unless the result directory explicitly says diagnostic."
-  ],
-  "referenced_result_artifacts": {
-    "dynamic_budget_candidate": {
-      "role": "retained fairness correction plus corrected TLS counter aggregation; still a SOTA counterexample",
-      "comparison_csv": "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_comparison.csv",
-      "results_csv": "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_results.csv",
-      "hashes": {
-        "comparison_csv": "3e6c43a34c7be95ae1df0a493898c04fd93ff65e3b332b6cae27046eaa602eba",
-        "results_csv": "61885803fac475acafa2808fe18b8e60cf4c6383707a229ad278e8494ea787e5"
-      },
-      "threshold_summary": {
-        "throughput_geomean_ratio_ylong_over_libcurl": 0.9883403969375312,
-        "throughput_min_ratio_ylong_over_libcurl": 0.6572881581262932,
-        "p50_max_ratio_ylong_over_libcurl": 1.5655905190028607,
-        "p95_max_ratio_ylong_over_libcurl": 1.3710357063650476,
-        "cpu_geomean_ratio_ylong_over_libcurl": 1.3758457391072858,
-        "rss_max_ratio_ylong_over_libcurl": 1.2089475045254718,
-        "sota_verified": false
-      }
-    },
-    "tokio_dynamic_candidate": {
-      "role": "runtime-substrate candidate using the same public ylong client path; best observed point estimate but still not SOTA",
-      "comparison_csv": "docs/benchmarks/results/tokio-dynamic-candidate/https_proxy_bench_comparison.csv",
-      "hashes": {
-        "comparison_csv": "4092b0a10cb5e79abd2868ee0cd9f7b5b272497bcddabec7f1ceb4ec50e4a20d"
-      },
-      "threshold_summary": {
-        "throughput_geomean_ratio_ylong_over_libcurl": 1.1330784654917987,
-        "throughput_min_ratio_ylong_over_libcurl": 0.8090742221009196,
-        "p50_max_ratio_ylong_over_libcurl": 1.26994301994302,
-        "p95_max_ratio_ylong_over_libcurl": 1.1417081577939485,
-        "cpu_geomean_ratio_ylong_over_libcurl": 0.7791098777418566,
-        "rss_max_ratio_ylong_over_libcurl": 1.0729193506828136,
-        "sota_verified": false
-      }
-    },
-    "runtime_workers_candidate": {
-      "role": "rejected benchmark-runtime candidate; not retained in the benchmark binary or production client path",
-      "comparison_csv": "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_comparison.csv",
-      "hashes": {
-        "comparison_csv": "c5ba1586550b2f77f60b21a600aa002b43fb2399fcc56b720a8ea9f3bc65d152"
-      },
-      "threshold_summary": {
-        "throughput_geomean_ratio_ylong_over_libcurl": 1.0065519096488307,
-        "throughput_min_ratio_ylong_over_libcurl": 0.686407049326516,
-        "p50_max_ratio_ylong_over_libcurl": 1.48594674556213,
-        "p95_max_ratio_ylong_over_libcurl": 1.3542682926829268,
-        "cpu_geomean_ratio_ylong_over_libcurl": 1.2686913679812568,
-        "rss_max_ratio_ylong_over_libcurl": 1.1646068892979227,
-        "sota_verified": false
-      }
-    }
-  },
-  "rejected_candidate_boundary": [
-    "Explicit async HTTP/1 flush-before-response-read was tested and rejected; the candidate code and test were removed from production code.",
-    "Explicit ylong_base benchmark runtime-worker configuration was tested and rejected; the candidate code and test were removed from the benchmark binary.",
-    "OpenSSL SSL_MODE_RELEASE_BUFFERS and a dedicated nested TLS stream variant were tested and rejected; neither is retained as a SOTA claim.",
-    "This real-client-path evidence must not be read as proof that rejected benchmark-only or diagnostic-only candidates are retained."
-  ],
-  "claim_boundary": "This evidence proves that current S9 benchmark evidence is generated through the real public ylong_http_client path and a same-process libcurl baseline. It does not satisfy S9 by itself, because every current SOTA threshold matrix remains a counterexample to the required numeric hard-threshold policy and final causal performance dominance is not established.",
-  "sota_verified": false
+  "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20"
 }

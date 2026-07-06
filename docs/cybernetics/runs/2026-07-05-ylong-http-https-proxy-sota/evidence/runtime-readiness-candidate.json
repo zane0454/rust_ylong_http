@@ -1,0 +1,184 @@
+{
+  "schema": "s9c-runtime-readiness-candidate/v1",
+  "evidence_id": "evidence.runtime-readiness-candidate",
+  "runtime_generation": "gen-001",
+  "created_at": "2026-07-06T13:33:00+08:00",
+  "status": "pass",
+  "required_step": "S9C-runtime-readiness-candidate",
+  "summary": "Implemented a vendored ylong_runtime readiness scheduling candidate that avoids waking another worker for same-runtime local FIFO wake_by_ref enqueue when the local queue is not full. The candidate is behavior-preserving for HTTP/TLS/proxy semantics and is S9C evidence only; S9D canonical SOTA matrix remains pending.",
+  "candidate": {
+    "name": "same-runtime local FIFO enqueue wake suppression",
+    "causal_basis": [
+      "S9B found that ylong_base/tokio_base have the same HTTP response poll count and the same nested TLS pending shape.",
+      "S9B found ylong-specific worker migration and strong response-wait correlation with park and steal/search activity.",
+      "Source review showed TaskHandle::wake_by_ref schedules with lifo=false, and MultiThreadScheduler::enqueue_under_ctx previously returned true after ordinary same-runtime local FIFO enqueue, causing schedule() to call wake_up_rand_one(false)."
+    ],
+    "behavior_change": "For same-runtime worker context and lifo=false, enqueue_under_ctx now returns false after local queue enqueue unless the local queue was already full and may overflow to the global queue.",
+    "preserved_behaviors": [
+      "Foreign-runtime context still enqueues to the global queue and returns true.",
+      "No-worker context still enqueues to the global queue and returns true.",
+      "LIFO scheduling behavior is kept unchanged, including the existing return true path when replacing an occupied lifo slot.",
+      "A full local queue conservatively returns true so global overflow can still wake another worker.",
+      "HTTP, TLS, proxy CONNECT formatting, parsing, mTLS, and origin/proxy TLS configuration code are not changed."
+    ]
+  },
+  "source_changes": {
+    "vendored_runtime": {
+      "path": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime",
+      "source_head": "0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c",
+      "source_tree": "380ed16c9693833112f3a533a9504a7190c94ba1",
+      "copied_from": "/home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7",
+      "excluded": [
+        ".git",
+        ".cargo-ok"
+      ]
+    },
+    "workspace_patch": {
+      "file": "Cargo.toml",
+      "patch_source": "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git",
+      "patched_packages": [
+        "ylong_io",
+        "ylong_runtime",
+        "ylong_runtime_macros"
+      ],
+      "dependency_tree_result": "ylong_http and ylong_http_client both resolve to the same vendored ylong_runtime path; no duplicate runtime crate was observed."
+    },
+    "runtime_files": [
+      {
+        "path": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+        "change": "Added a unit test and changed same-runtime FIFO local enqueue wake hint from unconditional true to true only when local queue remaining capacity is zero."
+      },
+      {
+        "path": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/join_set.rs",
+        "change": "Applied the Rust 1.96 dangerous_implicit_autorefs compatibility fix needed to compile the vendored runtime; this makes implicit raw-pointer autorefs explicit and does not alter scheduling behavior."
+      }
+    ],
+    "hashes": {
+      "Cargo.toml": "sha256:2ecdb782ab12d9d264b070942d63997829083b6e6bacddd1557bf341153415c5",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs": "sha256:66d66a301dc39ae0bc941793c4804b81806ff2a7f79137501a546088c1863720",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/join_set.rs": "sha256:105790ae20212a825769c165962f6ec0a1c838e2818ebc15a4f59a013138cffb",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke/https_proxy_bench_summary.csv": "sha256:9a8f9787b7bc6bd7f8b3b022c0524aae9f9e049dd61d6bac3dc6d13c5e2c4846",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke/https_proxy_bench_comparison.csv": "sha256:142b23ecf1a98fdd467113189e183c0e764a4ea19d0d90d539db39a87f87cfe6",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke/https_proxy_bench_results.csv": "sha256:76b93705247b5a163d7bb977a0ece0bb777f04b9121f57459898d9de9a09dcf6",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke/https_proxy_bench_env.json": "sha256:c609019449e11ff128275579738bd7d74ee59fb31bb6adf250c42c0de9a71905"
+    }
+  },
+  "tdd": {
+    "red": {
+      "command": "source ~/.cargo/env && cargo test -p ylong_runtime ut_executor_mng_info_local_fifo_enqueue_does_not_wake_another_worker",
+      "workdir": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime",
+      "result": "failed as expected before implementation",
+      "failure": "assertion failed: !should_wake"
+    },
+    "green": {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9c_runtime cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_executor_mng_info_local_fifo_enqueue_does_not_wake_another_worker",
+      "result": "pass",
+      "tests": "1 passed; 0 failed"
+    }
+  },
+  "verification": {
+    "dependency_tree": {
+      "command": "source ~/.cargo/env && cargo tree -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0 --offline | rg -n \"ylong_runtime|ylong_io|ylong_runtime_macros|https://gitee\"",
+      "result": "pass",
+      "relevant_lines": [
+        "ylong_http -> ylong_runtime v1.0.0 (/home/ender/Workspace/rust_ylong_http/ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime)",
+        "ylong_http_client -> ylong_runtime v1.0.0 (/home/ender/Workspace/rust_ylong_http/ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime)"
+      ]
+    },
+    "commands": [
+      {
+        "name": "ylong_http_client check with vendored runtime",
+        "command": "source ~/.cargo/env && cargo check -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io --offline",
+        "result": "pass"
+      },
+      {
+        "name": "CONNECT parser and 2xx tunnel response semantics",
+        "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9c cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_tunnel_request_and_response --offline -- --nocapture",
+        "result": "pass",
+        "tests": "1 passed; 0 failed"
+      },
+      {
+        "name": "bench binary tests",
+        "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9c cargo test -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io --offline",
+        "result": "pass",
+        "tests": "7 passed; 0 failed"
+      },
+      {
+        "name": "async HTTPS proxy TLS and mTLS E2E",
+        "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9c cargo test -p ylong_http_client --test sdv_async_https_proxy_tls --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0 -- --nocapture --test-threads=1",
+        "result": "pass",
+        "tests": "5 passed; 0 failed"
+      },
+      {
+        "name": "sync HTTPS proxy TLS E2E",
+        "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9c cargo test -p ylong_http_client --test sdv_sync_https_proxy_tls --no-default-features --features sync,async,http1_1,tokio_base,c_openssl_3_0 -- --nocapture --test-threads=1",
+        "result": "pass",
+        "tests": "2 passed; 0 failed"
+      },
+      {
+        "name": "release benchmark binary build",
+        "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9c_release cargo build -p ylong_http_client --bin https_proxy_bench --release --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io --offline",
+        "result": "pass"
+      }
+    ],
+    "non_gating_observations": [
+      {
+        "name": "http3-over-proxy reject unit",
+        "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9c_h3 RUSTFLAGS='-C link-arg=/lib/x86_64-linux-gnu/libssl.so -C link-arg=/lib/x86_64-linux-gnu/libcrypto.so' cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,http3,ylong_base,c_openssl_3_0 ut_http3_over_proxy_is_rejected -- --nocapture",
+        "result": "failed before reaching S9C runtime behavior",
+        "failure": "Existing test mock TestStream in ylong_http_client/src/async_impl/pool.rs does not implement ConnInfo::quic_conn under the http3 test feature set.",
+        "gate_effect": "Not used as S9C pass evidence; S9C does not modify http3 proxy rejection code."
+      }
+    ]
+  },
+  "smoke_benchmark": {
+    "purpose": "S9C real-path smoke only; not the S9D canonical SOTA matrix.",
+    "command": "python docs/benchmarks/run_https_proxy_bench.py --requests 32 --repeats 1 --warmup 8 --concurrency 8 --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario https-over-https-proxy --bench-bin /tmp/ylong_http_target_s9c_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke --figure-dir docs/figures/ylong-runtime-readiness-candidate-smoke",
+    "result": "pass",
+    "artifacts": [
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate-smoke/https_proxy_bench_env.json"
+    ],
+    "metrics": {
+      "scenario": "https-over-https-proxy",
+      "requests": 32,
+      "concurrency": 8,
+      "ylong_concurrency_model": "single-client",
+      "baseline": "libcurl",
+      "ylong_http_client": {
+        "errors_sum": 0,
+        "throughput_rps_mean": 4610.977584885215,
+        "p50_us_mean": 1386.0,
+        "p95_us_mean": 2623.0,
+        "cpu_us_per_request_mean": 149.59375,
+        "rss_peak_bytes_max": 19030016,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_tls_connections_mean": 8.0,
+        "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+        "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+      },
+      "libcurl": {
+        "errors_sum": 0,
+        "throughput_rps_mean": 3544.874454947859,
+        "p50_us_mean": 1768.0,
+        "p95_us_mean": 4391.0,
+        "cpu_us_per_request_mean": 196.9375,
+        "rss_peak_bytes_max": 16445440
+      },
+      "ratios_vs_libcurl": {
+        "throughput_rps_ratio": 1.3007449610660577,
+        "p95_us_ratio": 0.5973582327488044,
+        "cpu_us_per_request_ratio": 0.7596001269438274,
+        "rss_peak_bytes_ratio": 1.1571606475716065
+      }
+    }
+  },
+  "s9c_verdict": {
+    "step_complete": true,
+    "sota_claim_permitted": false,
+    "next_required_step": "S9D-runtime-canonical-matrix",
+    "reason": "The candidate is implemented and smoke-verified, but the approved canonical matrix and final counterexample gate have not run."
+  }
+}

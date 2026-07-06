@@ -1,0 +1,241 @@
+{
+  "artifact_type": "runtime.post_home_frontier_review.evidence",
+  "schema_version": "1.0.0",
+  "evidence_id": "evidence.post-home-frontier-review",
+  "runtime_generation": "gen-004",
+  "required_step": "S9I-post-home-frontier-review",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "created_at": "2026-07-06T16:15:00+08:00",
+  "status": "completed_no_s9j_candidate_authorized",
+  "not_a_completion_claim": true,
+  "goal_achieved_permitted": false,
+  "s9j_authorized": false,
+  "s10_allowed": false,
+  "fixed_sota_gate_preserved": {
+    "throughput_geomean_lower_ci": ">= 2.00",
+    "throughput_every_scenario_lower_ci": ">= 1.50",
+    "p50_every_scenario_upper_ci": "<= 0.60",
+    "p95_every_scenario_upper_ci": "<= 0.70",
+    "flagship": "throughput >= 3.00 or p95 <= 0.50",
+    "cpu_geomean": "<= 0.80",
+    "cpu_every_scenario": "<= 1.00",
+    "rss_every_scenario": "<= 1.10",
+    "errors": "0",
+    "repetitions": ">= 5 after warmup for canonical SOTA verification"
+  },
+  "source_evidence": [
+    "evidence/runtime-frontier-review.json",
+    "evidence/runtime-frontier-candidate-io-affinity-rejected.json",
+    "evidence/runtime-io-home-stickiness-candidate-rejected.json",
+    "evidence/runtime-readiness-candidate-s9d-counterexample.json",
+    "evidence/runtime-dequeue-candidate-s9d-counterexample.json",
+    "evidence/runtime-blockon-driver-candidate-rejected.json",
+    "evidence/runtime-blockon-atomic-candidate-rejected.json",
+    "evidence/runtime-periodic-candidate-rejected.json",
+    "evidence/runtime-sleeper-steal-candidates-rejected.json",
+    "evidence/a2-optimistic-readiness-candidate-rejected.json",
+    "evidence/a2-no-yield-parker-candidate-rejected.json",
+    "evidence/a2-no-steal-sleep-candidate-rejected.json",
+    "evidence/ylong-client-production-lever-hard-negative.json",
+    "evidence/performance-causality.json",
+    "evidence/sota-threshold-matrix.json"
+  ],
+  "post_home_gap_math": {
+    "best_retained_runtime_candidate": {
+      "evidence": "evidence.runtime-dequeue-candidate-s9d-counterexample",
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.1057178257457998,
+      "throughput_min_ratio_ylong_over_libcurl": 0.9344353474147318,
+      "p50_max_ratio_ylong_over_libcurl": 1.162037037037037,
+      "p95_max_ratio_ylong_over_libcurl": 1.3256880733944953,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.8565957153286522,
+      "rss_max_ratio_ylong_over_libcurl": 1.0693989071038252,
+      "additional_effect_needed_to_reach_fixed_gate": {
+        "throughput_geomean_multiplier_needed": 1.808772551257852,
+        "worst_throughput_multiplier_needed": 1.6052485782723647,
+        "p50_max_reduction_factor_needed": 1.9367283950617284,
+        "p95_max_reduction_factor_needed": 1.893840104849279,
+        "cpu_geomean_reduction_factor_needed": 1.0707446441619952
+      }
+    },
+    "s9h_home_stickiness_candidate": {
+      "evidence": "evidence.runtime-io-home-stickiness-candidate-rejected",
+      "trace_locality_mismatch_ratio": 0.0,
+      "trace_locality_mismatch_chains": "0/91",
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9142476707872258,
+      "throughput_min_ratio_ylong_over_libcurl": 0.695293846080088,
+      "p50_max_ratio_ylong_over_libcurl": 1.4491253123884327,
+      "p95_max_ratio_ylong_over_libcurl": 1.3300620869216904,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.4920395318681197,
+      "cpu_max_ratio_ylong_over_libcurl": 1.5609526657446515,
+      "rss_max_ratio_ylong_over_libcurl": 1.1469145365349858,
+      "additional_effect_needed_to_reach_fixed_gate": {
+        "throughput_geomean_multiplier_needed": 2.187589098574956,
+        "worst_throughput_multiplier_needed": 2.157361479978458,
+        "p50_max_reduction_factor_needed": 2.4152088539807215,
+        "p95_max_reduction_factor_needed": 1.900088695602415,
+        "cpu_geomean_reduction_factor_needed": 1.8650494148351495,
+        "rss_reduction_needed_to_meet_1_10": 1.042649578668169
+      },
+      "interpretation": "The only previously remaining IO locality surface is no longer SOTA-plausible: removing traced locality mismatches increased latency, CPU, RSS, and regressed nested HTTPS proxy throughput."
+    }
+  },
+  "surface_decisions": [
+    {
+      "surface_id": "ylong_http_client_protocol_tls_connect",
+      "decision": "exclude_from_s9j",
+      "classification": "correctness_security_surface_not_sota_scale_performance_surface",
+      "evidence": [
+        "evidence.connect-2xx-tests",
+        "evidence.proxy-tls-mtls-tests",
+        "evidence.sync-async-proxy-tests"
+      ],
+      "reason": "Changing CONNECT/TLS/mTLS semantics would violate preserved public HTTPS proxy semantics and cannot explain the measured response-read/runtime gap."
+    },
+    {
+      "surface_id": "request_format_pool_body_drain",
+      "decision": "exclude_from_s9j",
+      "classification": "measured_upper_bound_too_small",
+      "evidence": [
+        "evidence.performance-causality",
+        "evidence.ylong-client-production-lever-hard-negative",
+        "evidence.pool-capacity-candidate"
+      ],
+      "reason": "Existing phase evidence puts pool checkout around 3 us/request and body drain around 1.5 us/request, while remaining nested HTTPS proxy response-read gaps are about 1.0-1.3 ms/request and require roughly 1.6x-1.9x throughput/tail correction even after the best retained candidate."
+    },
+    {
+      "surface_id": "nested_tls_wrapper_and_proxy_stream_shape",
+      "decision": "exclude_from_s9j",
+      "classification": "dedicated_variants_rejected_or_refuted",
+      "evidence": [
+        "evidence.nested-tls-variant-candidate",
+        "evidence.progress-retry-candidate",
+        "evidence.runtime-readiness-profile",
+        "evidence.performance-causality"
+      ],
+      "reason": "Nested TLS variant and progress retry were rejected; corrected TLS I/O diagnostics show about 5 SSL_read calls and 2 SSL-read pendings per nested request, not a ylong-specific call-count explosion."
+    },
+    {
+      "surface_id": "benchmark_harness_model",
+      "decision": "exclude_from_s9j",
+      "classification": "benchmark_only_or_fair_public_client_variants_fail",
+      "evidence": [
+        "evidence.single-driver-candidate",
+        "evidence.async-single-client-concurrency-candidate",
+        "evidence.async-single-client-maxh1-candidate",
+        "evidence.sync-client-candidate",
+        "evidence.real-client-path"
+      ],
+      "reason": "Benchmark-only shortcuts cannot satisfy real-client-path evidence; fair public-client variants still miss throughput and tail gates."
+    },
+    {
+      "surface_id": "dependency_tls_configuration",
+      "decision": "exclude_from_s9j",
+      "classification": "tls_parameter_mismatch_refuted",
+      "evidence": [
+        "evidence.tls-fingerprint-diagnostic",
+        "evidence.release-buffers-candidate",
+        "evidence.tokio-dynamic-candidate",
+        "evidence.performance-causality"
+      ],
+      "reason": "Server-observed TLS fingerprints match libcurl, release-buffers regresses, and tokio_base/dynamic budget improves CPU but still fails throughput, latency, and RSS threshold shape."
+    },
+    {
+      "surface_id": "ylong_runtime_micro_scheduling_knobs",
+      "decision": "exclude_from_s9j",
+      "classification": "repeated_micro_knobs_rejected_or_too_small",
+      "evidence": [
+        "evidence.runtime-readiness-candidate-s9d-counterexample",
+        "evidence.runtime-dequeue-candidate-s9d-counterexample",
+        "evidence.runtime-blockon-driver-candidate-rejected",
+        "evidence.runtime-blockon-atomic-candidate-rejected",
+        "evidence.runtime-periodic-candidate-rejected",
+        "evidence.runtime-sleeper-steal-candidates-rejected",
+        "evidence.a2-optimistic-readiness-candidate-rejected",
+        "evidence.a2-no-yield-parker-candidate-rejected",
+        "evidence.a2-no-steal-sleep-candidate-rejected"
+      ],
+      "reason": "FIFO wake suppression plus dequeue fast path is the best retained runtime point but still needs about 1.81x additional geomean throughput and about 1.94x p50 tail correction; later block_on, periodic, sleeper/steal, no-yield, no-steal, and optimistic-readiness attempts regress or remain below the focused gate."
+    },
+    {
+      "surface_id": "ylong_runtime_io_wake_worker_affinity",
+      "decision": "exclude_from_s9j",
+      "classification": "target_only_affinity_rejected",
+      "evidence": [
+        "evidence.runtime-frontier-candidate-io-affinity-rejected"
+      ],
+      "reason": "S9F target-worker IO affinity had a plausible red diagnostic but failed focused all-scenario benchmarks: throughput geomean 0.8936x, worst throughput 0.7178x, p50 max 1.4528x, p95 max 1.2777x, CPU geomean 1.5335x."
+    },
+    {
+      "surface_id": "ylong_runtime_io_home_worker_stickiness",
+      "decision": "exclude_from_s9j",
+      "classification": "home_stickiness_mechanism_rejected_after_locality_counterexample_eliminated",
+      "evidence": [
+        "evidence.runtime-io-home-stickiness-candidate-rejected"
+      ],
+      "reason": "S9H eliminated traced IO wake locality mismatches to 0/91 but worsened focused performance. This is the strongest counterexample against treating post-enqueue home stickiness as SOTA-scale."
+    }
+  ],
+  "frontier_decision": {
+    "s9i_completed": true,
+    "s9j_allowed": false,
+    "selected_s9j_surface": null,
+    "reason": "No remaining implementation surface is both non-duplicative and supported by measured SOTA-scale headroom under the unchanged hard thresholds. The last plausible IO locality surface was measured directly and rejected after its causal trace mismatch was eliminated.",
+    "reject_continuation_to_s9j": true,
+    "does_not_weaken_target": true,
+    "does_not_change_baseline": true,
+    "does_not_change_public_http_tls_proxy_semantics": true,
+    "does_not_convert_rejected_evidence_to_completion": true
+  },
+  "counterexamples_considered": [
+    "Combining prior runtime micro-knobs is not authorized as a fresh S9J surface because the best stacked retained point is still far below the hard thresholds and subsequent related knobs were rejected.",
+    "Switching benchmark topology or using benchmark-only parent polling cannot satisfy real-client-path or same-model libcurl evidence.",
+    "Changing TLS verification, mTLS material, cipher policy, proxy/origin topology, or response validation would violate the fixed benchmark fairness contract.",
+    "Claiming SOTA from correctness, mTLS, or report evidence is forbidden because O-causal-performance-evidence and O-final-counterexample-gate remain unsatisfied."
+  ],
+  "completion_effect": {
+    "S9I-post-home-frontier-review": "complete_review_no_s9j_candidate_authorized",
+    "S9J-post-home-frontier-candidate": "not_started_not_authorized_by_s9i_evidence",
+    "O-sota-threshold-matrix": "review_extended_with_post_home_negative_frontier_evidence",
+    "O-causal-performance-evidence": "not_satisfied",
+    "S10-final-counterexample-gate": "disallowed",
+    "goal_achieved": false
+  },
+  "artifact_hashes": {
+    "evidence/runtime-frontier-review.json": "sha256:b534610c83a9d541b7ef919e86d3da9bdb47540bf5cbbd82f8837a88e774e5e1",
+    "evidence/runtime-frontier-candidate-io-affinity-rejected.json": "sha256:be821360b82225f6a053e931156cd43199d8809c6e194c4404c5663edfa8e73a",
+    "evidence/runtime-io-home-stickiness-candidate-rejected.json": "sha256:d6fb2665614a20427880ea6e378dfc7a8588808ac9714eb3bd1fe00a0d668251",
+    "evidence/runtime-readiness-candidate-s9d-counterexample.json": "sha256:86b14f9c023a3a5a2d9f93ece8ef0554e4d190fbf7be83b1c6eb9b5b7ceced3e",
+    "evidence/runtime-dequeue-candidate-s9d-counterexample.json": "sha256:01091370594b0afbc51d4a5bd13f1bb242f3a22c12bcb2992d70410e9dab5706",
+    "evidence/runtime-blockon-driver-candidate-rejected.json": "sha256:5b60086c03f2de60d017eb195c4ebe2e4fadcff4816cda2915025b261dfa7599",
+    "evidence/runtime-blockon-atomic-candidate-rejected.json": "sha256:1707306cc5c6475e894ad1ad2ce32224fb6959e4ff648189f56c36ade86c4d3f",
+    "evidence/runtime-periodic-candidate-rejected.json": "sha256:16e260fd8f1424e07e1c41faa90c498f0f0e8976c2c87f0c3561a8dd7447082f",
+    "evidence/runtime-sleeper-steal-candidates-rejected.json": "sha256:4c181eea9459301f094ddb050ed996b8360882466a8ed5c443a8f8d88c0ba8be",
+    "evidence/a2-optimistic-readiness-candidate-rejected.json": "sha256:1cd8a4f3bf87cfdb32d4de43c801e46ba5bcfe5ccfb44eb20793541844ecf1df",
+    "evidence/a2-no-yield-parker-candidate-rejected.json": "sha256:cff6ab5eb6a41da7d9d1980b89663a99c105e11a3983db75b76895eff4610213",
+    "evidence/a2-no-steal-sleep-candidate-rejected.json": "sha256:c1bf7d95241f79f5bcc76fde0533629e40cf0c5bd8ce556ba0bcab594ce22e3a",
+    "evidence/ylong-client-production-lever-hard-negative.json": "sha256:cc3daafce6c7355fdc03c8e8a5e07431685a0eb6e85ab897da7d246d829a40de",
+    "evidence/performance-causality.json": "sha256:2d50f9316231a27026a13f09317f22b00c36fe85992e265c6e7ba3be59160cb7",
+    "evidence/sota-threshold-matrix.json": "sha256:26de660b855f8159707f63ca223baf2f8c28a569ec17a302299efb8472cf004a"
+  },
+  "independent_challenge_review": {
+    "reviewer": {
+      "kind": "subagent",
+      "id": "019f3677-2d51-7993-b4dd-4c58e3697fee",
+      "nickname": "Banach"
+    },
+    "completed_at": "2026-07-06T16:16:00+08:00",
+    "verdict": "no_s9j_candidate_justified",
+    "summary": "Independent explorer review found no non-duplicative S9J surface with SOTA-scale measured headroom. The strongest counterexample is S9H: the last causal IO locality surface proved the mechanism and eliminated 0/91 trace mismatches, but focused performance moved farther from SOTA.",
+    "matched_frontier_decision": true,
+    "excluded_surface_ids": [
+      "ylong_http_client_protocol_tls_connect",
+      "request_format_pool_body_drain",
+      "nested_tls_wrapper_and_proxy_stream_shape",
+      "benchmark_harness_model",
+      "dependency_tls_configuration",
+      "ylong_runtime_micro_scheduling_knobs",
+      "ylong_runtime_io_wake_worker_affinity",
+      "ylong_runtime_io_home_worker_stickiness"
+    ]
+  }
+}
