@@ -1,0 +1,42 @@
+{
+  "artifact_type": "https_proxy_benchmark_old_new_comparison",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "status": "pass",
+  "old_result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20",
+  "new_result_dir": "docs/benchmarks/results/gen006-benchmark-trust-repaired",
+  "old_recomputed_comparison_csv": "docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv",
+  "old_ratio_of_means_geomean": 1.2280045027021633,
+  "old_recomputed_paired_geomean": 1.2312033650719278,
+  "new_repaired_paired_geomean": 1.1043129514854073,
+  "old_recomputed_gate_counts": {
+    "reject_proxy_send_anomaly": 3,
+    "fail_sota20": 3,
+    "inconclusive_ci": 3
+  },
+  "new_gate_counts": {
+    "fail_sota20": 5,
+    "reject_proxy_send_anomaly": 3,
+    "inconclusive_ci": 1
+  },
+  "old_0_890_cell": [
+    {
+      "scenario": "http-over-https-proxy",
+      "requests": 1000,
+      "throughput_rps_ratio": 0.8902749490026741
+    }
+  ],
+  "new_http_1000_cell": [
+    {
+      "scenario": "http-over-https-proxy",
+      "requests": 1000,
+      "throughput_rps_ratio": 1.2993545315478252,
+      "paired_throughput_rps_ratio_ci95_low": 1.0207395841953255,
+      "paired_throughput_rps_ratio_ci95_high": 1.6540185418446514,
+      "proxy_send_anomaly": true,
+      "sota_gate": "reject_proxy_send_anomaly"
+    }
+  ],
+  "decision": "withdraw_sota_claim_under_repaired_benchmark",
+  "reason": "The repaired matrix has 1.104x paired throughput geomean, no pass_sota20 cells, and proxy-send anomaly rejects all HTTP-over-HTTPS-proxy cells."
+}

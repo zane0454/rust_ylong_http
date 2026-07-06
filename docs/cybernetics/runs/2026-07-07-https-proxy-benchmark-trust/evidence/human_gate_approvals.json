@@ -1,0 +1,15 @@
+{
+  "artifact_type": "runtime.human_gate_approvals",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "status": "pass",
+  "gated_actions_performed": [],
+  "gated_actions_not_performed": [
+    "push",
+    "tag",
+    "live external publication",
+    "credentialed external proxy use"
+  ],
+  "approval_basis": "No push, tag, live external publication, or credentialed external action was performed in this runtime. README and figure updates are local run artifacts inside the workspace.",
+  "satisfies_evidence_id": "evidence.human-gate-approvals"
+}

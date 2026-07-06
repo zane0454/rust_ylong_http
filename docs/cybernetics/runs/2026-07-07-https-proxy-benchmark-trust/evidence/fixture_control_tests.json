@@ -1,0 +1,40 @@
+{
+  "artifact_type": "https_proxy_benchmark_fixture_control_tests",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "status": "pass",
+  "implemented_control": "Equivalent fixture control was implemented by preserving proxy/origin trace attribution and adding canonical proxy-send anomaly gates before SOTA verdicts, rather than silently accepting Python TLS proxy send timing as client performance.",
+  "changed_files": [
+    "docs/benchmarks/run_https_proxy_bench.py",
+    "docs/benchmarks/test_run_https_proxy_bench.py"
+  ],
+  "key_fields": [
+    "proxy_response_send_us",
+    "proxy_response_send_events",
+    "origin_response_send_us",
+    "client_order_policy",
+    "client_order_seed",
+    "client_order_position",
+    "proxy_send_elapsed_share_max",
+    "proxy_send_elapsed_delta_explained_fraction",
+    "proxy_send_anomaly",
+    "sota_gate"
+  ],
+  "verification": [
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "status": "pass",
+      "stdout_tail": "Ran 21 tests in 3.976s\n\nOK"
+    },
+    {
+      "command": "python3 -m py_compile docs/benchmarks/run_https_proxy_bench.py docs/benchmarks/test_run_https_proxy_bench.py",
+      "status": "pass",
+      "stdout_tail": ""
+    }
+  ],
+  "relevant_tests": [
+    "test_trace_output_is_parsed_and_summarized",
+    "test_trace_output_records_tls_fingerprints",
+    "test_paired_comparison_reports_ci_and_proxy_send_anomaly"
+  ]
+}

@@ -391,6 +391,132 @@ class HttpsProxyHarnessTest(unittest.TestCase):
         ].iloc[0]
         self.assertAlmostEqual(ratio, 0.5)
 
+    def test_client_order_policy_controls_fixed_order_bias(self) -> None:
+        clients = ["ylong_http_client", "libcurl"]
+
+        self.assertEqual(
+            bench.build_client_run_order(clients, repeat=1, policy="interleaved", seed=7),
+            ["ylong_http_client", "libcurl"],
+        )
+        self.assertEqual(
+            bench.build_client_run_order(clients, repeat=2, policy="interleaved", seed=7),
+            ["libcurl", "ylong_http_client"],
+        )
+        first_random = bench.build_client_run_order(
+            clients, repeat=3, policy="random", seed=1234
+        )
+        second_random = bench.build_client_run_order(
+            clients, repeat=3, policy="random", seed=1234
+        )
+        self.assertEqual(first_random, second_random)
+        self.assertEqual(sorted(first_random), sorted(clients))
+
+    def test_write_results_persists_client_order_metadata(self) -> None:
+        rows = [
+            bench.BenchResult(
+                scenario="s",
+                requests=3,
+                repeat=1,
+                client="ylong_http_client",
+                elapsed_ms=1.5,
+                client_order_policy="interleaved",
+                client_order_seed=42,
+                client_order_position=2,
+            ),
+            bench.BenchResult(
+                scenario="s",
+                requests=3,
+                repeat=1,
+                client="libcurl",
+                elapsed_ms=1.2,
+                client_order_policy="interleaved",
+                client_order_seed=42,
+                client_order_position=1,
+            ),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            df = bench.write_results(rows, result_dir=Path(tmp))
+            self.assertIn("client_order_policy", df.columns)
+            self.assertIn("client_order_seed", df.columns)
+            self.assertIn("client_order_position", df.columns)
+            ylong = df[df["client"] == "ylong_http_client"].iloc[0]
+            self.assertEqual(ylong["client_order_policy"], "interleaved")
+            self.assertEqual(int(ylong["client_order_seed"]), 42)
+            self.assertEqual(int(ylong["client_order_position"]), 2)
+
+    def test_paired_comparison_reports_ci_and_proxy_send_anomaly(self) -> None:
+        df = bench.pd.DataFrame(
+            [
+                {
+                    "scenario": "s",
+                    "requests": 100,
+                    "repeat": 1,
+                    "client": "ylong_http_client",
+                    "elapsed_ms": 100.0,
+                    "latency_ms": 1.0,
+                    "throughput_rps": 1000.0,
+                    "p95_us": 1500,
+                    "cpu_us_per_request": 20.0,
+                    "rss_peak_bytes": 1000,
+                    "errors": 0,
+                    "proxy_response_send_us": 80_000,
+                },
+                {
+                    "scenario": "s",
+                    "requests": 100,
+                    "repeat": 2,
+                    "client": "ylong_http_client",
+                    "elapsed_ms": 90.0,
+                    "latency_ms": 0.9,
+                    "throughput_rps": 1111.111,
+                    "p95_us": 1400,
+                    "cpu_us_per_request": 18.0,
+                    "rss_peak_bytes": 1000,
+                    "errors": 0,
+                    "proxy_response_send_us": 70_000,
+                },
+                {
+                    "scenario": "s",
+                    "requests": 100,
+                    "repeat": 1,
+                    "client": "libcurl",
+                    "elapsed_ms": 125.0,
+                    "latency_ms": 1.25,
+                    "throughput_rps": 800.0,
+                    "p95_us": 1700,
+                    "cpu_us_per_request": 30.0,
+                    "rss_peak_bytes": 1100,
+                    "errors": 0,
+                    "proxy_response_send_us": 5_000,
+                },
+                {
+                    "scenario": "s",
+                    "requests": 100,
+                    "repeat": 2,
+                    "client": "libcurl",
+                    "elapsed_ms": 120.0,
+                    "latency_ms": 1.2,
+                    "throughput_rps": 833.333,
+                    "p95_us": 1650,
+                    "cpu_us_per_request": 29.0,
+                    "rss_peak_bytes": 1100,
+                    "errors": 0,
+                    "proxy_response_send_us": 4_000,
+                },
+            ]
+        )
+
+        paired = bench.paired_compare_to_baseline(df, baseline="libcurl")
+        row = paired[paired["client"] == "ylong_http_client"].iloc[0]
+
+        self.assertEqual(int(row["paired_sample_count"]), 2)
+        self.assertIn("paired_throughput_rps_ratio_geomean", paired.columns)
+        self.assertIn("paired_throughput_rps_ratio_ci95_low", paired.columns)
+        self.assertIn("paired_throughput_rps_ratio_ci95_high", paired.columns)
+        self.assertGreater(float(row["paired_throughput_rps_ratio_geomean"]), 1.2)
+        self.assertTrue(bool(row["proxy_send_anomaly"]))
+        self.assertEqual(row["sota_gate"], "reject_proxy_send_anomaly")
+
     def test_ratio_plot_data_keeps_all_scenarios_and_uses_throughput_ratio(self) -> None:
         df = bench.pd.DataFrame(
             [
@@ -461,6 +587,7 @@ class HttpsProxyHarnessTest(unittest.TestCase):
         )
         self.assertEqual(plot_data["requests"], [200, 1000])
         self.assertEqual(plot_data["candidate"], "ylong_http_client_sync")
+        self.assertEqual(plot_data["ratio_source"], "paired")
         throughput = plot_data["matrices"]["throughput_rps_ratio"]
         self.assertAlmostEqual(throughput.loc["http-over-https-proxy", 200], 1.25)
         self.assertAlmostEqual(throughput.loc["proxy-mtls-https-origin", 1000], 0.8)

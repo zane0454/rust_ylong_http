@@ -1,0 +1,19 @@
+You are an independent Counterexample Gate reviewer for a controlled run in /home/ender/Workspace/rust_ylong_http. Do not edit files. Review the current workspace changes and artifacts for this objective: repair ylong_http HTTPS proxy benchmark trust. Focus on whether the final verdict 'withdraw_sota_claim_under_repaired_benchmark' is justified and whether any counterexample invalidates the implementation or evidence chain.
+
+Inspect these files/paths:
+- docs/benchmarks/run_https_proxy_bench.py
+- docs/benchmarks/test_run_https_proxy_bench.py
+- README.md benchmark section
+- docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_results.csv
+- docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv
+- docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv
+- docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/*.json
+
+Questions to answer:
+1. Do the code changes actually implement client order control, paired aggregation/CI, and proxy-send anomaly gating?
+2. Is the new README claim consistent with the generated CSVs and figure?
+3. Does the old gen005 recomputation undermine or support the withdrawal verdict?
+4. Are there any blocking counterexamples that should prevent S8 approval?
+5. List exact files/lines for any issues.
+
+Return a concise review artifact suitable to save as JSON/transcript evidence. Include verdict: approved or rejected.

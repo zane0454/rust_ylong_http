@@ -1,0 +1,49 @@
+{
+  "artifact_type": "counterexample_gate_review",
+  "objective": "repair ylong_http HTTPS proxy benchmark trust",
+  "verdict": "approved",
+  "final_decision_reviewed": "withdraw_sota_claim_under_repaired_benchmark",
+  "blocking_counterexamples": [],
+  "answers": {
+    "1_implementation": "Yes. Client order control is implemented with fixed/interleaved/random policies and persisted order metadata. Paired aggregation/CI is implemented using scenario/request/concurrency/model/repeat pairs with log-ratio geomean CI. Proxy-send anomaly gating is implemented for proxy_response_send_us and rejects SOTA cells before pass_sota20.",
+    "2_readme_consistency": "Yes. README table values match the generated comparison CSV, and the checked-in figure title/visible matrix matches the CSV facts: paired geomean 1.104x, worst cell 0.909x, errors 0. The figure does not show gates/CI, but README text/table supplies them; this is not a contradiction.",
+    "3_gen005_recompute": "Supports withdrawal under repaired gates. Old gen005 recomputed paired geomean remains above 1.20x at 1.231x, but repaired gates yield zero pass_sota20 cells: 3 reject_proxy_send_anomaly, 3 fail_sota20, 3 inconclusive_ci. So old data does not justify retaining the SOTA claim.",
+    "4_s8_blockers": "No blocking counterexamples found. S8 approval is justified for the withdrawal verdict.",
+    "5_issues": []
+  },
+  "non_blocking_notes": [
+    {
+      "note": "The anomaly gate currently uses proxy_response_send_us, not proxy_tunnel_send_to_client_us. This does not block the withdrawal verdict because no HTTPS-origin/tunnel cell reaches pass_sota20, but it is worth naming if future claims rely on tunnel-heavy cells.",
+      "refs": [
+        "docs/benchmarks/run_https_proxy_bench.py:1813",
+        "docs/benchmarks/run_https_proxy_bench.py:1832",
+        "docs/benchmarks/run_https_proxy_bench.py:1843"
+      ]
+    }
+  ],
+  "key_evidence": [
+    "Client order policy: docs/benchmarks/run_https_proxy_bench.py:1363, docs/benchmarks/run_https_proxy_bench.py:2266, docs/benchmarks/run_https_proxy_bench.py:2361, docs/benchmarks/run_https_proxy_bench.py:2401",
+    "Order metadata persisted: docs/benchmarks/run_https_proxy_bench.py:1429",
+    "Paired keys and CI: docs/benchmarks/run_https_proxy_bench.py:1701, docs/benchmarks/run_https_proxy_bench.py:1731, docs/benchmarks/run_https_proxy_bench.py:1761",
+    "Gate order: docs/benchmarks/run_https_proxy_bench.py:1843",
+    "README withdrawal claim: README.md:140, README.md:154",
+    "New CSV no-pass evidence: docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv:3, docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv:17",
+    "Old recomputation no-pass evidence: docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv:3, docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv:19",
+    "Run evidence verdict: docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/old_new_benchmark_comparison.json:9, docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/old_new_benchmark_comparison.json:40"
+  ],
+  "independent_checks": {
+    "unit_tests": "PYTHONDONTWRITEBYTECODE=1 python -B -m unittest docs.benchmarks.test_run_https_proxy_bench -> Ran 21 tests in 4.412s, OK",
+    "csv_recalculation": {
+      "new_repaired_geomean": 1.1043129514854073,
+      "new_gate_counts": {
+        "fail_sota20": 5,
+        "reject_proxy_send_anomaly": 3,
+        "inconclusive_ci": 1
+      },
+      "new_pass_sota20_count": 0,
+      "old_recomputed_geomean": 1.2312033650719278,
+      "old_pass_sota20_count": 0
+    },
+    "figure_inspection": "docs/figures/https_proxy_bench_performance.png is readable and matches the CSV/README headline values."
+  }
+}

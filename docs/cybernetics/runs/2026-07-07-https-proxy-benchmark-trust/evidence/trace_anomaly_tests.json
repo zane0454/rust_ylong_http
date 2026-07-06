@@ -1,0 +1,32 @@
+{
+  "artifact_type": "https_proxy_benchmark_trace_anomaly_tests",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "status": "pass",
+  "anomaly_gate": {
+    "proxy_send_share_threshold": 0.2,
+    "proxy_send_explained_fraction_threshold": 0.5,
+    "reject_verdict": "reject_proxy_send_anomaly",
+    "logic": "Reject a SOTA gate when server-side proxy send share exceeds threshold or proxy send delta explains more than half of elapsed delta."
+  },
+  "comparison_fields": [
+    "proxy_send_elapsed_share_candidate_mean",
+    "proxy_send_elapsed_share_baseline_mean",
+    "proxy_send_elapsed_share_max",
+    "proxy_send_elapsed_delta_explained_fraction",
+    "proxy_send_anomaly",
+    "proxy_send_anomaly_reason",
+    "sota_gate"
+  ],
+  "verification": [
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "status": "pass",
+      "stdout_tail": "Ran 21 tests in 3.976s\n\nOK"
+    }
+  ],
+  "relevant_tests": [
+    "test_trace_output_is_parsed_and_summarized",
+    "test_paired_comparison_reports_ci_and_proxy_send_anomaly"
+  ]
+}

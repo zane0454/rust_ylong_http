@@ -1,0 +1,271 @@
+{
+  "artifact_type": "review.control",
+  "schema_version": "1.3.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json",
+    "design": "design.control.json",
+    "goal": "goal.control.json",
+    "plan": "plan.control.json"
+  },
+  "semantic_base_ref": {
+    "id": "ylong-http-https-proxy-benchmark-trust-requirements-v1",
+    "hash": "sha256:e6a9bf803e90eeee875625855bac8eb9e5fbf21259587ce2d976a8accbfa62fb"
+  },
+  "registry_bindings": {
+    "selected_agent_workflow": "superpowers-subagent-driven-development"
+  },
+  "approved_control_hashes": {
+    "requirements.control.json": "sha256:56666167076fc5dd163086ee8c7afeb22e941e01be649b1a6cb606142c51ae18",
+    "design.control.json": "sha256:662192dea99559b204ef2a6eb237ddb445389ef634b1001e28b0662b8c84eb0a",
+    "goal.control.json": "sha256:639b9f361bf180c4ed3269e536a07441927c44115867d30f05629cb8caa6273c",
+    "plan.control.json": "sha256:1da51866f013a9edc4953fac2322934cae3dbdcb17dc66d890a94566b9d93d1f"
+  },
+  "review_checks": [
+    {
+      "check_id": "required-answer-path",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "intent-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "obligation-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "required-outcome-coverage",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "source-requirement-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "producing-action-alignment",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "work-assignment",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "horizon-authority",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "final-observer",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json"
+      ],
+      "findings": [
+        "First review returned NeedsRevision; missing evidence file and repo-relative .agents command paths were corrected before final re-review."
+      ],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements->design",
+        "design->goal",
+        "goal->plan",
+        "plan->runtime"
+      ]
+    },
+    {
+      "check_id": "counterexample-gate",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "requirements.control.json",
+        "run.control.json",
+        "design.control.json",
+        "goal.control.json",
+        "plan.control.json",
+        "gen-000/runtime.control.json",
+        "evidence/review/pregoal_counterexample_review.json",
+        "evidence/review/pregoal_counterexample_review_transcript.txt"
+      ],
+      "findings": [
+        "Reviewed benchmark trust decomposition against fixture scheduling, order bias, aggregation distortion, missing tests, stale README evidence, and un-gated SOTA claim counterexamples.",
+        "Runtime cannot claim goal_achieved until verifier sees every blocking outcome evidence and final report states preserve/downgrade/withdraw SOTA."
+      ],
+      "required_changes": [],
+      "checked_transformations": [
+        "blocked_or_goal_achieved",
+        "comparison_csv->readme_claim",
+        "fixture_design->canonical_benchmark_claim",
+        "fixture_trace->claim_gate",
+        "old_cell->root_cause_claim",
+        "old_new_comparison->readme_report_claim",
+        "paired_aggregation->sota_verdict",
+        "pre_runtime_compile",
+        "required_outcome:O-anomaly-trace-gates->verdict_gate",
+        "required_outcome:O-contamination-audit->evidence",
+        "required_outcome:O-counterexample-human-gates->final_gate",
+        "required_outcome:O-counterexample-human-gates->human_gate",
+        "required_outcome:O-fixture-control->implementation",
+        "required_outcome:O-old-new-comparison->claim_evidence",
+        "required_outcome:O-order-and-aggregation->comparison_csv",
+        "required_outcome:O-readme-report-verdict->final_report",
+        "required_outcome:O-readme-report-verdict->readme",
+        "required_outcome:O-test-matrix->test_coverage",
+        "required_outcomes->required_steps",
+        "required_result_paths->required_steps",
+        "required_steps->runtime_steps",
+        "required_steps->work_packages",
+        "result_path:RP-canonical-benchmark-trust->aggregation",
+        "result_path:RP-canonical-benchmark-trust->completion_gate",
+        "result_path:RP-canonical-benchmark-trust->fixture",
+        "result_path:RP-old-new-verdict->claim_evidence",
+        "result_path:RP-old-new-verdict->completion_gate",
+        "result_path:RP-old-new-verdict->readme_report",
+        "result_path:RP-review-and-human-gates->blocked_or_goal_achieved",
+        "result_path:RP-review-and-human-gates->counterexample_gate",
+        "result_path:RP-review-and-human-gates->human_gate",
+        "source_requirements->required_outcomes",
+        "source_requirements->required_result_paths",
+        "trace_fields->anomaly_gate"
+      ],
+      "reviewer": {
+        "kind": "subagent",
+        "id": "019f38c6-986a-7571-92f4-784a177a86a9",
+        "evidence_ref": "evidence/review/pregoal_counterexample_review.json",
+        "summary": "Independent pre-goal control-chain counterexample reviewer."
+      }
+    }
+  ]
+}

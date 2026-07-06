@@ -1,0 +1,53 @@
+{
+  "artifact_type": "information_sufficiency.counterexample_review.evidence",
+  "schema_version": "1.0.0",
+  "status": "pass",
+  "verdict": "approved",
+  "independent_review": true,
+  "reviewed_at": "2026-07-07T00:00:00+08:00",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "019f38b2-862d-7891-a14a-899bd2063dca",
+    "nickname": "Rawls"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "id": "019f38b2-862d-7891-a14a-899bd2063dca",
+    "transcript_ref": "evidence/review/information_sufficiency_review_transcript.txt",
+    "transcript_hash": "sha256:a11c2527fc9c46637e181dc184c12622fa4873bd9e38cb09aed46e64076f9720"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/review/information_sufficiency_review_prompt.txt",
+    "prompt_hash": "sha256:d0440ddea23110b25129f0e8052f0f461e32ead4208c690adb7d69912da75841",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json": "sha256:56666167076fc5dd163086ee8c7afeb22e941e01be649b1a6cb606142c51ae18",
+      "evidence/benchmark_trust_source_context.json": "sha256:32fa97fad7f14b1fa418059a01b44c6cc86ecb6da82349c0144441ea56877aaf"
+    }
+  },
+  "checked_facts": [
+    "F-current-fixture-sendall",
+    "F-outlier-not-stable",
+    "F-order-alone-not-primary",
+    "F-aggregation-risk"
+  ],
+  "checked_transformations": [
+    "source_requirements->information_sufficiency_facts",
+    "required_outcomes->information_sufficiency_facts",
+    "information_sufficiency_facts->design_plan_entry"
+  ],
+  "findings": [
+    "Non-blocking: F-outlier-not-stable and F-order-alone-not-primary rely on temporary /tmp diagnostic artifacts; pregoal/runtime must regenerate or import run-local evidence before final claims.",
+    "Non-blocking: OBS-gen005-proxy-send-correlation has a weak reference and must be persisted under the run evidence directory before any design or final audit cites it.",
+    "Non-blocking: fixture choice, ordering policy, and canonical aggregation rule are intentionally deferred to design and must be explicit before runtime implementation."
+  ],
+  "reviewed_artifact_hashes": {
+    "requirements.control.json": "sha256:56666167076fc5dd163086ee8c7afeb22e941e01be649b1a6cb606142c51ae18",
+    "evidence/benchmark_trust_source_context.json": "sha256:32fa97fad7f14b1fa418059a01b44c6cc86ecb6da82349c0144441ea56877aaf"
+  },
+  "decision": {
+    "can_proceed_to_user_approval": true,
+    "requires_requirements_revision": false,
+    "requires_runtime_regeneration_of_tmp_evidence": true,
+    "requires_design_to_choose_fixture_ordering_aggregation": true
+  }
+}

@@ -1,0 +1,28 @@
+Review the final pre-goal control chain for docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust.
+
+Files:
+- requirements.control.json
+- run.control.json
+- design.control.json
+- goal.control.json
+- plan.control.json
+- review.control.json
+- gen-000/runtime.control.json
+- evidence/benchmark_trust_source_context.json
+- evidence/information_sufficiency_counterexample.json
+
+Objective: determine whether this pre-goal chain can be approved for runtime execution for the fixed goal: repair ylong_http HTTPS proxy SOTA benchmark measurement credibility. Do not run target benchmark work.
+
+Required checks:
+- requirement traceability and source requirement preservation
+- intent preservation and obligation preservation
+- design match and required answer path preservation
+- goal correctness and what-counts-as-done correctness
+- execution policy controllability and producing-action alignment
+- work assignment/subagent safety, especially serial vs parallel authorization
+- evidence governance and stale evidence handling
+- result placement and final answer format preservation
+- runtime suitability
+- counterexample gate against proxy send scheduling pollution, fixed order bias, ratio-of-mean-only SOTA, old gen005 evidence alone, README-only explanation, missing semantic tests, and unapproved push/tag/public claim changes
+
+Return verdict, blocking findings, major findings, non-blocking findings, checked transformations, final observer status, and runtime compilation conclusion.

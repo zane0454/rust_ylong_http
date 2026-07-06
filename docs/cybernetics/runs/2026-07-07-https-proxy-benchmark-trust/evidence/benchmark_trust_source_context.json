@@ -1,0 +1,57 @@
+{
+  "artifact_type": "requirements.source_context.evidence",
+  "schema_version": "1.0.0",
+  "observed_at": "2026-07-07T00:00:00+08:00",
+  "purpose": "Record pre-design facts for the HTTPS proxy benchmark trust repair controlled run.",
+  "observations": [
+    {
+      "id": "OBS-python-proxy-sendall-measured",
+      "statement": "The current benchmark fixture is a Python HTTPS proxy that sends HTTP proxy responses with ssl.SSLSocket.sendall and records proxy_response_send_us around that call.",
+      "evidence": [
+        "docs/benchmarks/run_https_proxy_bench.py:664-679",
+        "docs/benchmarks/run_https_proxy_bench.py:2091-2126"
+      ]
+    },
+    {
+      "id": "OBS-gen005-outlier-cell",
+      "statement": "The checked-in gen005 S8 final benchmark contains a 0.890x throughput ratio for HTTP over HTTPS proxy at 1000 requests, while the same cell has zero errors and identical proxy connection/request/body counts for ylong_http_client_sync and libcurl.",
+      "evidence": [
+        "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20/https_proxy_bench_results.csv",
+        "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20/https_proxy_bench_comparison.csv"
+      ]
+    },
+    {
+      "id": "OBS-gen005-proxy-send-correlation",
+      "statement": "Local analysis found gen005 elapsed time is strongly correlated with proxy_response_send_us in the outlier cell: about 0.999 for ylong_http_client_sync and about 0.990 for libcurl; paired throughput ratio is negatively correlated with proxy send ratio.",
+      "evidence": [
+        "interactive analysis command output in current requirements session"
+      ]
+    },
+    {
+      "id": "OBS-r20-not-reproduced",
+      "statement": "A targeted 20-repeat rerun of HTTP over HTTPS proxy at 1000 requests did not reproduce the 0.890x result: ratio-of-mean throughput was about 1.267x, paired geomean about 1.242x, with ylong winning 14 of 20 paired repeats.",
+      "evidence": [
+        "/tmp/ylong-http-proxy-cell1000-r20/https_proxy_bench_results.csv"
+      ]
+    },
+    {
+      "id": "OBS-reverse-order-not-order-only",
+      "statement": "A reverse-order 20-repeat rerun, libcurl before ylong in each repeat, still produced ylong advantage: ratio-of-mean throughput about 1.307x, paired geomean about 1.296x, with ylong winning 14 of 20 paired repeats.",
+      "evidence": [
+        "/tmp/ylong-http-proxy-cell1000-reverse-r20/https_proxy_bench_results.csv"
+      ]
+    },
+    {
+      "id": "OBS-aggregation-risk",
+      "statement": "The figure currently uses ratio-of-mean throughput for each scenario/request cell, which can diverge from paired elapsed or paired geomean when one client has low-latency outliers.",
+      "evidence": [
+        "docs/benchmarks/run_https_proxy_bench.py:1737-1807",
+        "docs/figures/https_proxy_bench_performance.png"
+      ]
+    }
+  ],
+  "limits": [
+    "This source context records pre-design facts only. It does not choose the final fixture design.",
+    "Temporary /tmp rerun artifacts are diagnostic evidence and must be replaced by run-local persisted evidence during runtime before final claims."
+  ]
+}

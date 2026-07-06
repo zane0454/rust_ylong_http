@@ -1,0 +1,155 @@
+{
+  "artifact_type": "run.control",
+  "schema_version": "1.3.0",
+  "status": "active",
+  "run_id": "2026-07-07-https-proxy-benchmark-trust",
+  "control_level": 4,
+  "target_model": {
+    "result_orientation": [
+      "state_change",
+      "knowledge_production",
+      "judgment"
+    ],
+    "result_content": "partially_specified",
+    "path": "partially_known",
+    "result_placement": "multi_place",
+    "impact_scope": "persistent_internal"
+  },
+  "strategy_policy": "reviewed_replanning",
+  "gate_mode": "human_gate",
+  "phase_structure": "adaptive_loop",
+  "current_generation": "gen-000",
+  "max_auto_amendment_rounds": 2,
+  "semantic_base_ref": {
+    "id": "ylong-http-https-proxy-benchmark-trust-requirements-v1",
+    "hash": "sha256:e6a9bf803e90eeee875625855bac8eb9e5fbf21259587ce2d976a8accbfa62fb"
+  },
+  "amendment_policy": {
+    "may_change": [
+      "fixture implementation tactic after evidence review",
+      "benchmark repeat count and matrix size within approved evidence budget",
+      "plot presentation mechanics that preserve metric semantics",
+      "runtime work-package sequencing by reviewed amendment"
+    ],
+    "must_not_change_without_human": [
+      "semantic_base",
+      "blocking required outcomes",
+      "20 percent SOTA threshold rule",
+      "forbidden live external proxy or credential use",
+      "push/tag/public claim-changing authority"
+    ]
+  },
+  "generations": [
+    {
+      "id": "gen-000",
+      "strategy_kind": "execution",
+      "status": "active",
+      "runtime": "gen-000/runtime.control.json",
+      "review": "review.control.json",
+      "writable_evidence_paths": [
+        "evidence/",
+        "docs/benchmarks/results/",
+        "docs/figures/"
+      ],
+      "verifier": {
+        "required_before_goal_achieved": true,
+        "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py",
+        "required_outcomes": [
+          "O-contamination-audit",
+          "O-fixture-control",
+          "O-order-and-aggregation",
+          "O-anomaly-trace-gates",
+          "O-test-matrix",
+          "O-old-new-comparison",
+          "O-readme-report-verdict",
+          "O-counterexample-human-gates"
+        ],
+        "output_schema": "final-report.schema.json"
+      },
+      "required_steps": [
+        {
+          "step_id": "S1-contamination-audit",
+          "transition": "Audit existing HTTPS proxy benchmark contamination sources and classify Python proxy send timing, fixed order, small samples, and aggregation distortion.",
+          "evidence": [
+            "evidence.contamination-audit"
+          ],
+          "satisfies_outcomes": [
+            "O-contamination-audit"
+          ]
+        },
+        {
+          "step_id": "S2-fixture-control",
+          "transition": "Implement a stable proxy/origin fixture or equivalent controls so canonical results are attributable to client behavior.",
+          "evidence": [
+            "evidence.fixture-control-tests"
+          ],
+          "satisfies_outcomes": [
+            "O-fixture-control"
+          ]
+        },
+        {
+          "step_id": "S3-order-aggregation",
+          "transition": "Implement client ordering control plus paired aggregation and confidence/uncertainty reporting.",
+          "evidence": [
+            "evidence.order-aggregation-tests"
+          ],
+          "satisfies_outcomes": [
+            "O-order-and-aggregation"
+          ]
+        },
+        {
+          "step_id": "S4-anomaly-trace-gates",
+          "transition": "Persist trace attribution fields and enforce proxy send time anomaly gates before any SOTA verdict.",
+          "evidence": [
+            "evidence.trace-anomaly-tests"
+          ],
+          "satisfies_outcomes": [
+            "O-anomaly-trace-gates"
+          ]
+        },
+        {
+          "step_id": "S5-test-matrix",
+          "transition": "Run focused semantic tests covering benchmark ordering, trace parsing, anomaly gates, paired stats, and figure data semantics.",
+          "evidence": [
+            "evidence.benchmark-test-matrix"
+          ],
+          "satisfies_outcomes": [
+            "O-test-matrix"
+          ]
+        },
+        {
+          "step_id": "S6-old-new-comparison",
+          "transition": "Run or import repaired benchmark evidence and compare it with old gen005 evidence including the 0.890x cell.",
+          "evidence": [
+            "evidence.old-new-benchmark-comparison"
+          ],
+          "satisfies_outcomes": [
+            "O-old-new-comparison"
+          ]
+        },
+        {
+          "step_id": "S7-readme-report-verdict",
+          "transition": "Update README/report/figure evidence chain and decide preserve, downgrade, or withdraw SOTA under repaired evidence.",
+          "evidence": [
+            "evidence.readme-report-artifacts",
+            "evidence.sota-verdict-review"
+          ],
+          "satisfies_outcomes": [
+            "O-readme-report-verdict"
+          ]
+        },
+        {
+          "step_id": "S8-counterexample-human-gates",
+          "transition": "Run final independent Counterexample Gate and enforce human gates for claim-changing push/tag/live/external actions.",
+          "evidence": [
+            "evidence.final-counterexample-gate",
+            "evidence.human-gate-approvals"
+          ],
+          "satisfies_outcomes": [
+            "O-counterexample-human-gates"
+          ]
+        }
+      ]
+    }
+  ]
+}

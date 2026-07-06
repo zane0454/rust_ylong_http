@@ -1,0 +1,116 @@
+{
+  "artifact_type": "design.control",
+  "schema_version": "1.3.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json"
+  },
+  "semantic_base_ref": {
+    "id": "ylong-http-https-proxy-benchmark-trust-requirements-v1",
+    "hash": "sha256:e6a9bf803e90eeee875625855bac8eb9e5fbf21259587ce2d976a8accbfa62fb"
+  },
+  "approved_control": {
+    "confirmed_meaning": "Repair the HTTPS proxy benchmark credibility chain by changing the harness, result generation, evidence gates, and repository-facing claim so SOTA is not accepted when explained by fixture scheduling, fixed order, small samples, or aggregation artifacts.",
+    "required_answer_path": [
+      "Audit contamination sources and classify old evidence limits.",
+      "Choose and implement a fixture or equivalent control that bounds proxy send scheduling influence.",
+      "Randomize or interleave ylong/libcurl execution and persist order metadata.",
+      "Compute paired ratios with uncertainty and demote ratio-of-mean-only claims.",
+      "Persist trace attribution fields and reject/downgrade proxy-send-dominated cells.",
+      "Run semantic tests and a repaired benchmark matrix before deciding the SOTA claim.",
+      "Update README/report evidence so old results are historical when repaired gates supersede them.",
+      "Apply final counterexample and human gates before completion or public claim-changing actions."
+    ],
+    "what_is_not_enough_avoided": [
+      "README-only explanation of the 0.890x cell is not enough.",
+      "Old gen005 numbers alone are not enough.",
+      "curl CLI evidence is not a same-process libcurl baseline.",
+      "A SOTA verdict cannot be based on ratio-of-mean throughput alone under high variance.",
+      "mismatched fixture scheduling cannot be accepted as client performance."
+    ]
+  },
+  "required_steps": [
+    {
+      "step_id": "S1-contamination-audit",
+      "transition": "Audit existing HTTPS proxy benchmark contamination sources and classify Python proxy send timing, fixed order, small samples, and aggregation distortion.",
+      "evidence": [
+        "evidence.contamination-audit"
+      ],
+      "satisfies_outcomes": [
+        "O-contamination-audit"
+      ]
+    },
+    {
+      "step_id": "S2-fixture-control",
+      "transition": "Implement a stable proxy/origin fixture or equivalent controls so canonical results are attributable to client behavior.",
+      "evidence": [
+        "evidence.fixture-control-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-fixture-control"
+      ]
+    },
+    {
+      "step_id": "S3-order-aggregation",
+      "transition": "Implement client ordering control plus paired aggregation and confidence/uncertainty reporting.",
+      "evidence": [
+        "evidence.order-aggregation-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-order-and-aggregation"
+      ]
+    },
+    {
+      "step_id": "S4-anomaly-trace-gates",
+      "transition": "Persist trace attribution fields and enforce proxy send time anomaly gates before any SOTA verdict.",
+      "evidence": [
+        "evidence.trace-anomaly-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-anomaly-trace-gates"
+      ]
+    },
+    {
+      "step_id": "S5-test-matrix",
+      "transition": "Run focused semantic tests covering benchmark ordering, trace parsing, anomaly gates, paired stats, and figure data semantics.",
+      "evidence": [
+        "evidence.benchmark-test-matrix"
+      ],
+      "satisfies_outcomes": [
+        "O-test-matrix"
+      ]
+    },
+    {
+      "step_id": "S6-old-new-comparison",
+      "transition": "Run or import repaired benchmark evidence and compare it with old gen005 evidence including the 0.890x cell.",
+      "evidence": [
+        "evidence.old-new-benchmark-comparison"
+      ],
+      "satisfies_outcomes": [
+        "O-old-new-comparison"
+      ]
+    },
+    {
+      "step_id": "S7-readme-report-verdict",
+      "transition": "Update README/report/figure evidence chain and decide preserve, downgrade, or withdraw SOTA under repaired evidence.",
+      "evidence": [
+        "evidence.readme-report-artifacts",
+        "evidence.sota-verdict-review"
+      ],
+      "satisfies_outcomes": [
+        "O-readme-report-verdict"
+      ]
+    },
+    {
+      "step_id": "S8-counterexample-human-gates",
+      "transition": "Run final independent Counterexample Gate and enforce human gates for claim-changing push/tag/live/external actions.",
+      "evidence": [
+        "evidence.final-counterexample-gate",
+        "evidence.human-gate-approvals"
+      ],
+      "satisfies_outcomes": [
+        "O-counterexample-human-gates"
+      ]
+    }
+  ]
+}

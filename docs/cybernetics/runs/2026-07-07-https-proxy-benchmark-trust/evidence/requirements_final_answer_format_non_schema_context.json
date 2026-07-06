@@ -1,0 +1,14 @@
+{
+  "artifact_type": "requirements.final_answer_format.non_schema_context",
+  "schema_version": "1.0.0",
+  "status": "archived_non_control_context",
+  "fields": {
+    "audience": "repository maintainer, contest reviewer, and the user directing the controlled run",
+    "purpose": "handoff and audit of benchmark trust repair",
+    "detail_level": "high enough to enter pregoal/orchestration and code execution without inventing missing requirement meaning",
+    "evidence_reference_needs": "Every final claim must cite run-local evidence or repository file paths.",
+    "machine_readable_needs": "requirements.control.json must be valid JSON and consumable by the cybernetic pregoal toolchain.",
+    "destination_path": "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/",
+    "acceptance_condition": "The user can approve the compact commitment and pass the run directory directly to orchestrating/pregoal."
+  }
+}

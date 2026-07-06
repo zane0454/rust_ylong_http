@@ -104,12 +104,14 @@ cargo build -p ylong_http_client --no-default-features `
   --release --bin https_proxy_bench
 
 conda run -n base python docs\benchmarks\run_https_proxy_bench.py `
-  --baseline libcurl --scenario all --requests "200,1000,3000" --repeats 5 --warmup 50
+  --baseline libcurl --ylong-client sync --scenario all `
+  --requests "200,1000,3000" --repeats 5 --warmup 50 `
+  --client-order interleaved --client-order-seed 20260707
 ```
 
 ![HTTPS proxy benchmark ratio matrix](docs/figures/https_proxy_bench_performance.png)
 
-Checked-in final SOTA matrix setup:
+Checked-in repaired trust-gated matrix setup:
 
 - response body: 4096 bytes
 - request body: 0 bytes
@@ -117,6 +119,8 @@ Checked-in final SOTA matrix setup:
 - repeats: 5 paired runs
 - request counts: 200, 1000, 3000
 - baseline: same-process libcurl
+- candidate: `ylong_http_client_sync`
+- client order: deterministic interleaving by repeat, seed `20260707`
 - scenarios: HTTP over HTTPS proxy, HTTPS origin over HTTPS proxy, proxy mTLS
   with HTTPS origin
 - proxy TLS: local CA verified
@@ -125,36 +129,38 @@ Checked-in final SOTA matrix setup:
   repeat; HTTPS-origin scenarios also use one CONNECT tunnel and one origin TLS
   connection per repeat
 - raw output:
-  `docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20/https_proxy_bench_results.csv`
+  `docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_results.csv`
 - summary output:
-  `docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20/https_proxy_bench_summary.csv`
+  `docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_summary.csv`
 - ratio output:
-  `docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20/https_proxy_bench_comparison.csv`
+  `docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv`
+- old gen005 data recomputed with repaired gates:
+  `docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv`
 
-Latest checked-in final SOTA matrix results:
+Latest repaired matrix results:
 
-| Scenario | Requests | Throughput ratio | p95 latency ratio | CPU/request ratio | RSS peak ratio |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| HTTP over HTTPS proxy | 200 | 1.610x | 0.546x | 0.523x | 1.061x |
-| HTTP over HTTPS proxy | 1000 | 0.890x | 0.934x | 0.739x | 1.055x |
-| HTTP over HTTPS proxy | 3000 | 1.510x | 0.747x | 0.547x | 1.066x |
-| HTTPS origin over HTTPS proxy | 200 | 1.101x | 1.006x | 0.677x | 1.059x |
-| HTTPS origin over HTTPS proxy | 1000 | 1.035x | 0.929x | 0.688x | 1.052x |
-| HTTPS origin over HTTPS proxy | 3000 | 1.296x | 0.867x | 0.589x | 1.066x |
-| proxy mTLS with HTTPS origin | 200 | 1.149x | 0.824x | 0.652x | 1.065x |
-| proxy mTLS with HTTPS origin | 1000 | 1.358x | 0.782x | 0.594x | 1.066x |
-| proxy mTLS with HTTPS origin | 3000 | 1.273x | 0.804x | 0.625x | 1.062x |
+| Scenario | Requests | Paired throughput | 95% CI | p95 latency | CPU/request | RSS peak | Gate |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| HTTP over HTTPS proxy | 200 | 1.111x | [0.512x, 2.413x] | 0.785x | 0.705x | 1.055x | reject_proxy_send_anomaly |
+| HTTP over HTTPS proxy | 1000 | 1.299x | [1.021x, 1.654x] | 0.821x | 0.598x | 1.052x | reject_proxy_send_anomaly |
+| HTTP over HTTPS proxy | 3000 | 1.064x | [0.852x, 1.329x] | 0.826x | 0.740x | 1.057x | reject_proxy_send_anomaly |
+| HTTPS origin over HTTPS proxy | 200 | 1.171x | [0.913x, 1.502x] | 0.718x | 0.670x | 1.065x | fail_sota20 |
+| HTTPS origin over HTTPS proxy | 1000 | 0.911x | [0.529x, 1.571x] | 0.938x | 0.808x | 1.058x | fail_sota20 |
+| HTTPS origin over HTTPS proxy | 3000 | 1.016x | [0.802x, 1.289x] | 0.945x | 0.756x | 1.062x | fail_sota20 |
+| proxy mTLS with HTTPS origin | 200 | 0.909x | [0.545x, 1.515x] | 1.033x | 0.781x | 1.054x | fail_sota20 |
+| proxy mTLS with HTTPS origin | 1000 | 1.348x | [0.968x, 1.877x] | 0.727x | 0.577x | 1.056x | inconclusive_ci |
+| proxy mTLS with HTTPS origin | 3000 | 1.196x | [0.748x, 1.913x] | 0.809x | 0.651x | 1.056x | fail_sota20 |
 
-The final matrix verifies the same-process libcurl baseline path, verified
-proxy TLS, HTTPS-origin tunneling, proxy mTLS, metric columns,
-scenario-ratio output, and connection-reuse trace. Under the user-approved
-contest threshold, the checked-in S8 candidate satisfies the SOTA gate with
-1.228x throughput geomean and zero errors. The table is intentionally shown as
-ratios: throughput is higher-is-better, while p95 latency, CPU/request, and RSS
-peak are lower-is-better. One throughput cell remains below libcurl
-(`HTTP over HTTPS proxy`, 1000 requests, 0.890x), and RSS peak is about
-5-7% higher across the matrix, so the claim is a geomean-threshold contest SOTA
-result rather than an every-cell dominance claim.
+The repaired matrix verifies the same-process libcurl baseline path, verified
+proxy TLS, HTTPS-origin tunneling, proxy mTLS, metric columns, scenario-ratio
+output, connection-reuse trace, client order metadata, paired aggregation, and
+proxy-send anomaly gates. Under the repaired gate, the SOTA claim is withdrawn:
+the paired throughput geomean is 1.104x, which is below the 1.20x threshold, and
+no cell reaches `pass_sota20`. All HTTP-over-HTTPS-proxy cells are rejected by
+the proxy-send anomaly gate because Python TLS proxy send time is large enough
+to pollute client-attribution. The old gen005 matrix remains historical
+evidence only: its original ratio-of-means geomean was 1.228x, but recomputing
+that data with repaired gates yields no `pass_sota20` cells.
 
 Historical fair-matrix and counterexample runs remain under
 `docs/benchmarks/results/`, including `tokio-full/`, but they are not the

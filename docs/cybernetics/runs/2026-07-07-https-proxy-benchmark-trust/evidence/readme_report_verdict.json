@@ -1,0 +1,38 @@
+{
+  "artifact_type": "https_proxy_benchmark_readme_report_verdict",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "status": "pass",
+  "updated_artifacts": [
+    "README.md",
+    "docs/figures/https_proxy_bench_performance.png",
+    "docs/figures/https_proxy_bench_performance.pdf",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_results.csv",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_summary.csv",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_env.json",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv"
+  ],
+  "readme_changes": [
+    "Benchmark command now records --ylong-client sync, --client-order interleaved, and --client-order-seed 20260707.",
+    "Result paths now point to gen006-benchmark-trust-repaired.",
+    "Table now reports paired throughput ratio, 95% CI, and SOTA gate per cell.",
+    "The old gen005 SOTA statement was replaced by a repaired-gate withdrawal verdict."
+  ],
+  "figure_check": {
+    "source": "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_results.csv",
+    "visual_inspection": "readable",
+    "title": "ylong_http_client sync vs libcurl library: paired throughput geomean 1.104x, worst cell 0.909x, errors 0"
+  },
+  "sota_verdict": {
+    "decision": "withdraw_sota_claim_under_repaired_benchmark",
+    "threshold": "paired throughput geomean >= 1.20x with no rejecting anomaly gate",
+    "new_repaired_paired_geomean": 1.1043129514854073,
+    "new_gate_counts": {
+      "fail_sota20": 5,
+      "reject_proxy_send_anomaly": 3,
+      "inconclusive_ci": 1
+    },
+    "reason": "No repaired matrix cell reaches pass_sota20, the paired geomean is below 1.20x, and all HTTP-over-HTTPS-proxy cells are rejected by proxy-send anomaly gates."
+  }
+}

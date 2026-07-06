@@ -1,0 +1,101 @@
+{
+  "artifact_type": "review.counterexample_gate.evidence",
+  "schema_version": "1.0.0",
+  "status": "pass",
+  "verdict": "approved",
+  "check_id": "counterexample-gate",
+  "independent_review": true,
+  "reviewed_at": "2026-07-07T00:00:00+08:00",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "019f38c6-986a-7571-92f4-784a177a86a9",
+    "nickname": "Wegener"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "id": "019f38c6-986a-7571-92f4-784a177a86a9",
+    "transcript_ref": "evidence/review/pregoal_counterexample_review_transcript.txt",
+    "transcript_hash": "sha256:fdb1552c21ba990834dcb05615a96c055b16897004ee4508a45459c3aacb109a"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/review/pregoal_counterexample_review_prompt.txt",
+    "prompt_hash": "sha256:b10bc7dba46879372e5ca2b8cd149f70110449248ef0de5b73b31ef3ea3698ea",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json": "sha256:56666167076fc5dd163086ee8c7afeb22e941e01be649b1a6cb606142c51ae18",
+      "run.control.json": "sha256:a0fcd6f1fb28607cbd3ce709cb9be05a98d263d1c71adb18c021333cf9739cc1",
+      "gen-000/runtime.control.json": "sha256:b10404b547ed3043c5d2804e1efbce756c852f883e0bb81f7f0bbb6d2a85a698",
+      "review.control.json": "sha256:c537429d1d2d0297ac435734d91916889606b6409b9f9d285a5279708e048581"
+    }
+  },
+  "checked_transformations": [
+    "blocked_or_goal_achieved",
+    "comparison_csv->readme_claim",
+    "fixture_design->canonical_benchmark_claim",
+    "fixture_trace->claim_gate",
+    "old_cell->root_cause_claim",
+    "old_new_comparison->readme_report_claim",
+    "paired_aggregation->sota_verdict",
+    "pre_runtime_compile",
+    "required_outcome:O-anomaly-trace-gates->verdict_gate",
+    "required_outcome:O-contamination-audit->evidence",
+    "required_outcome:O-counterexample-human-gates->final_gate",
+    "required_outcome:O-counterexample-human-gates->human_gate",
+    "required_outcome:O-fixture-control->implementation",
+    "required_outcome:O-old-new-comparison->claim_evidence",
+    "required_outcome:O-order-and-aggregation->comparison_csv",
+    "required_outcome:O-readme-report-verdict->final_report",
+    "required_outcome:O-readme-report-verdict->readme",
+    "required_outcome:O-test-matrix->test_coverage",
+    "required_outcomes->required_steps",
+    "required_result_paths->required_steps",
+    "required_steps->runtime_steps",
+    "required_steps->work_packages",
+    "result_path:RP-canonical-benchmark-trust->aggregation",
+    "result_path:RP-canonical-benchmark-trust->completion_gate",
+    "result_path:RP-canonical-benchmark-trust->fixture",
+    "result_path:RP-old-new-verdict->claim_evidence",
+    "result_path:RP-old-new-verdict->completion_gate",
+    "result_path:RP-old-new-verdict->readme_report",
+    "result_path:RP-review-and-human-gates->blocked_or_goal_achieved",
+    "result_path:RP-review-and-human-gates->counterexample_gate",
+    "result_path:RP-review-and-human-gates->human_gate",
+    "source_requirements->required_outcomes",
+    "source_requirements->required_result_paths",
+    "trace_fields->anomaly_gate"
+  ],
+  "evidence": [
+    "requirements.control.json",
+    "run.control.json",
+    "design.control.json",
+    "goal.control.json",
+    "plan.control.json",
+    "gen-000/runtime.control.json",
+    "evidence/review/pregoal_counterexample_review.json",
+    "evidence/review/pregoal_counterexample_review_transcript.txt"
+  ],
+  "findings": {
+    "blocking_findings": [],
+    "major_findings": [
+      "Source requirements and required result paths are preserved through design, goal, plan, and runtime.",
+      "SOTA cannot pass from old gen005 evidence alone, README-only explanation, proxy send scheduling pollution, fixed order bias, or ratio-of-mean-only aggregation.",
+      "Work assignment remains Serial subagent-driven with no parallel authorization leak.",
+      "human_gate remains required for push/tag/public claim-changing/live external actions.",
+      "Absolute verifier/validator commands exist and are runnable from the repo workdir."
+    ],
+    "non_blocking_findings": [
+      "plan.control.json has no top-level verifier command, but run.control.json and runtime.control.json provide it.",
+      "Final evidence recording is mechanical and excluded from substantive re-review need."
+    ]
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json": "sha256:56666167076fc5dd163086ee8c7afeb22e941e01be649b1a6cb606142c51ae18",
+    "run.control.json": "sha256:a0fcd6f1fb28607cbd3ce709cb9be05a98d263d1c71adb18c021333cf9739cc1",
+    "gen-000/runtime.control.json": "sha256:b10404b547ed3043c5d2804e1efbce756c852f883e0bb81f7f0bbb6d2a85a698",
+    "review.control.json": "sha256:c537429d1d2d0297ac435734d91916889606b6409b9f9d285a5279708e048581"
+  },
+  "decision": {
+    "runtime_compilation_may_proceed_after_mechanical_evidence_recording": true,
+    "requires_revision": false,
+    "requires_human_decision": false
+  }
+}

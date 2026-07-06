@@ -1,0 +1,13 @@
+Run an independent requirements information sufficiency counterexample review.
+Try to find missing facts that would make later design or plan invalid.
+
+Facts to challenge:
+- F-current-fixture-sendall
+- F-outlier-not-stable
+- F-order-alone-not-primary
+- F-aggregation-risk
+
+Required transformations:
+- source_requirements->information_sufficiency_facts
+- required_outcomes->information_sufficiency_facts
+- information_sufficiency_facts->design_plan_entry

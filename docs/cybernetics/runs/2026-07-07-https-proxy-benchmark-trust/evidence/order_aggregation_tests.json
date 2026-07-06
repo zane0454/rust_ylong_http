@@ -1,0 +1,27 @@
+{
+  "artifact_type": "https_proxy_benchmark_order_aggregation_tests",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "status": "pass",
+  "implemented_behavior": [
+    "Added build_client_run_order with fixed, interleaved, and seeded random policies.",
+    "Changed canonical CLI default from fixed order to interleaved order.",
+    "Persisted client_order_policy, client_order_seed, and client_order_position in result rows, raw headers, and environment JSON.",
+    "Added paired_compare_to_baseline over scenario/request/concurrency/model/repeat pairs.",
+    "Added paired geomean ratios and log-ratio 95 percent confidence intervals."
+  ],
+  "canonical_ratio_rule": "benchmark_comparison keeps throughput_rps_ratio_mean as diagnostic and uses paired_throughput_rps_ratio_geomean as the canonical throughput_rps_ratio when paired evidence exists.",
+  "verification": [
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "status": "pass",
+      "stdout_tail": "Ran 21 tests in 3.976s\n\nOK"
+    }
+  ],
+  "relevant_tests": [
+    "test_client_order_policy_controls_fixed_order_bias",
+    "test_write_results_persists_client_order_metadata",
+    "test_paired_comparison_reports_ci_and_proxy_send_anomaly",
+    "test_ratio_plot_data_keeps_all_scenarios_and_uses_throughput_ratio"
+  ]
+}

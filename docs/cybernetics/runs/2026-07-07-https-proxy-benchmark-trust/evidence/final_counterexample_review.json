@@ -1,0 +1,160 @@
+{
+  "artifact_type": "runtime.counterexample_review.evidence",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "independent_review": true,
+  "status": "pass",
+  "verdict": "approved",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "019f38e0-9f0e-7750-9c54-dd4026fd5fc2"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "id": "019f38e0-9f0e-7750-9c54-dd4026fd5fc2",
+    "transcript_ref": "evidence/final_counterexample_review_transcript.txt",
+    "transcript_hash": "sha256:3409473f49dd2dab845105edccc4a954870d34fab451eb5614085eb914f9fbae"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/final_counterexample_review_prompt.txt",
+    "prompt_hash": "sha256:29665f2b00486b63c0e1f807e1c4773a0fa23da9c48746de79cb76d1268ec31e",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json": "sha256:56666167076fc5dd163086ee8c7afeb22e941e01be649b1a6cb606142c51ae18",
+      "gen-000/runtime.control.json": "sha256:b10404b547ed3043c5d2804e1efbce756c852f883e0bb81f7f0bbb6d2a85a698",
+      "review.control.json": "sha256:c537429d1d2d0297ac435734d91916889606b6409b9f9d285a5279708e048581",
+      "progress.jsonl": "sha256:7e0cb639281dc94909c5f4d97a1aaf7beb10e661484d646c10014a7b478d088c"
+    }
+  },
+  "reviewed_steps": [
+    "S1-contamination-audit",
+    "S2-fixture-control",
+    "S3-order-aggregation",
+    "S4-anomaly-trace-gates",
+    "S5-test-matrix",
+    "S6-old-new-comparison",
+    "S7-readme-report-verdict",
+    "S8-counterexample-human-gates"
+  ],
+  "reviewed_outcomes": [
+    "O-contamination-audit",
+    "O-fixture-control",
+    "O-order-and-aggregation",
+    "O-anomaly-trace-gates",
+    "O-test-matrix",
+    "O-old-new-comparison",
+    "O-readme-report-verdict",
+    "O-counterexample-human-gates"
+  ],
+  "reviewed_result_paths": [
+    "RP-canonical-benchmark-trust",
+    "RP-old-new-verdict",
+    "RP-review-and-human-gates"
+  ],
+  "checked_transformations": [
+    "blocked_or_goal_achieved",
+    "comparison_csv->readme_claim",
+    "fixture_design->canonical_benchmark_claim",
+    "fixture_trace->claim_gate",
+    "old_cell->root_cause_claim",
+    "old_new_comparison->readme_report_claim",
+    "paired_aggregation->sota_verdict",
+    "pre_runtime_compile",
+    "required_outcome:O-anomaly-trace-gates->verdict_gate",
+    "required_outcome:O-contamination-audit->evidence",
+    "required_outcome:O-counterexample-human-gates->final_gate",
+    "required_outcome:O-counterexample-human-gates->human_gate",
+    "required_outcome:O-fixture-control->implementation",
+    "required_outcome:O-old-new-comparison->claim_evidence",
+    "required_outcome:O-order-and-aggregation->comparison_csv",
+    "required_outcome:O-readme-report-verdict->final_report",
+    "required_outcome:O-readme-report-verdict->readme",
+    "required_outcome:O-test-matrix->test_coverage",
+    "required_outcomes->required_steps",
+    "required_result_paths->required_steps",
+    "required_steps->runtime_steps",
+    "required_steps->work_packages",
+    "result_path:RP-canonical-benchmark-trust->aggregation",
+    "result_path:RP-canonical-benchmark-trust->completion_gate",
+    "result_path:RP-canonical-benchmark-trust->fixture",
+    "result_path:RP-old-new-verdict->claim_evidence",
+    "result_path:RP-old-new-verdict->completion_gate",
+    "result_path:RP-old-new-verdict->readme_report",
+    "result_path:RP-review-and-human-gates->blocked_or_goal_achieved",
+    "result_path:RP-review-and-human-gates->counterexample_gate",
+    "result_path:RP-review-and-human-gates->human_gate",
+    "source_requirements->required_outcomes",
+    "source_requirements->required_result_paths",
+    "trace_fields->anomaly_gate"
+  ],
+  "evidence": [
+    "evidence.contamination-audit",
+    "evidence.fixture-control-tests",
+    "evidence.order-aggregation-tests",
+    "evidence.trace-anomaly-tests",
+    "evidence.benchmark-test-matrix",
+    "evidence.old-new-benchmark-comparison",
+    "evidence.readme-report-artifacts",
+    "evidence.sota-verdict-review",
+    "evidence.final-counterexample-gate",
+    "evidence.human-gate-approvals"
+  ],
+  "supported_conclusion": "withdraw_sota_claim_under_repaired_benchmark is supported by repaired paired comparison, anomaly gates, README update, and old-new recomputation.",
+  "unsupported_conclusion": "SOTA claim preserved under repaired benchmark is unsupported.",
+  "smallest_counterexample": "No blocking counterexample found by independent subagent review; non-blocking note is that tunnel send time is not part of the current anomaly gate and must be considered before future tunnel-heavy SOTA claims.",
+  "progress_event_line": 18,
+  "reviewed_artifact_hashes": {
+    "requirements.control.json": "sha256:56666167076fc5dd163086ee8c7afeb22e941e01be649b1a6cb606142c51ae18",
+    "gen-000/runtime.control.json": "sha256:b10404b547ed3043c5d2804e1efbce756c852f883e0bb81f7f0bbb6d2a85a698",
+    "review.control.json": "sha256:c537429d1d2d0297ac435734d91916889606b6409b9f9d285a5279708e048581",
+    "progress.jsonl": "sha256:7e0cb639281dc94909c5f4d97a1aaf7beb10e661484d646c10014a7b478d088c"
+  },
+  "subagent_summary": {
+    "artifact_type": "counterexample_gate_review",
+    "objective": "repair ylong_http HTTPS proxy benchmark trust",
+    "verdict": "approved",
+    "final_decision_reviewed": "withdraw_sota_claim_under_repaired_benchmark",
+    "blocking_counterexamples": [],
+    "answers": {
+      "1_implementation": "Yes. Client order control is implemented with fixed/interleaved/random policies and persisted order metadata. Paired aggregation/CI is implemented using scenario/request/concurrency/model/repeat pairs with log-ratio geomean CI. Proxy-send anomaly gating is implemented for proxy_response_send_us and rejects SOTA cells before pass_sota20.",
+      "2_readme_consistency": "Yes. README table values match the generated comparison CSV, and the checked-in figure title/visible matrix matches the CSV facts: paired geomean 1.104x, worst cell 0.909x, errors 0. The figure does not show gates/CI, but README text/table supplies them; this is not a contradiction.",
+      "3_gen005_recompute": "Supports withdrawal under repaired gates. Old gen005 recomputed paired geomean remains above 1.20x at 1.231x, but repaired gates yield zero pass_sota20 cells: 3 reject_proxy_send_anomaly, 3 fail_sota20, 3 inconclusive_ci. So old data does not justify retaining the SOTA claim.",
+      "4_s8_blockers": "No blocking counterexamples found. S8 approval is justified for the withdrawal verdict.",
+      "5_issues": []
+    },
+    "non_blocking_notes": [
+      {
+        "note": "The anomaly gate currently uses proxy_response_send_us, not proxy_tunnel_send_to_client_us. This does not block the withdrawal verdict because no HTTPS-origin/tunnel cell reaches pass_sota20, but it is worth naming if future claims rely on tunnel-heavy cells.",
+        "refs": [
+          "docs/benchmarks/run_https_proxy_bench.py:1813",
+          "docs/benchmarks/run_https_proxy_bench.py:1832",
+          "docs/benchmarks/run_https_proxy_bench.py:1843"
+        ]
+      }
+    ],
+    "key_evidence": [
+      "Client order policy: docs/benchmarks/run_https_proxy_bench.py:1363, docs/benchmarks/run_https_proxy_bench.py:2266, docs/benchmarks/run_https_proxy_bench.py:2361, docs/benchmarks/run_https_proxy_bench.py:2401",
+      "Order metadata persisted: docs/benchmarks/run_https_proxy_bench.py:1429",
+      "Paired keys and CI: docs/benchmarks/run_https_proxy_bench.py:1701, docs/benchmarks/run_https_proxy_bench.py:1731, docs/benchmarks/run_https_proxy_bench.py:1761",
+      "Gate order: docs/benchmarks/run_https_proxy_bench.py:1843",
+      "README withdrawal claim: README.md:140, README.md:154",
+      "New CSV no-pass evidence: docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv:3, docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv:17",
+      "Old recomputation no-pass evidence: docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv:3, docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv:19",
+      "Run evidence verdict: docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/old_new_benchmark_comparison.json:9, docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/old_new_benchmark_comparison.json:40"
+    ],
+    "independent_checks": {
+      "unit_tests": "PYTHONDONTWRITEBYTECODE=1 python -B -m unittest docs.benchmarks.test_run_https_proxy_bench -> Ran 21 tests in 4.412s, OK",
+      "csv_recalculation": {
+        "new_repaired_geomean": 1.1043129514854073,
+        "new_gate_counts": {
+          "fail_sota20": 5,
+          "reject_proxy_send_anomaly": 3,
+          "inconclusive_ci": 1
+        },
+        "new_pass_sota20_count": 0,
+        "old_recomputed_geomean": 1.2312033650719278,
+        "old_pass_sota20_count": 0
+      },
+      "figure_inspection": "docs/figures/https_proxy_bench_performance.png is readable and matches the CSV/README headline values."
+    }
+  }
+}

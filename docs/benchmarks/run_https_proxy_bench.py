@@ -12,6 +12,7 @@ import contextlib
 import json
 import os
 import platform
+import random
 import re
 import select
 import shutil
@@ -155,6 +156,9 @@ class BenchResult:
     elapsed_ms: float
     concurrency: int = 1
     ylong_concurrency_model: str = "threaded"
+    client_order_policy: str = "fixed"
+    client_order_seed: int = 0
+    client_order_position: int = 0
     p50_us: int = 0
     p95_us: int = 0
     cpu_us: int = 0
@@ -1356,6 +1360,25 @@ def benchmark_clients(baseline: str, *, ylong_client: str = "async") -> list[str
     return clients
 
 
+def build_client_run_order(
+    clients: list[str],
+    *,
+    repeat: int,
+    policy: str,
+    seed: int,
+) -> list[str]:
+    ordered = list(clients)
+    if policy == "fixed":
+        return ordered
+    if policy == "interleaved":
+        return ordered if repeat % 2 == 1 else list(reversed(ordered))
+    if policy == "random":
+        rng = random.Random(f"{seed}:{repeat}:{','.join(ordered)}")
+        rng.shuffle(ordered)
+        return ordered
+    raise ValueError(f"unsupported client order policy: {policy}")
+
+
 def attach_trace(rows: list[BenchResult], trace: TraceResult) -> None:
     for row in rows:
         row.proxy_connections = trace.proxy_connections
@@ -1403,6 +1426,9 @@ def write_results(
             "elapsed_ms": row.elapsed_ms,
             "latency_ms": row.latency_ms,
             "throughput_rps": row.throughput_rps,
+            "client_order_policy": row.client_order_policy,
+            "client_order_seed": row.client_order_seed,
+            "client_order_position": row.client_order_position,
             "p50_us": row.p50_us,
             "p95_us": row.p95_us,
             "cpu_us": row.cpu_us,
@@ -1474,7 +1500,7 @@ def write_results(
     summary = summarize_results(df)
     summary.to_csv(result_dir / "https_proxy_bench_summary.csv", index=False)
     baseline = "libcurl" if "libcurl" in set(df["client"]) else "curl_cli"
-    compare_to_baseline(summary, baseline=baseline).to_csv(
+    benchmark_comparison(df, baseline=baseline).to_csv(
         result_dir / "https_proxy_bench_comparison.csv", index=False
     )
     return df
@@ -1672,6 +1698,227 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
     return summary
 
 
+COMPARISON_KEYS = ["scenario", "requests", "concurrency", "ylong_concurrency_model"]
+PAIR_KEYS = [*COMPARISON_KEYS, "repeat"]
+
+
+def normalize_benchmark_df(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    if "concurrency" not in df:
+        df["concurrency"] = 1
+    if "ylong_concurrency_model" not in df:
+        df["ylong_concurrency_model"] = "threaded"
+    if "latency_ms" not in df:
+        df["latency_ms"] = df["elapsed_ms"] / df["requests"]
+    if "throughput_rps" not in df:
+        df["throughput_rps"] = df["requests"] / (df["elapsed_ms"] / 1000.0)
+    for column, default in (
+        ("p50_us", 0),
+        ("p95_us", 0),
+        ("cpu_us_per_request", 0.0),
+        ("rss_peak_bytes", 0),
+        ("errors", 0),
+        ("proxy_response_send_us", 0),
+        ("client_order_policy", "unknown"),
+        ("client_order_seed", 0),
+        ("client_order_position", 0),
+    ):
+        if column not in df:
+            df[column] = default
+    return df
+
+
+def paired_ratio_stats(values: Iterable[float]) -> tuple[float, float, float, int]:
+    ratios = np.array(
+        [float(value) for value in values if np.isfinite(value) and float(value) > 0.0],
+        dtype=float,
+    )
+    if ratios.size == 0:
+        return float("nan"), float("nan"), float("nan"), 0
+    logs = np.log(ratios)
+    mean = float(logs.mean())
+    if ratios.size <= 1:
+        half_width = 0.0
+    else:
+        half_width = float(
+            t_critical_975(int(ratios.size - 1))
+            * logs.std(ddof=1)
+            / np.sqrt(ratios.size)
+        )
+    return (
+        float(np.exp(mean)),
+        float(np.exp(mean - half_width)),
+        float(np.exp(mean + half_width)),
+        int(ratios.size),
+    )
+
+
+def safe_divide(numerator: pd.Series, denominator: pd.Series) -> pd.Series:
+    denominator = denominator.replace(0, np.nan)
+    return numerator / denominator
+
+
+def paired_compare_to_baseline(
+    df: pd.DataFrame,
+    *,
+    baseline: str,
+    proxy_send_share_threshold: float = 0.20,
+    proxy_send_explained_fraction_threshold: float = 0.50,
+    sota_threshold: float = 1.20,
+    min_sota_samples: int = 3,
+) -> pd.DataFrame:
+    df = normalize_benchmark_df(df)
+    metric_columns = [
+        "elapsed_ms",
+        "latency_ms",
+        "throughput_rps",
+        "p50_us",
+        "p95_us",
+        "cpu_us_per_request",
+        "rss_peak_bytes",
+        "errors",
+        "proxy_response_send_us",
+    ]
+    baseline_rows = df[df["client"] == baseline][PAIR_KEYS + metric_columns].rename(
+        columns={column: f"{column}_baseline" for column in metric_columns}
+    )
+    if baseline_rows.empty:
+        return pd.DataFrame()
+    paired = df.merge(baseline_rows, on=PAIR_KEYS, how="inner")
+    paired = paired[paired["client"] != baseline].copy()
+    if paired.empty:
+        return pd.DataFrame()
+
+    rows: list[dict[str, object]] = []
+    for keys, group in paired.groupby([*COMPARISON_KEYS, "client"], sort=True):
+        scenario, requests, concurrency, ylong_concurrency_model, client = keys
+        elapsed_ratio, elapsed_low, elapsed_high, sample_count = paired_ratio_stats(
+            safe_divide(group["elapsed_ms"], group["elapsed_ms_baseline"])
+        )
+        latency_ratio, latency_low, latency_high, _ = paired_ratio_stats(
+            safe_divide(group["latency_ms"], group["latency_ms_baseline"])
+        )
+        throughput_ratio, throughput_low, throughput_high, _ = paired_ratio_stats(
+            safe_divide(group["throughput_rps"], group["throughput_rps_baseline"])
+        )
+        p95_ratio, p95_low, p95_high, _ = paired_ratio_stats(
+            safe_divide(group["p95_us"], group["p95_us_baseline"])
+        )
+        cpu_ratio, cpu_low, cpu_high, _ = paired_ratio_stats(
+            safe_divide(
+                group["cpu_us_per_request"],
+                group["cpu_us_per_request_baseline"],
+            )
+        )
+        candidate_proxy_send_ms = group["proxy_response_send_us"] / 1000.0
+        baseline_proxy_send_ms = group["proxy_response_send_us_baseline"] / 1000.0
+        candidate_send_share = safe_divide(candidate_proxy_send_ms, group["elapsed_ms"])
+        baseline_send_share = safe_divide(
+            baseline_proxy_send_ms,
+            group["elapsed_ms_baseline"],
+        )
+        elapsed_delta_ms = (group["elapsed_ms"] - group["elapsed_ms_baseline"]).abs()
+        proxy_send_delta_ms = (
+            candidate_proxy_send_ms - baseline_proxy_send_ms
+        ).abs()
+        explained_fraction = safe_divide(proxy_send_delta_ms, elapsed_delta_ms).replace(
+            [np.inf, -np.inf],
+            np.nan,
+        )
+        candidate_share_mean = float(candidate_send_share.fillna(0.0).mean())
+        baseline_share_mean = float(baseline_send_share.fillna(0.0).mean())
+        max_send_share = max(candidate_share_mean, baseline_share_mean)
+        explained_fraction_mean = float(explained_fraction.fillna(0.0).mean())
+        proxy_send_anomaly = (
+            max_send_share > proxy_send_share_threshold
+            or explained_fraction_mean > proxy_send_explained_fraction_threshold
+        )
+        if max_send_share > proxy_send_share_threshold:
+            proxy_send_anomaly_reason = "server_send_share_exceeds_threshold"
+        elif explained_fraction_mean > proxy_send_explained_fraction_threshold:
+            proxy_send_anomaly_reason = "server_send_delta_explains_elapsed_delta"
+        else:
+            proxy_send_anomaly_reason = "-"
+        errors_sum = int(group["errors"].sum() + group["errors_baseline"].sum())
+        if proxy_send_anomaly:
+            sota_gate = "reject_proxy_send_anomaly"
+        elif errors_sum:
+            sota_gate = "reject_errors"
+        elif sample_count < min_sota_samples:
+            sota_gate = "diagnostic_low_sample"
+        elif np.isfinite(throughput_low) and throughput_low >= sota_threshold:
+            sota_gate = "pass_sota20"
+        elif np.isfinite(throughput_ratio) and throughput_ratio >= sota_threshold:
+            sota_gate = "inconclusive_ci"
+        else:
+            sota_gate = "fail_sota20"
+        rows.append(
+            {
+                "scenario": scenario,
+                "requests": requests,
+                "concurrency": concurrency,
+                "ylong_concurrency_model": ylong_concurrency_model,
+                "client": client,
+                "paired_sample_count": sample_count,
+                "paired_elapsed_ms_ratio_geomean": elapsed_ratio,
+                "paired_elapsed_ms_ratio_ci95_low": elapsed_low,
+                "paired_elapsed_ms_ratio_ci95_high": elapsed_high,
+                "paired_latency_ms_ratio_geomean": latency_ratio,
+                "paired_latency_ms_ratio_ci95_low": latency_low,
+                "paired_latency_ms_ratio_ci95_high": latency_high,
+                "paired_throughput_rps_ratio_geomean": throughput_ratio,
+                "paired_throughput_rps_ratio_ci95_low": throughput_low,
+                "paired_throughput_rps_ratio_ci95_high": throughput_high,
+                "paired_p95_us_ratio_geomean": p95_ratio,
+                "paired_p95_us_ratio_ci95_low": p95_low,
+                "paired_p95_us_ratio_ci95_high": p95_high,
+                "paired_cpu_us_per_request_ratio_geomean": cpu_ratio,
+                "paired_cpu_us_per_request_ratio_ci95_low": cpu_low,
+                "paired_cpu_us_per_request_ratio_ci95_high": cpu_high,
+                "proxy_send_elapsed_share_candidate_mean": candidate_share_mean,
+                "proxy_send_elapsed_share_baseline_mean": baseline_share_mean,
+                "proxy_send_elapsed_share_max": max_send_share,
+                "proxy_send_elapsed_delta_explained_fraction": explained_fraction_mean,
+                "proxy_send_anomaly": bool(proxy_send_anomaly),
+                "proxy_send_anomaly_reason": proxy_send_anomaly_reason,
+                "paired_errors_sum": errors_sum,
+                "sota_gate": sota_gate,
+            }
+        )
+    return pd.DataFrame(rows).sort_values(
+        [*COMPARISON_KEYS, "client"],
+        ignore_index=True,
+    )
+
+
+def benchmark_comparison(df: pd.DataFrame, *, baseline: str) -> pd.DataFrame:
+    summary = summarize_results(df)
+    comparison = compare_to_baseline(summary, baseline=baseline).rename(
+        columns={"throughput_rps_ratio": "throughput_rps_ratio_mean"}
+    )
+    paired = paired_compare_to_baseline(df, baseline=baseline)
+    if not paired.empty:
+        comparison = comparison.merge(
+            paired,
+            on=[*COMPARISON_KEYS, "client"],
+            how="left",
+        )
+    else:
+        comparison["paired_throughput_rps_ratio_geomean"] = np.nan
+    comparison["throughput_rps_ratio"] = comparison[
+        "paired_throughput_rps_ratio_geomean"
+    ].combine_first(comparison["throughput_rps_ratio_mean"])
+    comparison["ratio_source"] = np.where(
+        comparison["paired_throughput_rps_ratio_geomean"].notna(),
+        "paired",
+        "summary",
+    )
+    return comparison.sort_values(
+        [*COMPARISON_KEYS, "client"],
+        ignore_index=True,
+    )
+
+
 def compare_to_baseline(summary: pd.DataFrame, *, baseline: str) -> pd.DataFrame:
     baseline_rows = summary[summary["client"] == baseline][
         [
@@ -1752,8 +1999,7 @@ def benchmark_ratio_plot_data(
         df["errors"] = 0
     clients = set(df["client"])
     baseline = baseline or ("libcurl" if "libcurl" in clients else "curl_cli")
-    summary = summarize_results(df)
-    comparison = compare_to_baseline(summary, baseline=baseline)
+    comparison = benchmark_comparison(df, baseline=baseline)
     candidate_order = [
         "ylong_http_client_sync",
         "ylong_http_client",
@@ -1796,6 +2042,9 @@ def benchmark_ratio_plot_data(
         "scenarios": scenarios,
         "requests": requests,
         "matrices": matrices,
+        "ratio_source": "paired"
+        if candidate_rows["ratio_source"].eq("paired").any()
+        else "summary",
         "throughput_geomean": float(np.exp(np.log(throughput).mean())),
         "throughput_worst": float(throughput.min()),
         "errors_sum": int(candidate_rows["errors_sum"].sum()),
@@ -1925,7 +2174,7 @@ def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
     draw_ratio_matrix(
         axes[0, 0],
         matrices["throughput_rps_ratio"],
-        title="(a) Throughput ratio (higher is better)",
+        title="(a) Paired throughput ratio (higher is better)",
         higher_is_better=True,
         threshold=1.20,
     )
@@ -1953,7 +2202,7 @@ def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
     summary = (
         f"{client_labels.get(str(plot_data['candidate']), str(plot_data['candidate']))} vs "
         f"{client_labels.get(str(plot_data['baseline']), str(plot_data['baseline']))}: "
-        f"throughput geomean {float(plot_data['throughput_geomean']):.3f}x, "
+        f"paired throughput geomean {float(plot_data['throughput_geomean']):.3f}x, "
         f"worst cell {float(plot_data['throughput_worst']):.3f}x, "
         f"errors {int(plot_data['errors_sum'])}"
     )
@@ -2012,6 +2261,21 @@ def main() -> None:
             "Async ylong concurrency model when --concurrency > 1. "
             "Default threaded preserves existing diagnostic behavior."
         ),
+    )
+    parser.add_argument(
+        "--client-order",
+        choices=["fixed", "interleaved", "random"],
+        default="interleaved",
+        help=(
+            "Client execution order policy. interleaved alternates order by repeat; "
+            "random uses --client-order-seed and records positions."
+        ),
+    )
+    parser.add_argument(
+        "--client-order-seed",
+        type=int,
+        default=20260707,
+        help="Seed for --client-order random and provenance for all order policies.",
     )
     parser.add_argument(
         "--bench-bin",
@@ -2090,7 +2354,17 @@ def main() -> None:
             time.sleep(0.2)
             for requests in request_counts:
                 for repeat in range(1, args.repeats + 1):
-                    for client in benchmark_clients(args.baseline, ylong_client=args.ylong_client):
+                    clients = benchmark_clients(
+                        args.baseline,
+                        ylong_client=args.ylong_client,
+                    )
+                    ordered_clients = build_client_run_order(
+                        clients,
+                        repeat=repeat,
+                        policy=args.client_order,
+                        seed=args.client_order_seed,
+                    )
+                    for client_position, client in enumerate(ordered_clients, start=1):
                         before_proxy = proxy.snapshot(scenario, client_label(client))
                         before_origin = (
                             origin.snapshot(scenario, client_label(client))
@@ -2124,11 +2398,18 @@ def main() -> None:
                         trace = after_proxy.delta(before_proxy)
                         trace.add_origin(after_origin.delta(before_origin))
                         attach_trace(rows, trace)
+                        for row in rows:
+                            row.client_order_policy = args.client_order
+                            row.client_order_seed = args.client_order_seed
+                            row.client_order_position = client_position
                         all_rows.extend(rows)
                         raw_lines.append(
                             f"### scenario={scenario} requests={requests} "
                             f"concurrency={args.concurrency} repeat={repeat} "
                             f"ylong_concurrency_model={args.ylong_concurrency_model} "
+                            f"client_order={args.client_order} "
+                            f"client_order_seed={args.client_order_seed} "
+                            f"client_order_position={client_position} "
                             f"client={client_label(client)}"
                         )
                         raw_lines.append(stdout.strip())
@@ -2138,6 +2419,8 @@ def main() -> None:
                             f"scenario={scenario} requests={requests} "
                             f"concurrency={args.concurrency} repeat={repeat} "
                             f"ylong_concurrency_model={args.ylong_concurrency_model} "
+                            f"client_order={args.client_order} "
+                            f"client_order_position={client_position} "
                             f"client={client_label(client)}: ok",
                             flush=True,
                         )
@@ -2169,6 +2452,8 @@ def main() -> None:
         "request_counts": request_counts,
         "concurrency": args.concurrency,
         "ylong_concurrency_model": args.ylong_concurrency_model,
+        "client_order": args.client_order,
+        "client_order_seed": args.client_order_seed,
         "repeats": args.repeats,
         "warmup": args.warmup,
         "phase_timing": args.phase_timing,

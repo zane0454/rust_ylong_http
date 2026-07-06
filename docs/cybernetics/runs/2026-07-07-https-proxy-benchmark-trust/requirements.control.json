@@ -1,0 +1,1232 @@
+{
+  "artifact_type": "requirements.control",
+  "schema_version": "1.3.0",
+  "status": "approved",
+  "approved_control": {
+    "human_purpose": "Repair the ylong_http HTTPS proxy SOTA benchmark so performance evidence is trustworthy rather than explained after the fact.",
+    "primary_object": "ylong_http HTTPS proxy benchmark harness, results, and evidence chain",
+    "requested_transformation": "Perform implementation-level benchmark trust repair: identify and remove or control Python TLS proxy send scheduling pollution, fixed client-order bias, small-sample outlier amplification, and mean-throughput aggregation distortion; then update tests, results, README/report evidence, and the SOTA claim decision.",
+    "non_goals": [
+      "Do not merely rewrite README prose or figure captions.",
+      "Do not preserve a SOTA claim by statistical explanation of the old 0.890x cell.",
+      "Do not replace same-process libcurl-library evidence with curl CLI evidence.",
+      "Do not weaken protocol, TLS, mTLS, sync/async, or previous correctness requirements.",
+      "Do not use live external proxies, credentials, destructive operations, or tags without human_gate approval."
+    ],
+    "how_we_know_purpose_was_met": "A reviewer can rerun the benchmark and inspect run-local artifacts showing that the benchmark fixture, client scheduling, aggregation method, trace attribution, anomaly gates, tests, README/report text, and final SOTA verdict no longer accept proxy send scheduling noise, fixed order bias, low-repeat outliers, or mismatched aggregation as client performance evidence.",
+    "where_result_must_show_up": [
+      "docs/benchmarks/run_https_proxy_bench.py or replacement benchmark fixture code",
+      "ylong_http_client/src/bin/https_proxy_bench.rs when benchmark binary changes are required",
+      "docs/benchmarks/test_run_https_proxy_bench.py and any new focused benchmark tests",
+      "docs/benchmarks/results/<new-run>/ with raw, summary, comparison, environment, and trace evidence",
+      "docs/figures/https_proxy_bench_performance.png and .pdf if README figure semantics change",
+      "README.md benchmark section",
+      "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/",
+      "final-report.json for the controlled run"
+    ],
+    "what_counts_as_done": "The benchmark trust repair is done only when all required outcomes and result paths are directly evidenced: contamination audit completed; fixture or equivalent control implemented; client execution order bias controlled; paired aggregation, confidence intervals, and outlier/anomaly gates implemented; proxy send time and trace attribution included in result artifacts; tests pass; a new benchmark or controlled diagnostic matrix is run and compared with gen005; README/report evidence is updated; final Counterexample Gate passes; and the final report explicitly decides whether the SOTA claim is preserved, downgraded, or withdrawn under the repaired benchmark.",
+    "final_answer_format": {
+      "medium": "chat summary plus run-local JSON/evidence artifacts",
+      "required_structure": [
+        "requirements control path",
+        "status",
+        "approved or pending control commitment",
+        "source requirements summary",
+        "required outcomes/result paths",
+        "required checks",
+        "human gates",
+        "counterexample gates",
+        "next response-only command"
+      ]
+    },
+    "source_requirements": [
+      {
+        "id": "SR-benchmark-trust-fixed-target",
+        "source": {
+          "kind": "user_message",
+          "quote": "以“修正 ylong_http HTTPS proxy SOTA benchmark 的测量可信度”为固定目标"
+        },
+        "required_action": "Treat benchmark measurement credibility repair as the fixed controlled-run target.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "review_report",
+        "target_objects": [
+          "HTTPS proxy benchmark harness",
+          "SOTA evidence chain"
+        ],
+        "completion_checks": [
+          "The run does not drift into explaining the old result without repairing the benchmark.",
+          "The run does not treat README wording as a substitute for measurement credibility."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-contamination-audit",
+        "source": {
+          "kind": "user_message",
+          "quote": "识别并消除 Python TLS proxy sendall 调度污染"
+        },
+        "required_action": "Audit and eliminate or control Python TLS proxy sendall scheduling pollution in canonical benchmark evidence.",
+        "requirement_type": "diagnose_root_cause",
+        "required_evidence_strength": "analysis_report",
+        "target_objects": [
+          "LocalHttpsProxy",
+          "proxy_response_send_us",
+          "benchmark result interpretation"
+        ],
+        "completion_checks": [
+          "Audit identifies where proxy send time enters measured client performance.",
+          "Canonical benchmark either removes this fixture from the performance path or records and gates its influence."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-fixture-design-choice",
+        "source": {
+          "kind": "user_message",
+          "quote": "设计并实现更稳定的 proxy/origin fixture 或等价控制机制"
+        },
+        "required_action": "Choose and implement a stable proxy/origin fixture or equivalent controls that make benchmark results attributable to client behavior.",
+        "requirement_type": "implement_behavior",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "benchmark proxy fixture",
+          "benchmark origin fixture",
+          "fixture trace fields"
+        ],
+        "completion_checks": [
+          "Design review records why the chosen fixture/control is adequate.",
+          "Implementation evidence shows stable request/response counts and bounded server-side send influence."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-client-order-control",
+        "source": {
+          "kind": "user_message",
+          "quote": "client 顺序随机化/交错"
+        },
+        "required_action": "Implement client execution order control such as randomized order, seed logging, or A/B/B/A interleaving.",
+        "requirement_type": "implement_behavior",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "benchmark run loop",
+          "raw benchmark output",
+          "environment/result metadata"
+        ],
+        "completion_checks": [
+          "Result artifacts record execution order and seed or deterministic interleaving policy.",
+          "No canonical result is based on fixed ylong-then-libcurl order without an approved reason and counterexample review."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-paired-aggregation-ci",
+        "source": {
+          "kind": "user_message",
+          "quote": "paired aggregation 与 CI"
+        },
+        "required_action": "Implement paired aggregation and confidence/uncertainty reporting so one-sided low-latency outliers cannot dominate the claim.",
+        "requirement_type": "implement_behavior",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "benchmark comparison CSV",
+          "plot data",
+          "README/report metric definitions"
+        ],
+        "completion_checks": [
+          "Comparison output includes paired ratios or equivalent paired statistics.",
+          "Canonical claim uses an approved aggregation rule that includes uncertainty and downgrade behavior.",
+          "Ratio-of-mean throughput is not the sole SOTA gate unless justified and approved by counterexample review."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-proxy-send-anomaly-gate",
+        "source": {
+          "kind": "user_message",
+          "quote": "proxy send time 异常门"
+        },
+        "required_action": "Add anomaly gates for proxy send time and related trace fields that can reject or downgrade polluted cells.",
+        "requirement_type": "implement_behavior",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "proxy_response_send_us",
+          "result comparison",
+          "final SOTA verdict"
+        ],
+        "completion_checks": [
+          "Trace output records server-side send time per client/cell.",
+          "A predeclared anomaly gate rejects or downgrades cells where server-side send timing explains the claimed client advantage or disadvantage."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-trace-attribution-fields",
+        "source": {
+          "kind": "user_message",
+          "quote": "trace 归因字段"
+        },
+        "required_action": "Expose enough trace attribution fields to distinguish client work, server send timing, connection reuse, request counts, body bytes, errors, and TLS/proxy topology.",
+        "requirement_type": "implement_behavior",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "raw output",
+          "results CSV",
+          "summary CSV",
+          "comparison CSV"
+        ],
+        "completion_checks": [
+          "Trace fields are parsed and persisted.",
+          "Tests prove trace fields survive raw-output parsing and summary/comparison generation.",
+          "Final report uses trace fields to justify or reject benchmark cells."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-test-matrix",
+        "source": {
+          "kind": "user_message",
+          "quote": "测试矩阵"
+        },
+        "required_action": "Add or update tests that guard benchmark semantics, not only syntax.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "benchmark unit tests",
+          "fixture tests",
+          "plot/comparison tests"
+        ],
+        "completion_checks": [
+          "Tests cover client order metadata, paired aggregation, CI/uncertainty fields, anomaly gate behavior, trace parsing, and README plot data source semantics.",
+          "Tests fail if the benchmark silently drops scenarios or reverts to a single-scenario plot."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-old-new-comparison",
+        "source": {
+          "kind": "user_message",
+          "quote": "新旧 benchmark 对照"
+        },
+        "required_action": "Compare old gen005 evidence with repaired benchmark evidence and explain changes in measured results and claim validity.",
+        "requirement_type": "produce_empirical_measurement",
+        "required_evidence_strength": "benchmark_result",
+        "target_objects": [
+          "gen005 SOTA result",
+          "new repaired benchmark result",
+          "outlier cell explanation"
+        ],
+        "completion_checks": [
+          "Comparison identifies whether the old 0.890x cell remains, disappears, or is rejected by anomaly gates.",
+          "Comparison records whether old SOTA evidence is preserved, downgraded to historical evidence, or withdrawn."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-readme-report-evidence",
+        "source": {
+          "kind": "user_message",
+          "quote": "README/报告证据链"
+        },
+        "required_action": "Update README/report evidence chain so plotted figures, tables, metric definitions, and SOTA language match repaired benchmark evidence.",
+        "requirement_type": "implement_behavior",
+        "required_evidence_strength": "code_change",
+        "target_objects": [
+          "README.md",
+          "docs/figures",
+          "report/final run artifacts"
+        ],
+        "completion_checks": [
+          "README does not cite superseded benchmark results as canonical.",
+          "Figures and tables point to the repaired benchmark result directory.",
+          "Claims distinguish canonical evidence from historical/counterexample runs."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-sota-verdict",
+        "source": {
+          "kind": "user_message",
+          "quote": "是否保留 SOTA claim 的判定规则"
+        },
+        "required_action": "Define and apply a final decision rule for preserving, downgrading, or withdrawing the SOTA claim after benchmark repair.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "review_report",
+        "target_objects": [
+          "final SOTA claim",
+          "README benchmark section",
+          "final-report.json"
+        ],
+        "completion_checks": [
+          "The final verdict cannot be inferred from old gen005 results alone.",
+          "The verdict states whether the repaired benchmark still meets the approved 20% SOTA threshold, with zero errors and no anomaly-gate failure.",
+          "If the repaired benchmark fails, README/report are downgraded honestly instead of preserving the SOTA claim."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-human-counterexample-gates",
+        "source": {
+          "kind": "user_message",
+          "quote": "human_gate 和 counterexample_gate"
+        },
+        "required_action": "Use human_gate for claim-changing/public actions and counterexample_gate for benchmark credibility and final completion.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "review_report",
+        "target_objects": [
+          "control chain",
+          "final SOTA claim",
+          "push/tag actions"
+        ],
+        "completion_checks": [
+          "Counterexample Gate challenges benchmark pollution, ordering bias, aggregation distortion, unsupported SOTA claims, and result-path decomposition.",
+          "Human approval is required before pushing claim-changing benchmark/report updates or tagging."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      }
+    ],
+    "required_result_paths": [
+      {
+        "path_id": "RP-canonical-benchmark-trust",
+        "statement": "A canonical HTTPS proxy benchmark run produces client-comparable results that are not accepted when dominated by proxy send scheduling, fixed order bias, or low-repeat outliers. The repaired benchmark also has semantic tests that prevent reverting to polluted or unreadable evidence.",
+        "source_requirements": [
+          "SR-contamination-audit",
+          "SR-fixture-design-choice",
+          "SR-client-order-control",
+          "SR-paired-aggregation-ci",
+          "SR-proxy-send-anomaly-gate",
+          "SR-test-matrix"
+        ],
+        "satisfies_outcomes": [
+          "O-contamination-audit",
+          "O-fixture-control",
+          "O-order-and-aggregation",
+          "O-anomaly-trace-gates",
+          "O-test-matrix"
+        ],
+        "path_steps": [
+          "run repaired fixture/control",
+          "execute ylong and libcurl using approved ordering policy",
+          "record trace and anomaly fields",
+          "compute paired statistics and uncertainty",
+          "reject or downgrade polluted cells",
+          "run focused semantic tests"
+        ],
+        "completion_standard": "The path is complete only when canonical results include trace-backed evidence that benchmark cells are attributable to client behavior and anomaly gates are applied before SOTA verdicts.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-canonical-benchmark-trust->fixture",
+            "result_path:RP-canonical-benchmark-trust->aggregation",
+            "result_path:RP-canonical-benchmark-trust->completion_gate"
+          ],
+          "reject_if": [
+            "All component tests pass but canonical results can still be dominated by proxy send scheduling.",
+            "Execution order remains fixed and unrecorded.",
+            "A low-repeat outlier can still determine the SOTA verdict."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-old-new-verdict",
+        "statement": "The old gen005 SOTA evidence and the repaired benchmark evidence are compared, and the repository reaches an explicit keep/downgrade/withdraw SOTA verdict.",
+        "source_requirements": [
+          "SR-old-new-comparison",
+          "SR-sota-verdict",
+          "SR-readme-report-evidence"
+        ],
+        "satisfies_outcomes": [
+          "O-old-new-comparison",
+          "O-readme-report-verdict"
+        ],
+        "path_steps": [
+          "load gen005 evidence",
+          "run or load repaired benchmark evidence",
+          "apply anomaly and aggregation gates",
+          "decide SOTA claim status",
+          "update README/report evidence chain"
+        ],
+        "completion_standard": "The path is complete only when the final SOTA claim status is tied to repaired benchmark evidence and old results are not misrepresented as canonical if they fail repaired gates.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-old-new-verdict->claim_evidence",
+            "result_path:RP-old-new-verdict->readme_report",
+            "result_path:RP-old-new-verdict->completion_gate"
+          ],
+          "reject_if": [
+            "README/report still imply the old gen005 matrix is canonical when repaired evidence supersedes it.",
+            "The final verdict preserves SOTA without passing repaired benchmark gates.",
+            "The final verdict withdraws SOTA without explaining which repaired gate failed."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-review-and-human-gates",
+        "statement": "Independent Counterexample Gate and required human gates are applied before goal_achieved, push/tag, or final SOTA claim changes.",
+        "source_requirements": [
+          "SR-human-counterexample-gates"
+        ],
+        "satisfies_outcomes": [
+          "O-counterexample-human-gates"
+        ],
+        "path_steps": [
+          "run independent counterexample review",
+          "resolve or reject counterexamples",
+          "request human approval for public/push/tag actions",
+          "finalize only after verifier permits goal_achieved"
+        ],
+        "completion_standard": "The path is complete only when review evidence explicitly tries to disprove benchmark credibility and the final status does not bypass human-gated actions.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-review-and-human-gates->counterexample_gate",
+            "result_path:RP-review-and-human-gates->human_gate",
+            "result_path:RP-review-and-human-gates->blocked_or_goal_achieved"
+          ],
+          "reject_if": [
+            "The run claims completion without independent counterexample evidence.",
+            "Push/tag or claim-changing publication happens without required human approval."
+          ]
+        }
+      }
+    ],
+    "information_sufficiency_check": {
+      "status": "satisfied",
+      "facts": [
+        {
+          "fact_id": "F-current-fixture-sendall",
+          "statement": "The current benchmark fixture uses Python ssl.SSLSocket.sendall in LocalHttpsProxy and records proxy_response_send_us around it.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-contamination-audit",
+              "SR-fixture-design-choice"
+            ],
+            "required_outcomes": [
+              "O-contamination-audit",
+              "O-fixture-control"
+            ]
+          },
+          "why_needed": "Design must know whether the current fixture can pollute client timing before choosing replacement or control mechanisms.",
+          "acceptable_evidence": [
+            {
+              "kind": "source_code",
+              "description": "Repository source lines showing LocalHttpsProxy sendall timing and trace recording."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/benchmark_trust_source_context.json#OBS-python-proxy-sendall-measured",
+          "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-outlier-not-stable",
+          "statement": "The gen005 0.890x cell was not reproduced by targeted 20-repeat forward and reverse-order reruns; this indicates the old cell is not a stable implementation-slow-path result.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-old-new-comparison",
+              "SR-sota-verdict"
+            ],
+            "required_outcomes": [
+              "O-old-new-comparison",
+              "O-readme-report-verdict"
+            ]
+          },
+          "why_needed": "Design must distinguish implementation optimization work from benchmark measurement repair.",
+          "acceptable_evidence": [
+            {
+              "kind": "command_result",
+              "description": "Targeted rerun summaries showing different ratios and win counts."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/benchmark_trust_source_context.json#OBS-r20-not-reproduced",
+          "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-order-alone-not-primary",
+          "statement": "A reverse-order diagnostic did not make libcurl preserve the 0.890x advantage, so fixed order alone is not a sufficient root-cause explanation, even though order still requires control.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-client-order-control"
+            ],
+            "required_outcomes": [
+              "O-order-and-aggregation"
+            ]
+          },
+          "why_needed": "Design must not select order randomization as the only repair if server-side send pollution remains uncontrolled.",
+          "acceptable_evidence": [
+            {
+              "kind": "command_result",
+              "description": "Reverse-order diagnostic summary."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/benchmark_trust_source_context.json#OBS-reverse-order-not-order-only",
+          "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-aggregation-risk",
+          "statement": "The current README figure and comparison flow use throughput ratios in a way that can amplify low-latency outliers when sample size is small.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-paired-aggregation-ci"
+            ],
+            "required_outcomes": [
+              "O-order-and-aggregation"
+            ]
+          },
+          "why_needed": "Design must define aggregation and uncertainty before execution so runtime does not invent favorable statistics.",
+          "acceptable_evidence": [
+            {
+              "kind": "source_code",
+              "description": "Plot/comparison data source and current figure metric semantics."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/benchmark_trust_source_context.json#OBS-aggregation-risk",
+          "blocks_design_or_plan_if_missing": true
+        }
+      ],
+      "counterexample_review": {
+        "status": "pass",
+        "verdict": "approved",
+        "reviewer": {
+          "kind": "subagent",
+          "id": "019f38b2-862d-7891-a14a-899bd2063dca",
+          "evidence_ref": "evidence/information_sufficiency_counterexample.json"
+        },
+        "checked_facts": [
+          "F-current-fixture-sendall",
+          "F-outlier-not-stable",
+          "F-order-alone-not-primary",
+          "F-aggregation-risk"
+        ],
+        "checked_transformations": [
+          "source_requirements->information_sufficiency_facts",
+          "required_outcomes->information_sufficiency_facts",
+          "information_sufficiency_facts->design_plan_entry"
+        ],
+        "findings": [
+          "Non-blocking: F-outlier-not-stable and F-order-alone-not-primary rely on temporary /tmp diagnostic artifacts; pregoal/runtime must regenerate or import run-local evidence before final claims.",
+          "Non-blocking: OBS-gen005-proxy-send-correlation has a weak reference and must be persisted under the run evidence directory before any design or final audit cites it.",
+          "Non-blocking: fixture choice, ordering policy, and canonical aggregation rule are intentionally deferred to design and must be explicit before runtime implementation."
+        ]
+      }
+    },
+    "required_outcomes": [
+      {
+        "id": "O-contamination-audit",
+        "statement": "Existing benchmark contamination sources are audited and classified before implementation.",
+        "source_requirements": [
+          "SR-contamination-audit",
+          "SR-benchmark-trust-fixed-target"
+        ],
+        "completion_claim": "The run identifies which old benchmark signals are polluted, stable, or inconclusive and what must be controlled before making client-performance claims.",
+        "completed_target_objects": [
+          "benchmark harness",
+          "gen005 outlier cell",
+          "proxy send trace"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "local HTTPS proxy benchmark",
+            "same-process libcurl baseline",
+            "ylong_http_client_sync candidate"
+          ],
+          "forbidden_contexts": [
+            "curl CLI-only evidence",
+            "README-only explanation"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.contamination-audit",
+            "kind": "progress_event",
+            "description": "Audit report with source refs, rerun summaries, and candidate pollution sources.",
+            "evidence_strength": "analysis_report",
+            "satisfies_source_requirements": [
+              "SR-contamination-audit"
+            ],
+            "evidence_claim": "The report proves known benchmark pollution sources were identified before repair.",
+            "completed_target_objects": [
+              "benchmark contamination model",
+              "LocalHttpsProxy",
+              "proxy_response_send_us",
+              "benchmark result interpretation"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "pre-repair audit",
+                "local HTTPS proxy benchmark",
+                "same-process libcurl baseline",
+                "ylong_http_client_sync candidate"
+              ],
+              "proves": "The contamination model was inspected and recorded.",
+              "does_not_prove": [
+                "The benchmark has been repaired",
+                "SOTA remains valid"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Explaining the 0.890x cell without changing benchmark gates.",
+          "Only rerunning the same benchmark with more repeats."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Audit is complete only if it can identify how current benchmark evidence could still be false-positive or false-negative.",
+          "required_checked_transformations": [
+            "required_outcome:O-contamination-audit->evidence",
+            "old_cell->root_cause_claim"
+          ],
+          "required_evidence_ids": [
+            "evidence.contamination-audit"
+          ],
+          "reject_if": [
+            "The audit treats the old 0.890x as explained but leaves the same metric path accepted.",
+            "The audit omits proxy_response_send_us or client-order analysis."
+          ]
+        }
+      },
+      {
+        "id": "O-fixture-control",
+        "statement": "Benchmark fixture or equivalent controls make canonical results attributable to client behavior.",
+        "source_requirements": [
+          "SR-fixture-design-choice",
+          "SR-contamination-audit"
+        ],
+        "completion_claim": "The benchmark fixture/control no longer lets Python proxy send scheduling dominate canonical performance cells without detection.",
+        "completed_target_objects": [
+          "proxy/origin fixture",
+          "benchmark trace model"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "canonical HTTPS proxy performance matrix"
+          ],
+          "forbidden_contexts": [
+            "uncontrolled Python sendall-only fixture"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.fixture-control-tests",
+            "kind": "progress_event",
+            "description": "Implementation and tests for chosen stable fixture/control.",
+            "evidence_strength": "test_result",
+            "satisfies_source_requirements": [
+              "SR-fixture-design-choice"
+            ],
+            "evidence_claim": "The implemented fixture/control is tested and emits required trace fields.",
+            "completed_target_objects": [
+              "benchmark fixture/control",
+              "benchmark proxy fixture",
+              "benchmark origin fixture",
+              "fixture trace fields"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "repaired benchmark harness",
+                "canonical HTTPS proxy performance matrix"
+              ],
+              "proves": "Fixture/control implementation behaves as specified in tests.",
+              "does_not_prove": [
+                "Final SOTA threshold passes"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Leaving Python sendall as canonical with no anomaly gate.",
+          "A fixture design note without executable tests."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Fixture control is complete only if polluted server-side send behavior is removed or detected and downgraded before claims.",
+          "required_checked_transformations": [
+            "required_outcome:O-fixture-control->implementation",
+            "fixture_trace->claim_gate"
+          ],
+          "required_evidence_ids": [
+            "evidence.fixture-control-tests"
+          ],
+          "reject_if": [
+            "The fixture still accepts cells where proxy send time explains the advantage.",
+            "Tests do not exercise the anomaly-control path."
+          ]
+        }
+      },
+      {
+        "id": "O-order-and-aggregation",
+        "statement": "Client order and statistical aggregation are fair, paired, recorded, and resistant to small-sample outlier distortion.",
+        "source_requirements": [
+          "SR-client-order-control",
+          "SR-paired-aggregation-ci"
+        ],
+        "completion_claim": "The benchmark records execution ordering and computes paired/uncertainty metrics that cannot silently convert one low-latency outlier into a SOTA result.",
+        "completed_target_objects": [
+          "run loop",
+          "comparison CSV",
+          "figure data"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "same topology paired ylong/libcurl benchmark cells"
+          ],
+          "forbidden_contexts": [
+            "unpaired ad hoc reruns",
+            "ratio-of-mean-only SOTA gate"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.order-aggregation-tests",
+            "kind": "progress_event",
+            "description": "Tests and benchmark output proving order metadata, paired metrics, and uncertainty fields.",
+            "evidence_strength": "test_result",
+            "satisfies_source_requirements": [
+              "SR-client-order-control",
+              "SR-paired-aggregation-ci"
+            ],
+            "evidence_claim": "The benchmark implements fair order and paired aggregation semantics.",
+            "completed_target_objects": [
+              "benchmark ordering and statistics",
+              "benchmark run loop",
+              "raw benchmark output",
+              "environment/result metadata",
+              "benchmark comparison CSV",
+              "plot data",
+              "README/report metric definitions"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "benchmark summary and comparison generation",
+                "same topology paired ylong/libcurl benchmark cells"
+              ],
+              "proves": "Order and aggregation fields are generated and tested.",
+              "does_not_prove": [
+                "Fixture pollution has been eliminated",
+                "SOTA threshold passes"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "More repeats with the same fixed order and old aggregation.",
+          "A plot-only change without CSV/test support."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Order and aggregation are complete only when final claims use the repaired paired evidence and downgrade rules.",
+          "required_checked_transformations": [
+            "required_outcome:O-order-and-aggregation->comparison_csv",
+            "comparison_csv->readme_claim"
+          ],
+          "required_evidence_ids": [
+            "evidence.order-aggregation-tests"
+          ],
+          "reject_if": [
+            "The final claim still depends on ratio-of-mean throughput alone.",
+            "Order metadata is missing or not checked by tests."
+          ]
+        }
+      },
+      {
+        "id": "O-anomaly-trace-gates",
+        "statement": "Trace attribution and proxy-send anomaly gates are implemented and applied before benchmark claims.",
+        "source_requirements": [
+          "SR-proxy-send-anomaly-gate",
+          "SR-trace-attribution-fields"
+        ],
+        "completion_claim": "Benchmark artifacts contain enough trace fields to reject or downgrade polluted cells.",
+        "completed_target_objects": [
+          "trace fields",
+          "anomaly gates",
+          "comparison CSV"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "canonical result generation",
+            "final SOTA verdict"
+          ],
+          "forbidden_contexts": [
+            "trace-only diagnostics not connected to verdict"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.trace-anomaly-tests",
+            "kind": "progress_event",
+            "description": "Tests and results proving trace fields and anomaly gates are present and applied.",
+            "evidence_strength": "test_result",
+            "satisfies_source_requirements": [
+              "SR-proxy-send-anomaly-gate",
+              "SR-trace-attribution-fields"
+            ],
+            "evidence_claim": "Trace/anomaly gates are executable and affect verdict eligibility.",
+            "completed_target_objects": [
+              "trace attribution and anomaly gate",
+              "proxy_response_send_us",
+              "result comparison",
+              "final SOTA verdict",
+              "raw output",
+              "results CSV",
+              "summary CSV",
+              "comparison CSV"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "repaired benchmark comparison",
+                "canonical result generation",
+                "final SOTA verdict"
+              ],
+              "proves": "Anomaly fields can reject/downgrade polluted cells.",
+              "does_not_prove": [
+                "The candidate passes SOTA threshold"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Recording trace fields but not using them in verdicts.",
+          "A manual explanation of proxy send time without an executable gate."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Trace/anomaly gates are complete only when polluted-cell rejection is automatic or explicitly predeclared and evidenced.",
+          "required_checked_transformations": [
+            "required_outcome:O-anomaly-trace-gates->verdict_gate"
+          ],
+          "required_evidence_ids": [
+            "evidence.trace-anomaly-tests"
+          ],
+          "reject_if": [
+            "A cell can pass SOTA while proxy send time explains the advantage.",
+            "Trace data is not persisted in run-local artifacts."
+          ]
+        }
+      },
+      {
+        "id": "O-test-matrix",
+        "statement": "Benchmark semantic tests cover the repaired measurement model.",
+        "source_requirements": [
+          "SR-test-matrix"
+        ],
+        "completion_claim": "The test suite guards ordering, aggregation, trace fields, anomaly gates, figure data, and comparison outputs.",
+        "completed_target_objects": [
+          "benchmark tests"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "local test execution"
+          ],
+          "forbidden_contexts": [
+            "manual-only verification"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.benchmark-test-matrix",
+            "kind": "progress_event",
+            "description": "Passing focused tests for repaired benchmark semantics.",
+            "evidence_strength": "test_result",
+            "satisfies_source_requirements": [
+              "SR-test-matrix"
+            ],
+            "evidence_claim": "The benchmark semantic tests pass.",
+            "completed_target_objects": [
+              "test matrix",
+              "benchmark unit tests",
+              "fixture tests",
+              "plot/comparison tests"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "post-implementation verification",
+                "local test execution"
+              ],
+              "proves": "Focused tests pass for benchmark semantics.",
+              "does_not_prove": [
+                "Empirical SOTA threshold passes"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Only py_compile.",
+          "Tests that only assert output files exist."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Test matrix is complete only when tests fail against meaningful semantic regressions, not only syntax errors.",
+          "required_checked_transformations": [
+            "required_outcome:O-test-matrix->test_coverage"
+          ],
+          "required_evidence_ids": [
+            "evidence.benchmark-test-matrix"
+          ],
+          "reject_if": [
+            "Tests pass while order metadata, paired aggregation, or anomaly gates are absent.",
+            "Tests do not cover the old failure mode."
+          ]
+        }
+      },
+      {
+        "id": "O-old-new-comparison",
+        "statement": "Old gen005 results are compared with repaired benchmark evidence.",
+        "source_requirements": [
+          "SR-old-new-comparison"
+        ],
+        "completion_claim": "The run records how repaired benchmark evidence changes or confirms the old SOTA result.",
+        "completed_target_objects": [
+          "gen005 result",
+          "new benchmark result"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "old/new evidence comparison"
+          ],
+          "forbidden_contexts": [
+            "old evidence alone"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.old-new-benchmark-comparison",
+            "kind": "progress_event",
+            "description": "New benchmark result and explicit comparison against gen005.",
+            "evidence_strength": "benchmark_result",
+            "satisfies_source_requirements": [
+              "SR-old-new-comparison"
+            ],
+            "evidence_claim": "Old and new benchmark evidence have been compared under repaired gates.",
+            "completed_target_objects": [
+              "benchmark evidence comparison",
+              "gen005 SOTA result",
+              "new repaired benchmark result",
+              "outlier cell explanation"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "post-repair benchmark analysis",
+                "old/new evidence comparison"
+              ],
+              "proves": "The new result has been compared with old gen005 evidence.",
+              "does_not_prove": [
+                "README was updated",
+                "SOTA claim is preserved"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Only quoting gen005 numbers.",
+          "Only rerunning the outlier cell without the full canonical matrix or an approved scoped diagnostic."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Old/new comparison is complete only when the final claim explains how repaired gates affect old evidence.",
+          "required_checked_transformations": [
+            "required_outcome:O-old-new-comparison->claim_evidence"
+          ],
+          "required_evidence_ids": [
+            "evidence.old-new-benchmark-comparison"
+          ],
+          "reject_if": [
+            "The comparison omits the old 0.890x cell.",
+            "The comparison ignores anomaly-gate outcomes."
+          ]
+        }
+      },
+      {
+        "id": "O-readme-report-verdict",
+        "statement": "README/report evidence and final SOTA claim match repaired benchmark evidence.",
+        "source_requirements": [
+          "SR-readme-report-evidence",
+          "SR-sota-verdict"
+        ],
+        "completion_claim": "Repository-facing performance text and final report honestly state whether SOTA is preserved, downgraded, or withdrawn.",
+        "completed_target_objects": [
+          "README.md",
+          "benchmark figure/table",
+          "final-report.json"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "post-repair repository state",
+            "final controlled-run report"
+          ],
+          "forbidden_contexts": [
+            "old README-only state"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.readme-report-artifacts",
+            "kind": "progress_event",
+            "description": "README/report and figure artifacts updated to match repaired benchmark evidence.",
+            "evidence_strength": "code_change",
+            "satisfies_source_requirements": [
+              "SR-readme-report-evidence"
+            ],
+            "evidence_claim": "Repository-facing README/report/figure artifacts were changed to match repaired benchmark evidence.",
+            "completed_target_objects": [
+              "README.md",
+              "docs/figures",
+              "report/final run artifacts"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "post-repair documentation",
+                "post-repair repository state",
+                "final controlled-run report"
+              ],
+              "proves": "Documentation and final verdict were updated consistently.",
+              "does_not_prove": [
+                "Benchmark tests pass",
+                "SOTA threshold passes"
+              ]
+            }
+          },
+          {
+            "evidence_id": "evidence.sota-verdict-review",
+            "kind": "progress_event",
+            "description": "Final SOTA verdict review tied to repaired benchmark evidence and final-report.json.",
+            "evidence_strength": "review_report",
+            "satisfies_source_requirements": [
+              "SR-sota-verdict"
+            ],
+            "evidence_claim": "The final SOTA verdict was reviewed against the repaired benchmark evidence and 20% threshold rule.",
+            "completed_target_objects": [
+              "final SOTA claim",
+              "README benchmark section",
+              "final-report.json"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "post-repair documentation",
+                "post-repair repository state",
+                "final controlled-run report"
+              ],
+              "proves": "Documentation and final verdict were updated consistently.",
+              "does_not_prove": [
+                "Benchmark tests pass",
+                "SOTA threshold passes"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Keeping SOTA wording when repaired gates fail.",
+          "Updating README without changing benchmark evidence."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "README/report verdict is complete only when wording is backed by repaired benchmark evidence and no old result is falsely canonical.",
+          "required_checked_transformations": [
+            "required_outcome:O-readme-report-verdict->readme",
+            "required_outcome:O-readme-report-verdict->final_report"
+          ],
+          "required_evidence_ids": [
+            "evidence.readme-report-artifacts",
+            "evidence.sota-verdict-review"
+          ],
+          "reject_if": [
+            "README still states a SOTA claim that repaired evidence does not support.",
+            "README hides a failed anomaly gate or below-threshold repaired result."
+          ]
+        }
+      },
+      {
+        "id": "O-counterexample-human-gates",
+        "statement": "Counterexample and human gates are applied before final completion or public claim-changing actions.",
+        "source_requirements": [
+          "SR-benchmark-trust-fixed-target",
+          "SR-human-counterexample-gates"
+        ],
+        "completion_claim": "Independent review and human approval requirements prevent premature completion, push/tag, or public SOTA-claim changes.",
+        "completed_target_objects": [
+          "control chain",
+          "push/tag authority",
+          "final report"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "controlled-run completion",
+            "claim-changing publication"
+          ],
+          "forbidden_contexts": [
+            "self-review only",
+            "ungated push/tag"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.final-counterexample-gate",
+            "kind": "progress_event",
+            "description": "Final independent Counterexample Gate result.",
+            "evidence_strength": "review_report",
+            "satisfies_source_requirements": [
+              "SR-human-counterexample-gates",
+              "SR-benchmark-trust-fixed-target"
+            ],
+            "evidence_claim": "Independent review passed or identified unresolved blockers.",
+            "completed_target_objects": [
+              "final quality gate",
+              "control chain",
+              "final SOTA claim",
+              "push/tag actions",
+              "HTTPS proxy benchmark harness",
+              "SOTA evidence chain"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "final completion review",
+                "controlled-run completion",
+                "claim-changing publication"
+              ],
+              "proves": "The required independent challenge was performed.",
+              "does_not_prove": [
+                "Human approval for push/tag was granted"
+              ]
+            }
+          },
+          {
+            "evidence_id": "evidence.human-gate-approvals",
+            "kind": "progress_event",
+            "description": "Human approvals for push/tag or claim-changing publication, if such actions are performed.",
+            "evidence_strength": "review_report",
+            "satisfies_source_requirements": [
+              "SR-human-counterexample-gates"
+            ],
+            "evidence_claim": "Required human gates were obtained before gated actions.",
+            "completed_target_objects": [
+              "human-gated actions",
+              "control chain",
+              "final SOTA claim",
+              "push/tag actions"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "push/tag or claim-changing publication occurs",
+                "controlled-run completion",
+                "claim-changing publication"
+              ],
+              "proves": "Human approval existed for that action.",
+              "does_not_prove": [
+                "Counterexample Gate passed"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Self-review only.",
+          "Pushing or tagging without explicit human approval."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Gate outcome is complete only when independent review and required human approvals are evidenced before final claims/actions.",
+          "required_checked_transformations": [
+            "required_outcome:O-counterexample-human-gates->final_gate",
+            "required_outcome:O-counterexample-human-gates->human_gate"
+          ],
+          "required_evidence_ids": [
+            "evidence.final-counterexample-gate",
+            "evidence.human-gate-approvals"
+          ],
+          "reject_if": [
+            "Completion is claimed with only self-review.",
+            "A gated action occurs before approval."
+          ]
+        }
+      }
+    ],
+    "completion_logic": {
+      "all_required": [
+        "O-contamination-audit",
+        "O-fixture-control",
+        "O-order-and-aggregation",
+        "O-anomaly-trace-gates",
+        "O-test-matrix",
+        "O-old-new-comparison",
+        "O-readme-report-verdict",
+        "O-counterexample-human-gates"
+      ],
+      "no_offset": [
+        {
+          "failed_outcome": "O-anomaly-trace-gates",
+          "cannot_be_offset_by": [
+            "O-old-new-comparison",
+            "O-readme-report-verdict"
+          ],
+          "reason": "A passing SOTA threshold cannot offset a failed anomaly gate."
+        },
+        {
+          "failed_outcome": "O-fixture-control",
+          "cannot_be_offset_by": [
+            "O-readme-report-verdict"
+          ],
+          "reason": "README/report cleanup cannot offset missing benchmark repair."
+        },
+        {
+          "failed_outcome": "O-fixture-control",
+          "cannot_be_offset_by": [
+            "O-old-new-comparison"
+          ],
+          "reason": "More repeats cannot offset uncontrolled fixture pollution."
+        },
+        {
+          "failed_outcome": "O-readme-report-verdict",
+          "cannot_be_offset_by": [
+            "O-old-new-comparison"
+          ],
+          "reason": "A passing old gen005 result cannot offset a failed repaired benchmark verdict."
+        },
+        {
+          "failed_outcome": "O-test-matrix",
+          "cannot_be_offset_by": [
+            "O-counterexample-human-gates",
+            "O-old-new-comparison"
+          ],
+          "reason": "Counterexample Gate evidence cannot offset missing tests or benchmark results."
+        }
+      ]
+    },
+    "counterexample_gate_contract": {
+      "quality_standard": "Independent reverse review must try to disprove that the repaired benchmark actually measures client performance rather than fixture scheduling, execution-order artifacts, aggregation artifacts, or README/report narrative.",
+      "required_checked_transformations": [
+        "source_requirements->required_outcomes",
+        "source_requirements->required_result_paths",
+        "required_outcomes->required_steps",
+        "required_result_paths->required_steps",
+        "required_steps->work_packages",
+        "required_steps->runtime_steps",
+        "fixture_design->canonical_benchmark_claim",
+        "trace_fields->anomaly_gate",
+        "paired_aggregation->sota_verdict",
+        "old_new_comparison->readme_report_claim",
+        "pre_runtime_compile",
+        "blocked_or_goal_achieved"
+      ],
+      "minimum_reviewer": {
+        "allowed_kinds": [
+          "subagent",
+          "human",
+          "external"
+        ],
+        "independence": "The reviewer must be independent from the execution agent's own completion claim.",
+        "evidence_ref_required": true
+      },
+      "reject_if": [
+        "A benchmark cell can still pass SOTA while proxy send time explains the measured advantage.",
+        "Fixed client order remains unrecorded or ungated.",
+        "The SOTA verdict can still be based on ratio-of-mean throughput alone under high variance.",
+        "All component tests can pass while a required result path still fails.",
+        "README/report preserves a SOTA claim unsupported by repaired benchmark evidence.",
+        "The run claims completion without explicit keep/downgrade/withdraw verdict for SOTA."
+      ]
+    },
+    "semantic_base": {
+      "id": "ylong-http-https-proxy-benchmark-trust-requirements-v1",
+      "hash": "sha256:e6a9bf803e90eeee875625855bac8eb9e5fbf21259587ce2d976a8accbfa62fb"
+    }
+  }
+}

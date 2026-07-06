@@ -1,0 +1,85 @@
+{
+  "artifact_type": "requirements.non_schema_context",
+  "schema_version": "1.0.0",
+  "status": "archived_non_control_context",
+  "reason": "Archived fields that are meaningful background but not accepted by requirements.control.schema.json additionalProperties=false.",
+  "fields": {
+    "what_the_user_approved": {
+      "status": "approved",
+      "approved_at": "2026-07-07T00:00:00+08:00",
+      "approved_by": "user",
+      "approval_message": "批准",
+      "approval_required_before": [
+        "orchestrating-cybernetic-pregoal",
+        "runtime /goal handoff",
+        "implementation execution under this controlled run"
+      ],
+      "reason": "The user approved the materialized compact control commitment."
+    },
+    "required_checks": {
+      "meaning": "satisfied",
+      "rubric": "required",
+      "output_contract": "satisfied",
+      "design": "required",
+      "goal": "required",
+      "plan": "required",
+      "review": "required",
+      "risk": "required"
+    },
+    "rubric": {
+      "strongest_positive_status": "Benchmark trust repair complete and final SOTA verdict valid under repaired evidence.",
+      "minimum_evidence_for_strongest_positive": [
+        "all required outcomes have run-local evidence",
+        "all required result paths pass counterexample review",
+        "focused tests pass",
+        "new or repaired benchmark evidence exists",
+        "README/report match repaired evidence",
+        "final Counterexample Gate passes",
+        "human-gated actions have explicit approval if performed"
+      ],
+      "downgrade_rules": [
+        "If repaired benchmark fails anomaly or fairness gates, SOTA must be downgraded or withdrawn.",
+        "If tests pass but no new benchmark evidence exists, status remains incomplete.",
+        "If benchmark evidence exists but README/report still cite stale claims, status remains incomplete.",
+        "If external/live actions are needed, report exact human_gate requirement instead of claiming completion."
+      ],
+      "external_dependency_handling": "No live external proxy, credentials, destructive action, push, or tag may be used without human_gate approval."
+    },
+    "design_check": {
+      "status": "required",
+      "questions_deferred_to_design": [
+        "Whether to replace the Python proxy with a Rust fixture or retain Python with strict anomaly controls.",
+        "Which client ordering policy becomes canonical: seeded randomized order, A/B/B/A interleaving, or another paired design.",
+        "Which aggregation metric is canonical for SOTA verdict and which are supporting diagnostics.",
+        "How proxy send time gates should be parameterized without making the gate gameable.",
+        "How README figures should show repaired evidence without hiding failed cells."
+      ]
+    },
+    "risk": {
+      "human_gate_required_for": [
+        "pushing claim-changing benchmark/report updates",
+        "creating or moving tags",
+        "using live external services or credentials",
+        "declaring SOTA preserved after repaired benchmark"
+      ],
+      "forbidden_without_human_gate": [
+        "live external proxy benchmarking",
+        "destructive git operations",
+        "tag creation or mutation",
+        "credentialed external access",
+        "public claim-changing push"
+      ]
+    },
+    "known_assumptions": [
+      "The approved SOTA numeric threshold remains the previously approved 20% geomean threshold unless the user revises it.",
+      "The benchmark baseline remains same-process libcurl library, not curl CLI.",
+      "The repaired benchmark may preserve, downgrade, or withdraw the current SOTA claim depending on evidence.",
+      "Implementation strategy can change under reviewed_replanning, but target and evidence gates cannot be weakened."
+    ],
+    "requirements_analysis_status": "complete_pending_user_approval",
+    "agent_delegation_preference": "Subagents may be used for independent counterexample review when explicitly authorized by the user or the active control mode.",
+    "agent_workflow_preference": "controlled_run with reviewed_replanning",
+    "parallel_execution_authority": "Allowed after orchestration approval when write scopes are disjoint or review is independent.",
+    "maximum_parallel_agents": 4
+  }
+}

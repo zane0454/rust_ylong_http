@@ -1,0 +1,84 @@
+{
+  "artifact_type": "runtime.final_report",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "goal_achieved": true,
+  "what_counts_as_done_met": true,
+  "objective": "Repair the ylong_http HTTPS proxy SOTA benchmark measurement credibility.",
+  "work_coverage": {
+    "status": "complete",
+    "completed_required_steps": [
+      "S1-contamination-audit",
+      "S2-fixture-control",
+      "S3-order-aggregation",
+      "S4-anomaly-trace-gates",
+      "S5-test-matrix",
+      "S6-old-new-comparison",
+      "S7-readme-report-verdict",
+      "S8-counterexample-human-gates"
+    ],
+    "completed_required_outcomes": [
+      "O-contamination-audit",
+      "O-fixture-control",
+      "O-order-and-aggregation",
+      "O-anomaly-trace-gates",
+      "O-test-matrix",
+      "O-old-new-comparison",
+      "O-readme-report-verdict",
+      "O-counterexample-human-gates"
+    ]
+  },
+  "sota_verdict": {
+    "decision": "withdraw_sota_claim_under_repaired_benchmark",
+    "new_repaired_paired_geomean": 1.1043129514854073,
+    "old_ratio_of_means_geomean": 1.2280045027021633,
+    "old_recomputed_paired_geomean": 1.2312033650719278,
+    "reason": "The repaired matrix has no pass_sota20 cells. The new paired throughput geomean is below 1.20x, and HTTP-over-HTTPS-proxy cells are rejected by proxy-send anomaly gates. Recomputing old gen005 evidence under repaired gates also yields no pass_sota20 cells."
+  },
+  "evidence": [
+    "evidence/contamination_audit.json",
+    "evidence/fixture_control_tests.json",
+    "evidence/order_aggregation_tests.json",
+    "evidence/trace_anomaly_tests.json",
+    "evidence/benchmark_test_matrix.json",
+    "evidence/old_new_benchmark_comparison.json",
+    "evidence/readme_report_verdict.json",
+    "evidence/final_counterexample_review.json",
+    "evidence/human_gate_approvals.json",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_results.csv",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_summary.csv",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_env.json",
+    "docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv",
+    "README.md",
+    "docs/figures/https_proxy_bench_performance.png",
+    "docs/figures/https_proxy_bench_performance.pdf"
+  ],
+  "verification": [
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "status": "pass",
+      "summary": "Ran 21 tests; OK"
+    },
+    {
+      "command": "python3 -m py_compile docs/benchmarks/run_https_proxy_bench.py docs/benchmarks/test_run_https_proxy_bench.py",
+      "status": "pass",
+      "summary": "No syntax errors"
+    },
+    {
+      "command": "python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client sync --scenario all --requests \"200,1000,3000\" --repeats 5 --warmup 50 --client-order interleaved --client-order-seed 20260707 --result-dir docs/benchmarks/results/gen006-benchmark-trust-repaired --figure-dir docs/figures",
+      "status": "pass",
+      "summary": "Generated repaired matrix artifacts and README figure"
+    },
+    {
+      "command": "independent subagent Counterexample Gate",
+      "status": "pass",
+      "summary": "Reviewer 019f38e0-9f0e-7750-9c54-dd4026fd5fc2 approved withdrawal verdict with no blocking counterexamples"
+    }
+  ],
+  "remaining_gaps": [],
+  "non_blocking_followups": [
+    "Future tunnel-heavy SOTA claims should add or explicitly evaluate proxy_tunnel_send_to_client_us in anomaly gates; this does not block the current withdrawal verdict."
+  ],
+  "unresolved_amendments": []
+}

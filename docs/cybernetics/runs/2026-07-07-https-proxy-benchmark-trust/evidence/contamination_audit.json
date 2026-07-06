@@ -1,0 +1,63 @@
+{
+  "artifact_type": "https_proxy_benchmark_contamination_audit",
+  "schema_version": "1.0.0",
+  "runtime_generation": "gen-000",
+  "status": "pass",
+  "audited_files": [
+    "docs/benchmarks/run_https_proxy_bench.py",
+    "docs/benchmarks/test_run_https_proxy_bench.py"
+  ],
+  "findings": [
+    {
+      "id": "python-tls-proxy-sendall-in-measured-path",
+      "severity": "high",
+      "source_refs": [
+        "docs/benchmarks/run_https_proxy_bench.py:614",
+        "docs/benchmarks/run_https_proxy_bench.py:675"
+      ],
+      "observation": "LocalHttpsProxy serves canonical HTTP-over-HTTPS-proxy responses from Python ssl.SSLSocket.sendall and records proxy_response_send_us around that call.",
+      "risk": "A slow client cell can be caused or amplified by Python TLS write scheduling, socket buffering, or peer read timing rather than by client HTTP/TLS implementation cost.",
+      "required_repair": "Canonical comparison must either remove this fixture influence from the performance path or persist and gate proxy send timing before accepting a SOTA verdict."
+    },
+    {
+      "id": "fixed-client-order",
+      "severity": "high",
+      "source_refs": [
+        "docs/benchmarks/run_https_proxy_bench.py:2091"
+      ],
+      "observation": "The run loop executes clients in the fixed order returned by benchmark_clients for every scenario, request count, and repeat.",
+      "risk": "Warm cache state, process startup state, socket/TLS reuse side effects, and CPU scheduler drift can systematically favor one client order.",
+      "required_repair": "Result artifacts must record a deterministic interleaved or seeded randomized order, including client position metadata for each row."
+    },
+    {
+      "id": "ratio-of-means-main-comparison",
+      "severity": "medium",
+      "source_refs": [
+        "docs/benchmarks/run_https_proxy_bench.py:1702",
+        "docs/benchmarks/run_https_proxy_bench.py:1705"
+      ],
+      "observation": "compare_to_baseline derives elapsed, latency, p95, CPU, RSS, and throughput ratios from summary means.",
+      "risk": "Small-sample outliers can move mean ratios and produce misleading cell-level claims, especially when ylong and libcurl measurements are naturally paired by scenario/request/repeat.",
+      "required_repair": "Add paired log-ratio aggregation, confidence intervals, and downgrade behavior; retain mean ratios only as diagnostics."
+    },
+    {
+      "id": "figure-data-lacks-paired-gates",
+      "severity": "medium",
+      "source_refs": [
+        "docs/benchmarks/run_https_proxy_bench.py:1737",
+        "docs/benchmarks/run_https_proxy_bench.py:1845"
+      ],
+      "observation": "benchmark_ratio_plot_data and plot consume un-gated summary comparison matrices.",
+      "risk": "README figures can present ratios whose uncertainty or proxy-send anomaly status is unknown.",
+      "required_repair": "Figure data must use repaired comparison semantics or explicitly expose confidence/anomaly status."
+    }
+  ],
+  "root_cause_summary": "The old 0.890x cell cannot be treated as client-performance truth because the canonical harness mixes client timing with Python TLS proxy send scheduling, repeats clients in a fixed order, and presents ratio-of-mean throughput without paired uncertainty or anomaly gates.",
+  "implementation_direction": [
+    "Add execution order planning with deterministic interleaving or seeded randomization.",
+    "Persist client_order_policy, client_order_seed, and client_order_position into raw rows and environment metadata.",
+    "Add paired comparison output based on scenario/request/concurrency/repeat pairs.",
+    "Add proxy send influence metrics and anomaly gates that can reject or downgrade polluted cells.",
+    "Update tests first, then implement the smallest harness changes that satisfy the tests."
+  ]
+}

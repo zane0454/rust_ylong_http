@@ -1,0 +1,528 @@
+{
+  "artifact_type": "plan.control",
+  "schema_version": "1.3.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json",
+    "design": "design.control.json",
+    "goal": "goal.control.json"
+  },
+  "semantic_base_ref": {
+    "id": "ylong-http-https-proxy-benchmark-trust-requirements-v1",
+    "hash": "sha256:e6a9bf803e90eeee875625855bac8eb9e5fbf21259587ce2d976a8accbfa62fb"
+  },
+  "approved_control": {
+    "work_coverage": "Covers benchmark harness trust repair, semantic tests, repaired benchmark evidence, README/report/figure evidence, final SOTA verdict, and run-local completion evidence; excludes live external services and public push/tag without human_gate approval.",
+    "action_that_can_make_it_done": "Implement the benchmark repair, run the semantic tests and repaired benchmark or controlled diagnostic matrix, update evidence-bearing docs/figures/final report, and pass final counterexample and verifier gates."
+  },
+  "registry_bindings": {
+    "selected_agent_workflow": "superpowers-subagent-driven-development",
+    "allowed_work_assignment": "Serial subagent-driven"
+  },
+  "required_steps": [
+    {
+      "step_id": "S1-contamination-audit",
+      "transition": "Audit existing HTTPS proxy benchmark contamination sources and classify Python proxy send timing, fixed order, small samples, and aggregation distortion.",
+      "evidence": [
+        "evidence.contamination-audit"
+      ],
+      "satisfies_outcomes": [
+        "O-contamination-audit"
+      ]
+    },
+    {
+      "step_id": "S2-fixture-control",
+      "transition": "Implement a stable proxy/origin fixture or equivalent controls so canonical results are attributable to client behavior.",
+      "evidence": [
+        "evidence.fixture-control-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-fixture-control"
+      ]
+    },
+    {
+      "step_id": "S3-order-aggregation",
+      "transition": "Implement client ordering control plus paired aggregation and confidence/uncertainty reporting.",
+      "evidence": [
+        "evidence.order-aggregation-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-order-and-aggregation"
+      ]
+    },
+    {
+      "step_id": "S4-anomaly-trace-gates",
+      "transition": "Persist trace attribution fields and enforce proxy send time anomaly gates before any SOTA verdict.",
+      "evidence": [
+        "evidence.trace-anomaly-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-anomaly-trace-gates"
+      ]
+    },
+    {
+      "step_id": "S5-test-matrix",
+      "transition": "Run focused semantic tests covering benchmark ordering, trace parsing, anomaly gates, paired stats, and figure data semantics.",
+      "evidence": [
+        "evidence.benchmark-test-matrix"
+      ],
+      "satisfies_outcomes": [
+        "O-test-matrix"
+      ]
+    },
+    {
+      "step_id": "S6-old-new-comparison",
+      "transition": "Run or import repaired benchmark evidence and compare it with old gen005 evidence including the 0.890x cell.",
+      "evidence": [
+        "evidence.old-new-benchmark-comparison"
+      ],
+      "satisfies_outcomes": [
+        "O-old-new-comparison"
+      ]
+    },
+    {
+      "step_id": "S7-readme-report-verdict",
+      "transition": "Update README/report/figure evidence chain and decide preserve, downgrade, or withdraw SOTA under repaired evidence.",
+      "evidence": [
+        "evidence.readme-report-artifacts",
+        "evidence.sota-verdict-review"
+      ],
+      "satisfies_outcomes": [
+        "O-readme-report-verdict"
+      ]
+    },
+    {
+      "step_id": "S8-counterexample-human-gates",
+      "transition": "Run final independent Counterexample Gate and enforce human gates for claim-changing push/tag/live/external actions.",
+      "evidence": [
+        "evidence.final-counterexample-gate",
+        "evidence.human-gate-approvals"
+      ],
+      "satisfies_outcomes": [
+        "O-counterexample-human-gates"
+      ]
+    }
+  ],
+  "step_action_alignment": [
+    {
+      "required_step_id": "S1-contamination-audit",
+      "what_would_make_it_true": "Audit existing HTTPS proxy benchmark contamination sources and classify Python proxy send timing, fixed order, small samples, and aggregation distortion.",
+      "current_state": "Not yet produced in this controlled runtime; pregoal only defines the approved work chain.",
+      "planned_producing_action": "Modify benchmark harness, tests, evidence artifacts, README/report, or final report as required by this step; then run the smallest relevant tests or benchmark diagnostics.",
+      "why_this_can_make_it_true": "The allowed write paths are the repository places that carry the benchmark harness, tests, generated results, figures, README/report text, and run-local evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/"
+        ],
+        "run_commands": [
+          "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.contamination-audit"
+      ],
+      "if_not_producible": "Stop and append a progress event explaining the unavailable capability, failed command, or human_gate needed; do not mark the step complete."
+    },
+    {
+      "required_step_id": "S2-fixture-control",
+      "what_would_make_it_true": "Implement a stable proxy/origin fixture or equivalent controls so canonical results are attributable to client behavior.",
+      "current_state": "Not yet produced in this controlled runtime; pregoal only defines the approved work chain.",
+      "planned_producing_action": "Modify benchmark harness, tests, evidence artifacts, README/report, or final report as required by this step; then run the smallest relevant tests or benchmark diagnostics.",
+      "why_this_can_make_it_true": "The allowed write paths are the repository places that carry the benchmark harness, tests, generated results, figures, README/report text, and run-local evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/benchmarks/run_https_proxy_bench.py",
+          "docs/benchmarks/test_run_https_proxy_bench.py"
+        ],
+        "run_commands": [
+          "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.fixture-control-tests"
+      ],
+      "if_not_producible": "Stop and append a progress event explaining the unavailable capability, failed command, or human_gate needed; do not mark the step complete."
+    },
+    {
+      "required_step_id": "S3-order-aggregation",
+      "what_would_make_it_true": "Implement client ordering control plus paired aggregation and confidence/uncertainty reporting.",
+      "current_state": "Not yet produced in this controlled runtime; pregoal only defines the approved work chain.",
+      "planned_producing_action": "Modify benchmark harness, tests, evidence artifacts, README/report, or final report as required by this step; then run the smallest relevant tests or benchmark diagnostics.",
+      "why_this_can_make_it_true": "The allowed write paths are the repository places that carry the benchmark harness, tests, generated results, figures, README/report text, and run-local evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/benchmarks/run_https_proxy_bench.py",
+          "docs/benchmarks/test_run_https_proxy_bench.py",
+          "docs/benchmarks/results/"
+        ],
+        "run_commands": [
+          "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.order-aggregation-tests"
+      ],
+      "if_not_producible": "Stop and append a progress event explaining the unavailable capability, failed command, or human_gate needed; do not mark the step complete."
+    },
+    {
+      "required_step_id": "S4-anomaly-trace-gates",
+      "what_would_make_it_true": "Persist trace attribution fields and enforce proxy send time anomaly gates before any SOTA verdict.",
+      "current_state": "Not yet produced in this controlled runtime; pregoal only defines the approved work chain.",
+      "planned_producing_action": "Modify benchmark harness, tests, evidence artifacts, README/report, or final report as required by this step; then run the smallest relevant tests or benchmark diagnostics.",
+      "why_this_can_make_it_true": "The allowed write paths are the repository places that carry the benchmark harness, tests, generated results, figures, README/report text, and run-local evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/benchmarks/run_https_proxy_bench.py",
+          "docs/benchmarks/test_run_https_proxy_bench.py",
+          "docs/benchmarks/results/"
+        ],
+        "run_commands": [
+          "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.trace-anomaly-tests"
+      ],
+      "if_not_producible": "Stop and append a progress event explaining the unavailable capability, failed command, or human_gate needed; do not mark the step complete."
+    },
+    {
+      "required_step_id": "S5-test-matrix",
+      "what_would_make_it_true": "Run focused semantic tests covering benchmark ordering, trace parsing, anomaly gates, paired stats, and figure data semantics.",
+      "current_state": "Not yet produced in this controlled runtime; pregoal only defines the approved work chain.",
+      "planned_producing_action": "Modify benchmark harness, tests, evidence artifacts, README/report, or final report as required by this step; then run the smallest relevant tests or benchmark diagnostics.",
+      "why_this_can_make_it_true": "The allowed write paths are the repository places that carry the benchmark harness, tests, generated results, figures, README/report text, and run-local evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/benchmarks/test_run_https_proxy_bench.py",
+          "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/"
+        ],
+        "run_commands": [
+          "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.benchmark-test-matrix"
+      ],
+      "if_not_producible": "Stop and append a progress event explaining the unavailable capability, failed command, or human_gate needed; do not mark the step complete."
+    },
+    {
+      "required_step_id": "S6-old-new-comparison",
+      "what_would_make_it_true": "Run or import repaired benchmark evidence and compare it with old gen005 evidence including the 0.890x cell.",
+      "current_state": "Not yet produced in this controlled runtime; pregoal only defines the approved work chain.",
+      "planned_producing_action": "Modify benchmark harness, tests, evidence artifacts, README/report, or final report as required by this step; then run the smallest relevant tests or benchmark diagnostics.",
+      "why_this_can_make_it_true": "The allowed write paths are the repository places that carry the benchmark harness, tests, generated results, figures, README/report text, and run-local evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/benchmarks/results/",
+          "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/"
+        ],
+        "run_commands": [
+          "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.old-new-benchmark-comparison"
+      ],
+      "if_not_producible": "Stop and append a progress event explaining the unavailable capability, failed command, or human_gate needed; do not mark the step complete."
+    },
+    {
+      "required_step_id": "S7-readme-report-verdict",
+      "what_would_make_it_true": "Update README/report/figure evidence chain and decide preserve, downgrade, or withdraw SOTA under repaired evidence.",
+      "current_state": "Not yet produced in this controlled runtime; pregoal only defines the approved work chain.",
+      "planned_producing_action": "Modify benchmark harness, tests, evidence artifacts, README/report, or final report as required by this step; then run the smallest relevant tests or benchmark diagnostics.",
+      "why_this_can_make_it_true": "The allowed write paths are the repository places that carry the benchmark harness, tests, generated results, figures, README/report text, and run-local evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "README.md",
+          "docs/figures/",
+          "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/final-report.json"
+        ],
+        "run_commands": [
+          "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.readme-report-artifacts",
+        "evidence.sota-verdict-review"
+      ],
+      "if_not_producible": "Stop and append a progress event explaining the unavailable capability, failed command, or human_gate needed; do not mark the step complete."
+    },
+    {
+      "required_step_id": "S8-counterexample-human-gates",
+      "what_would_make_it_true": "Run final independent Counterexample Gate and enforce human gates for claim-changing push/tag/live/external actions.",
+      "current_state": "Not yet produced in this controlled runtime; pregoal only defines the approved work chain.",
+      "planned_producing_action": "Modify benchmark harness, tests, evidence artifacts, README/report, or final report as required by this step; then run the smallest relevant tests or benchmark diagnostics.",
+      "why_this_can_make_it_true": "The allowed write paths are the repository places that carry the benchmark harness, tests, generated results, figures, README/report text, and run-local evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/",
+          "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/final-report.json"
+        ],
+        "run_commands": [
+          "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.final-counterexample-gate",
+        "evidence.human-gate-approvals"
+      ],
+      "if_not_producible": "Stop and append a progress event explaining the unavailable capability, failed command, or human_gate needed; do not mark the step complete."
+    }
+  ],
+  "work_packages": [
+    {
+      "work_package_id": "WP-s1-contamination-audit",
+      "role": "mainline",
+      "required_steps": [
+        "S1-contamination-audit"
+      ],
+      "uses_step_action_alignment": [
+        "S1-contamination-audit"
+      ],
+      "state_change_it_produces": "Audit existing HTTPS proxy benchmark contamination sources and classify Python proxy send timing, fixed order, small samples, and aggregation distortion.",
+      "not_merely_verification": false,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/"
+      ],
+      "forbidden_write_paths": [
+        ".git/",
+        "remote repositories",
+        "live external proxy credentials"
+      ],
+      "required_tests": [
+        "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+      ]
+    },
+    {
+      "work_package_id": "WP-s2-fixture-control",
+      "role": "mainline",
+      "required_steps": [
+        "S2-fixture-control"
+      ],
+      "uses_step_action_alignment": [
+        "S2-fixture-control"
+      ],
+      "state_change_it_produces": "Implement a stable proxy/origin fixture or equivalent controls so canonical results are attributable to client behavior.",
+      "not_merely_verification": true,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "docs/benchmarks/run_https_proxy_bench.py",
+        "docs/benchmarks/test_run_https_proxy_bench.py"
+      ],
+      "forbidden_write_paths": [
+        ".git/",
+        "remote repositories",
+        "live external proxy credentials"
+      ],
+      "required_tests": [
+        "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+      ]
+    },
+    {
+      "work_package_id": "WP-s3-order-aggregation",
+      "role": "mainline",
+      "required_steps": [
+        "S3-order-aggregation"
+      ],
+      "uses_step_action_alignment": [
+        "S3-order-aggregation"
+      ],
+      "state_change_it_produces": "Implement client ordering control plus paired aggregation and confidence/uncertainty reporting.",
+      "not_merely_verification": true,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "docs/benchmarks/run_https_proxy_bench.py",
+        "docs/benchmarks/test_run_https_proxy_bench.py",
+        "docs/benchmarks/results/"
+      ],
+      "forbidden_write_paths": [
+        ".git/",
+        "remote repositories",
+        "live external proxy credentials"
+      ],
+      "required_tests": [
+        "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+      ]
+    },
+    {
+      "work_package_id": "WP-s4-anomaly-trace-gates",
+      "role": "mainline",
+      "required_steps": [
+        "S4-anomaly-trace-gates"
+      ],
+      "uses_step_action_alignment": [
+        "S4-anomaly-trace-gates"
+      ],
+      "state_change_it_produces": "Persist trace attribution fields and enforce proxy send time anomaly gates before any SOTA verdict.",
+      "not_merely_verification": true,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "docs/benchmarks/run_https_proxy_bench.py",
+        "docs/benchmarks/test_run_https_proxy_bench.py",
+        "docs/benchmarks/results/"
+      ],
+      "forbidden_write_paths": [
+        ".git/",
+        "remote repositories",
+        "live external proxy credentials"
+      ],
+      "required_tests": [
+        "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+      ]
+    },
+    {
+      "work_package_id": "WP-s5-test-matrix",
+      "role": "mainline",
+      "required_steps": [
+        "S5-test-matrix"
+      ],
+      "uses_step_action_alignment": [
+        "S5-test-matrix"
+      ],
+      "state_change_it_produces": "Run focused semantic tests covering benchmark ordering, trace parsing, anomaly gates, paired stats, and figure data semantics.",
+      "not_merely_verification": false,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "docs/benchmarks/test_run_https_proxy_bench.py",
+        "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/"
+      ],
+      "forbidden_write_paths": [
+        ".git/",
+        "remote repositories",
+        "live external proxy credentials"
+      ],
+      "required_tests": [
+        "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+      ]
+    },
+    {
+      "work_package_id": "WP-s6-old-new-comparison",
+      "role": "mainline",
+      "required_steps": [
+        "S6-old-new-comparison"
+      ],
+      "uses_step_action_alignment": [
+        "S6-old-new-comparison"
+      ],
+      "state_change_it_produces": "Run or import repaired benchmark evidence and compare it with old gen005 evidence including the 0.890x cell.",
+      "not_merely_verification": false,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "docs/benchmarks/results/",
+        "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/"
+      ],
+      "forbidden_write_paths": [
+        ".git/",
+        "remote repositories",
+        "live external proxy credentials"
+      ],
+      "required_tests": [
+        "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+      ]
+    },
+    {
+      "work_package_id": "WP-s7-readme-report-verdict",
+      "role": "mainline",
+      "required_steps": [
+        "S7-readme-report-verdict"
+      ],
+      "uses_step_action_alignment": [
+        "S7-readme-report-verdict"
+      ],
+      "state_change_it_produces": "Update README/report/figure evidence chain and decide preserve, downgrade, or withdraw SOTA under repaired evidence.",
+      "not_merely_verification": true,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "README.md",
+        "docs/figures/",
+        "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/final-report.json"
+      ],
+      "forbidden_write_paths": [
+        ".git/",
+        "remote repositories",
+        "live external proxy credentials"
+      ],
+      "required_tests": [
+        "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+      ]
+    },
+    {
+      "work_package_id": "WP-s8-counterexample-human-gates",
+      "role": "mainline",
+      "required_steps": [
+        "S8-counterexample-human-gates"
+      ],
+      "uses_step_action_alignment": [
+        "S8-counterexample-human-gates"
+      ],
+      "state_change_it_produces": "Run final independent Counterexample Gate and enforce human gates for claim-changing push/tag/live/external actions.",
+      "not_merely_verification": false,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/evidence/",
+        "docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust/final-report.json"
+      ],
+      "forbidden_write_paths": [
+        ".git/",
+        "remote repositories",
+        "live external proxy credentials"
+      ],
+      "required_tests": [
+        "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py",
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-07-https-proxy-benchmark-trust"
+      ]
+    }
+  ],
+  "runtime": {
+    "readonly_files": [
+      "requirements.control.json",
+      "run.control.json",
+      "review.control.json",
+      "gen-000/runtime.control.json"
+    ],
+    "writable_files": [
+      "progress.jsonl",
+      "runtime-status.json",
+      "final-report.json"
+    ],
+    "writable_evidence_paths": [
+      "evidence/",
+      "docs/benchmarks/results/",
+      "docs/figures/"
+    ]
+  },
+  "progress": {
+    "event_schema": "progress-event.schema.json",
+    "append_only": true
+  },
+  "verifier": {
+    "required_before_goal_achieved": true,
+    "required_outcomes": [
+      "O-contamination-audit",
+      "O-fixture-control",
+      "O-order-and-aggregation",
+      "O-anomaly-trace-gates",
+      "O-test-matrix",
+      "O-old-new-comparison",
+      "O-readme-report-verdict",
+      "O-counterexample-human-gates"
+    ],
+    "output_schema": "final-report.schema.json"
+  }
+}
