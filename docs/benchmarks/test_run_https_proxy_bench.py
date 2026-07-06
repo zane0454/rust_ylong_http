@@ -391,6 +391,80 @@ class HttpsProxyHarnessTest(unittest.TestCase):
         ].iloc[0]
         self.assertAlmostEqual(ratio, 0.5)
 
+    def test_ratio_plot_data_keeps_all_scenarios_and_uses_throughput_ratio(self) -> None:
+        df = bench.pd.DataFrame(
+            [
+                {
+                    "scenario": "http-over-https-proxy",
+                    "requests": 200,
+                    "repeat": 1,
+                    "client": "ylong_http_client_sync",
+                    "elapsed_ms": 80.0,
+                    "latency_ms": 0.4,
+                    "throughput_rps": 2500.0,
+                    "p50_us": 80,
+                    "p95_us": 120,
+                    "cpu_us_per_request": 20.0,
+                    "rss_peak_bytes": 1200,
+                    "errors": 0,
+                },
+                {
+                    "scenario": "http-over-https-proxy",
+                    "requests": 200,
+                    "repeat": 1,
+                    "client": "libcurl",
+                    "elapsed_ms": 100.0,
+                    "latency_ms": 0.5,
+                    "throughput_rps": 2000.0,
+                    "p50_us": 100,
+                    "p95_us": 150,
+                    "cpu_us_per_request": 40.0,
+                    "rss_peak_bytes": 1100,
+                    "errors": 0,
+                },
+                {
+                    "scenario": "proxy-mtls-https-origin",
+                    "requests": 1000,
+                    "repeat": 1,
+                    "client": "ylong_http_client_sync",
+                    "elapsed_ms": 500.0,
+                    "latency_ms": 0.5,
+                    "throughput_rps": 2000.0,
+                    "p50_us": 120,
+                    "p95_us": 160,
+                    "cpu_us_per_request": 30.0,
+                    "rss_peak_bytes": 1300,
+                    "errors": 0,
+                },
+                {
+                    "scenario": "proxy-mtls-https-origin",
+                    "requests": 1000,
+                    "repeat": 1,
+                    "client": "libcurl",
+                    "elapsed_ms": 400.0,
+                    "latency_ms": 0.4,
+                    "throughput_rps": 2500.0,
+                    "p50_us": 100,
+                    "p95_us": 140,
+                    "cpu_us_per_request": 45.0,
+                    "rss_peak_bytes": 1250,
+                    "errors": 0,
+                },
+            ]
+        )
+
+        plot_data = bench.benchmark_ratio_plot_data(df, baseline="libcurl")
+
+        self.assertEqual(
+            plot_data["scenarios"],
+            ["http-over-https-proxy", "proxy-mtls-https-origin"],
+        )
+        self.assertEqual(plot_data["requests"], [200, 1000])
+        self.assertEqual(plot_data["candidate"], "ylong_http_client_sync")
+        throughput = plot_data["matrices"]["throughput_rps_ratio"]
+        self.assertAlmostEqual(throughput.loc["http-over-https-proxy", 200], 1.25)
+        self.assertAlmostEqual(throughput.loc["proxy-mtls-https-origin", 1000], 0.8)
+
     def test_summary_keeps_concurrency_as_comparison_dimension(self) -> None:
         df = bench.pd.DataFrame(
             [

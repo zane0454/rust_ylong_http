@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
 
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -1719,6 +1720,88 @@ def compare_to_baseline(summary: pd.DataFrame, *, baseline: str) -> pd.DataFrame
     )
 
 
+def ordered_scenarios(values: Iterable[str]) -> list[str]:
+    order = {name: index for index, name in enumerate(SCENARIOS)}
+    return sorted(values, key=lambda value: (order.get(value, len(order)), value))
+
+
+def scenario_label(name: str) -> str:
+    labels = {
+        "http-over-https-proxy": "HTTP over\nHTTPS proxy",
+        "https-over-https-proxy": "HTTPS origin over\nHTTPS proxy",
+        "proxy-mtls-https-origin": "proxy mTLS with\nHTTPS origin",
+    }
+    return labels.get(name, name.replace("-", " "))
+
+
+def benchmark_ratio_plot_data(
+    df: pd.DataFrame,
+    *,
+    baseline: str | None = None,
+) -> dict[str, object]:
+    df = df.copy()
+    if "p50_us" not in df:
+        df["p50_us"] = df["latency_ms"] * 1000.0
+    if "p95_us" not in df:
+        df["p95_us"] = df["latency_ms"] * 1000.0
+    if "cpu_us_per_request" not in df:
+        df["cpu_us_per_request"] = df["latency_ms"] * 1000.0
+    if "rss_peak_bytes" not in df:
+        df["rss_peak_bytes"] = 1
+    if "errors" not in df:
+        df["errors"] = 0
+    clients = set(df["client"])
+    baseline = baseline or ("libcurl" if "libcurl" in clients else "curl_cli")
+    summary = summarize_results(df)
+    comparison = compare_to_baseline(summary, baseline=baseline)
+    candidate_order = [
+        "ylong_http_client_sync",
+        "ylong_http_client",
+        "curl_cli",
+        "libcurl",
+    ]
+    candidate = next(
+        (
+            client
+            for client in candidate_order
+            if client in set(comparison["client"]) and client != baseline
+        ),
+        None,
+    )
+    if candidate is None:
+        candidates = sorted(set(comparison["client"]) - {baseline})
+        if not candidates:
+            raise ValueError("benchmark plot requires a non-baseline client")
+        candidate = candidates[0]
+
+    candidate_rows = comparison[comparison["client"] == candidate].copy()
+    scenarios = ordered_scenarios(candidate_rows["scenario"].unique())
+    requests = sorted(candidate_rows["requests"].unique())
+    metrics = [
+        "throughput_rps_ratio",
+        "p95_us_ratio",
+        "cpu_us_per_request_ratio",
+        "rss_peak_bytes_ratio",
+    ]
+    matrices = {
+        metric: candidate_rows.pivot(index="scenario", columns="requests", values=metric)
+        .reindex(index=scenarios, columns=requests)
+        for metric in metrics
+    }
+    throughput = candidate_rows["throughput_rps_ratio"]
+    return {
+        "baseline": baseline,
+        "candidate": candidate,
+        "comparison": candidate_rows,
+        "scenarios": scenarios,
+        "requests": requests,
+        "matrices": matrices,
+        "throughput_geomean": float(np.exp(np.log(throughput).mean())),
+        "throughput_worst": float(throughput.min()),
+        "errors_sum": int(candidate_rows["errors_sum"].sum()),
+    }
+
+
 def ci95_half_width(std: float, count: int) -> float:
     if count <= 1 or pd.isna(std):
         return 0.0
@@ -1761,138 +1844,120 @@ def t_critical_975(degrees_of_freedom: int) -> float:
 
 def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
     figure_dir.mkdir(parents=True, exist_ok=True)
-    first_scenario = sorted(df["scenario"].unique())[0]
-    df = df[df["scenario"] == first_scenario].copy()
+    plot_data = benchmark_ratio_plot_data(df)
     plt.rcParams.update(
         {
             "font.family": "DejaVu Sans",
-            "font.size": 9,
-            "axes.labelsize": 9,
-            "axes.titlesize": 9,
-            "legend.fontsize": 8,
-            "xtick.labelsize": 8,
-            "ytick.labelsize": 8,
+            "font.size": 9.5,
+            "axes.labelsize": 9.5,
+            "axes.titlesize": 10.5,
+            "xtick.labelsize": 9,
+            "ytick.labelsize": 9,
             "axes.spines.top": False,
             "axes.spines.right": False,
+            "axes.spines.left": False,
+            "axes.spines.bottom": False,
             "pdf.fonttype": 42,
             "ps.fonttype": 42,
         }
     )
-    colors = {
-        "ylong_http_client": "#0072B2",
-        "ylong_http_client_sync": "#CC79A7",
-        "curl_cli": "#D55E00",
-        "libcurl": "#009E73",
-    }
-    markers = {
-        "ylong_http_client": "o",
-        "ylong_http_client_sync": "D",
-        "curl_cli": "s",
-        "libcurl": "^",
-    }
-    labels = {
+    client_labels = {
         "ylong_http_client": "ylong_http_client",
         "ylong_http_client_sync": "ylong_http_client sync",
         "curl_cli": "curl CLI",
         "libcurl": "libcurl library",
     }
+    matrices = plot_data["matrices"]
+    scenarios = plot_data["scenarios"]
+    requests = plot_data["requests"]
+    row_labels = [scenario_label(item) for item in scenarios]
+    col_labels = [str(item) for item in requests]
+
+    fig, axes = plt.subplots(2, 2, figsize=(9.8, 5.9), constrained_layout=True)
+
+    def draw_ratio_matrix(
+        ax: plt.Axes,
+        matrix: pd.DataFrame,
+        *,
+        title: str,
+        higher_is_better: bool,
+        threshold: float | None = None,
+    ) -> None:
+        values = matrix.to_numpy(dtype=float)
+        max_delta = max(0.2, float(np.nanmax(np.abs(values - 1.0))))
+        vmin = max(0.0, 1.0 - max_delta)
+        vmax = 1.0 + max_delta
+        cmap = "RdYlGn" if higher_is_better else "RdYlGn_r"
+        norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=1.0, vmax=vmax)
+        ax.imshow(values, cmap=cmap, norm=norm, aspect="auto")
+        ax.set_xticks(range(len(col_labels)), col_labels)
+        ax.set_yticks(range(len(row_labels)), row_labels)
+        ax.tick_params(length=0)
+        ax.set_title(title, loc="left", fontweight="bold")
+        ax.set_xlabel("Requests")
+        for y, row in enumerate(values):
+            for x, value in enumerate(row):
+                if np.isnan(value):
+                    text = "-"
+                    weight = "normal"
+                else:
+                    text = f"{value:.3f}x"
+                    if threshold is None:
+                        weight = "normal"
+                    elif higher_is_better:
+                        weight = "bold" if value >= threshold else "normal"
+                    else:
+                        weight = "bold" if value <= threshold else "normal"
+                ax.text(
+                    x,
+                    y,
+                    text,
+                    ha="center",
+                    va="center",
+                    color="#111111",
+                    fontweight=weight,
+                )
+        ax.set_xticks(np.arange(-0.5, len(col_labels), 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, len(row_labels), 1), minor=True)
+        ax.grid(which="minor", color="white", linewidth=1.6)
+        ax.tick_params(which="minor", bottom=False, left=False)
+
+    draw_ratio_matrix(
+        axes[0, 0],
+        matrices["throughput_rps_ratio"],
+        title="(a) Throughput ratio (higher is better)",
+        higher_is_better=True,
+        threshold=1.20,
+    )
+    draw_ratio_matrix(
+        axes[0, 1],
+        matrices["p95_us_ratio"],
+        title="(b) p95 latency ratio (lower is better)",
+        higher_is_better=False,
+        threshold=1.00,
+    )
+    draw_ratio_matrix(
+        axes[1, 0],
+        matrices["cpu_us_per_request_ratio"],
+        title="(c) CPU / request ratio (lower is better)",
+        higher_is_better=False,
+        threshold=1.00,
+    )
+    draw_ratio_matrix(
+        axes[1, 1],
+        matrices["rss_peak_bytes_ratio"],
+        title="(d) RSS peak ratio (lower is better)",
+        higher_is_better=False,
+        threshold=1.00,
+    )
     summary = (
-        df.groupby(["requests", "client"], as_index=False)
-        .agg(
-            latency_mean=("latency_ms", "mean"),
-            latency_std=("latency_ms", "std"),
-            throughput_mean=("throughput_rps", "mean"),
-            throughput_std=("throughput_rps", "std"),
-            elapsed_mean=("elapsed_ms", "mean"),
-        )
-        .sort_values(["requests", "client"])
+        f"{client_labels.get(str(plot_data['candidate']), str(plot_data['candidate']))} vs "
+        f"{client_labels.get(str(plot_data['baseline']), str(plot_data['baseline']))}: "
+        f"throughput geomean {float(plot_data['throughput_geomean']):.3f}x, "
+        f"worst cell {float(plot_data['throughput_worst']):.3f}x, "
+        f"errors {int(plot_data['errors_sum'])}"
     )
-    requests = sorted(df["requests"].unique())
-    baseline = "libcurl" if "libcurl" in set(df["client"]) else "curl_cli"
-    ylong_candidate = (
-        "ylong_http_client"
-        if "ylong_http_client" in set(df["client"])
-        else "ylong_http_client_sync"
-    )
-    paired = df.pivot(index=["requests", "repeat"], columns="client", values="elapsed_ms").reset_index()
-    paired["improvement"] = (
-        1.0 - paired[ylong_candidate] / paired[baseline]
-    ) * 100.0
-    improvement = (
-        paired.groupby("requests", as_index=False)
-        .agg(mean=("improvement", "mean"), std=("improvement", "std"))
-        .sort_values("requests")
-    )
-
-    fig, axes = plt.subplots(1, 3, figsize=(8.2, 2.55), constrained_layout=True)
-    for client in [
-        item
-        for item in ["ylong_http_client", "ylong_http_client_sync", "libcurl", "curl_cli"]
-        if item in set(df["client"])
-    ]:
-        part = summary[summary["client"] == client]
-        axes[0].errorbar(
-            part["requests"],
-            part["latency_mean"],
-            yerr=part["latency_std"].fillna(0),
-            color=colors[client],
-            marker=markers[client],
-            linewidth=1.8,
-            markersize=4.5,
-            capsize=2.5,
-            label=labels[client],
-        )
-        axes[1].errorbar(
-            part["requests"],
-            part["throughput_mean"],
-            yerr=part["throughput_std"].fillna(0),
-            color=colors[client],
-            marker=markers[client],
-            linewidth=1.8,
-            markersize=4.5,
-            capsize=2.5,
-            label=labels[client],
-        )
-
-    axes[0].set_xscale("log")
-    axes[0].set_yscale("log")
-    axes[0].set_xticks(requests)
-    axes[0].get_xaxis().set_major_formatter(plt.ScalarFormatter())
-    axes[0].set_xlabel("Requests")
-    axes[0].set_ylabel("Latency / request (ms)")
-    axes[0].grid(True, which="major", axis="both", color="#d9d9d9", linewidth=0.7)
-    axes[0].legend(frameon=False, loc="best")
-
-    axes[1].set_xscale("log")
-    axes[1].set_xticks(requests)
-    axes[1].get_xaxis().set_major_formatter(plt.ScalarFormatter())
-    axes[1].set_xlabel("Requests")
-    axes[1].set_ylabel("Throughput (req/s)")
-    axes[1].grid(True, which="major", axis="both", color="#d9d9d9", linewidth=0.7)
-
-    x = np.arange(len(improvement))
-    axes[2].bar(
-        x,
-        improvement["mean"],
-        yerr=improvement["std"].fillna(0),
-        color="#009E73",
-        edgecolor="#222222",
-        linewidth=0.6,
-        capsize=2.5,
-        width=0.62,
-    )
-    axes[2].axhline(0.0, color="#666666", linewidth=0.8)
-    axes[2].axhline(20.0, color="#CC79A7", linestyle="--", linewidth=1.1)
-    axes[2].set_xticks(x, [str(v) for v in improvement["requests"]])
-    axes[2].set_xlabel("Requests")
-    axes[2].set_ylabel(f"{labels[ylong_candidate]} vs {labels[baseline]} (%)")
-    lower = min(-20.0, float((improvement["mean"] - improvement["std"].fillna(0)).min()) - 5.0)
-    upper = max(25.0, float((improvement["mean"] + improvement["std"].fillna(0)).max()) + 5.0)
-    axes[2].set_ylim(lower, upper)
-    axes[2].grid(True, axis="y", color="#d9d9d9", linewidth=0.7)
-
-    for idx, title in enumerate(["(a) Latency", "(b) Throughput", "(c) Speedup margin"]):
-        axes[idx].set_title(title, loc="left", fontweight="bold")
+    fig.suptitle(summary, fontsize=10.5, fontweight="bold")
 
     fig.savefig(figure_dir / "https_proxy_bench_performance.pdf")
     fig.savefig(figure_dir / "https_proxy_bench_performance.png", dpi=300)
