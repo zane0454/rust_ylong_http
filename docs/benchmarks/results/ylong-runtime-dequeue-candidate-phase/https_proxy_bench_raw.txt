@@ -1,0 +1,197 @@
+### scenario=http-over-https-proxy requests=1000 concurrency=1 repeat=1 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 128.485225ms for 1000 requests
+ylong_http_client_stats: p50_us=110 p95_us=120 cpu_us=85992 rss_peak_bytes=15876096 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=1266 request_execute=109939 body_drain=914 connect=792 dns=0 tcp=0 tls=0 transfer=90742 request_format=2516 pool_checkout=1674 send_on_conn=103739 http1_write=20254 http1_encode=1075 http1_write_io=18461 response_head=73551 response_read=70465 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=103 response_decode=2754 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=http-over-https-proxy client=ylong_http_client connections=1 forward_requests=1050 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0 request_header_bytes=82950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=28854 response_send_events=1050 tunnel_send_to_client_us=0 tunnel_send_to_client_events=0 tunnel_send_to_origin_us=0 tunnel_send_to_origin_events=0 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=http-over-https-proxy client=ylong_http_client connections=0 requests=0 tls_connections=0 request_header_bytes=0 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tls_fingerprints=-
+
+### scenario=http-over-https-proxy requests=1000 concurrency=1 repeat=1 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 109.669627ms for 1000 requests
+libcurl_stats: p50_us=109 p95_us=144 cpu_us=73491 rss_peak_bytes=14934016 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=96825 for 1000 requests
+
+proxy_trace: scenario=http-over-https-proxy client=libcurl connections=1 forward_requests=1050 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0 request_header_bytes=116550 request_body_bytes=0 response_body_bytes=4300800 response_send_us=22308 response_send_events=1050 tunnel_send_to_client_us=0 tunnel_send_to_client_events=0 tunnel_send_to_origin_us=0 tunnel_send_to_origin_events=0 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=http-over-https-proxy client=libcurl connections=0 requests=0 tls_connections=0 request_header_bytes=0 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tls_fingerprints=-
+
+### scenario=http-over-https-proxy requests=1000 concurrency=1 repeat=2 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 119.885456ms for 1000 requests
+ylong_http_client_stats: p50_us=111 p95_us=135 cpu_us=77470 rss_peak_bytes=15888384 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=1091 request_execute=103542 body_drain=823 connect=740 dns=0 tcp=0 tls=0 transfer=85944 request_format=2341 pool_checkout=1529 send_on_conn=97740 http1_write=17556 http1_encode=987 http1_write_io=15950 response_head=71521 response_read=68415 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=85 response_decode=2821 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=http-over-https-proxy client=ylong_http_client connections=1 forward_requests=1050 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0 request_header_bytes=82950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=26190 response_send_events=1050 tunnel_send_to_client_us=0 tunnel_send_to_client_events=0 tunnel_send_to_origin_us=0 tunnel_send_to_origin_events=0 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=http-over-https-proxy client=ylong_http_client connections=0 requests=0 tls_connections=0 request_header_bytes=0 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tls_fingerprints=-
+
+### scenario=http-over-https-proxy requests=1000 concurrency=1 repeat=2 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 46.607102ms for 1000 requests
+libcurl_stats: p50_us=34 p95_us=58 cpu_us=26285 rss_peak_bytes=15011840 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=42652 for 1000 requests
+
+proxy_trace: scenario=http-over-https-proxy client=libcurl connections=1 forward_requests=1050 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0 request_header_bytes=116550 request_body_bytes=0 response_body_bytes=4300800 response_send_us=12281 response_send_events=1050 tunnel_send_to_client_us=0 tunnel_send_to_client_events=0 tunnel_send_to_origin_us=0 tunnel_send_to_origin_events=0 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=http-over-https-proxy client=libcurl connections=0 requests=0 tls_connections=0 request_header_bytes=0 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tls_fingerprints=-
+
+### scenario=http-over-https-proxy requests=1000 concurrency=1 repeat=3 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 54.397831ms for 1000 requests
+ylong_http_client_stats: p50_us=36 p95_us=56 cpu_us=38954 rss_peak_bytes=15835136 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=504 request_execute=47039 body_drain=325 connect=413 dns=0 tcp=0 tls=0 transfer=37714 request_format=1276 pool_checkout=895 send_on_conn=43765 http1_write=7330 http1_encode=481 http1_write_io=6529 response_head=32202 response_read=30299 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=47 response_decode=1691 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=http-over-https-proxy client=ylong_http_client connections=1 forward_requests=1050 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0 request_header_bytes=82950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=9653 response_send_events=1050 tunnel_send_to_client_us=0 tunnel_send_to_client_events=0 tunnel_send_to_origin_us=0 tunnel_send_to_origin_events=0 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=http-over-https-proxy client=ylong_http_client connections=0 requests=0 tls_connections=0 request_header_bytes=0 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tls_fingerprints=-
+
+### scenario=http-over-https-proxy requests=1000 concurrency=1 repeat=3 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 100.588195ms for 1000 requests
+libcurl_stats: p50_us=107 p95_us=121 cpu_us=70163 rss_peak_bytes=14950400 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=87974 for 1000 requests
+
+proxy_trace: scenario=http-over-https-proxy client=libcurl connections=1 forward_requests=1050 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0 request_header_bytes=116550 request_body_bytes=0 response_body_bytes=4300800 response_send_us=20763 response_send_events=1050 tunnel_send_to_client_us=0 tunnel_send_to_client_events=0 tunnel_send_to_origin_us=0 tunnel_send_to_origin_events=0 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=http-over-https-proxy client=libcurl connections=0 requests=0 tls_connections=0 request_header_bytes=0 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tls_fingerprints=-
+
+### scenario=https-over-https-proxy requests=1000 concurrency=1 repeat=1 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 239.728859ms for 1000 requests
+ylong_http_client_stats: p50_us=215 p95_us=263 cpu_us=100443 rss_peak_bytes=15994880 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=1466 request_execute=218302 body_drain=1091 connect=889 dns=0 tcp=0 tls=0 transfer=197215 request_format=2777 pool_checkout=1914 send_on_conn=211352 http1_write=23009 http1_encode=957 http1_write_io=21341 response_head=177643 response_read=174207 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=102 response_decode=3059 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=https-over-https-proxy client=ylong_http_client connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=84514 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=59 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=30919 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=16382 tunnel_send_to_origin_events=1052 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=https-over-https-proxy client=ylong_http_client connections=1 requests=1050 tls_connections=1 request_header_bytes=59850 request_body_bytes=0 response_body_bytes=4300800 response_send_us=31522 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=https-over-https-proxy requests=1000 concurrency=1 repeat=1 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 145.717087ms for 1000 requests
+libcurl_stats: p50_us=129 p95_us=263 cpu_us=43290 rss_peak_bytes=15044608 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=139138 for 1000 requests
+
+proxy_trace: scenario=https-over-https-proxy client=libcurl connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=86705 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=89 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=20709 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=10076 tunnel_send_to_origin_events=1053 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=https-over-https-proxy client=libcurl connections=1 requests=1050 tls_connections=1 request_header_bytes=61950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=24034 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=https-over-https-proxy requests=1000 concurrency=1 repeat=2 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 234.765688ms for 1000 requests
+ylong_http_client_stats: p50_us=212 p95_us=257 cpu_us=98198 rss_peak_bytes=16064512 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=1553 request_execute=213926 body_drain=995 connect=866 dns=0 tcp=0 tls=0 transfer=193181 request_format=2748 pool_checkout=1824 send_on_conn=207125 http1_write=22827 http1_encode=879 http1_write_io=21179 response_head=173936 response_read=170390 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=98 response_decode=3136 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=https-over-https-proxy client=ylong_http_client connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=84514 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=59 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=29525 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=15588 tunnel_send_to_origin_events=1052 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=https-over-https-proxy client=ylong_http_client connections=1 requests=1050 tls_connections=1 request_header_bytes=59850 request_body_bytes=0 response_body_bytes=4300800 response_send_us=31421 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=https-over-https-proxy requests=1000 concurrency=1 repeat=2 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 212.384084ms for 1000 requests
+libcurl_stats: p50_us=205 p95_us=260 cpu_us=93201 rss_peak_bytes=14946304 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=196742 for 1000 requests
+
+proxy_trace: scenario=https-over-https-proxy client=libcurl connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=86705 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=89 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=25683 tunnel_send_to_client_events=1052 tunnel_send_to_origin_us=13055 tunnel_send_to_origin_events=1053 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=https-over-https-proxy client=libcurl connections=1 requests=1050 tls_connections=1 request_header_bytes=61950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=28027 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=https-over-https-proxy requests=1000 concurrency=1 repeat=3 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 106.37166ms for 1000 requests
+ylong_http_client_stats: p50_us=104 p95_us=144 cpu_us=43896 rss_peak_bytes=16023552 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=576 request_execute=97925 body_drain=411 connect=407 dns=0 tcp=0 tls=0 transfer=88736 request_format=1217 pool_checkout=860 send_on_conn=94827 http1_write=9694 http1_encode=416 http1_write_io=8949 response_head=80704 response_read=79052 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=48 response_decode=1466 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=https-over-https-proxy client=ylong_http_client connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=84514 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=59 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=13083 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=6301 tunnel_send_to_origin_events=1052 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=https-over-https-proxy client=ylong_http_client connections=1 requests=1050 tls_connections=1 request_header_bytes=59850 request_body_bytes=0 response_body_bytes=4300800 response_send_us=13038 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=https-over-https-proxy requests=1000 concurrency=1 repeat=3 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 138.250474ms for 1000 requests
+libcurl_stats: p50_us=111 p95_us=259 cpu_us=60920 rss_peak_bytes=15003648 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=127723 for 1000 requests
+
+proxy_trace: scenario=https-over-https-proxy client=libcurl connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=86705 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=89 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=16239 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=8684 tunnel_send_to_origin_events=1053 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=https-over-https-proxy client=libcurl connections=1 requests=1050 tls_connections=1 request_header_bytes=61950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=17511 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=proxy-mtls-https-origin requests=1000 concurrency=1 repeat=1 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 184.3576ms for 1000 requests
+ylong_http_client_stats: p50_us=120 p95_us=292 cpu_us=78072 rss_peak_bytes=16044032 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=1112 request_execute=168845 body_drain=798 connect=653 dns=0 tcp=0 tls=0 transfer=153141 request_format=2049 pool_checkout=1335 send_on_conn=163778 http1_write=17218 http1_encode=737 http1_write_io=15947 response_head=138503 response_read=135926 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=78 response_decode=2288 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=proxy-mtls-https-origin client=ylong_http_client connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=84514 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=59 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=24210 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=12565 tunnel_send_to_origin_events=1052 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=proxy-mtls-https-origin client=ylong_http_client connections=1 requests=1050 tls_connections=1 request_header_bytes=59850 request_body_bytes=0 response_body_bytes=4300800 response_send_us=21489 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=proxy-mtls-https-origin requests=1000 concurrency=1 repeat=1 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 212.001736ms for 1000 requests
+libcurl_stats: p50_us=159 p95_us=294 cpu_us=123571 rss_peak_bytes=14979072 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=191196 for 1000 requests
+
+proxy_trace: scenario=proxy-mtls-https-origin client=libcurl connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=86705 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=89 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=20277 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=10534 tunnel_send_to_origin_events=1053 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=proxy-mtls-https-origin client=libcurl connections=1 requests=1050 tls_connections=1 request_header_bytes=61950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=22177 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=proxy-mtls-https-origin requests=1000 concurrency=1 repeat=2 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 247.288501ms for 1000 requests
+ylong_http_client_stats: p50_us=225 p95_us=259 cpu_us=104291 rss_peak_bytes=16080896 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=1552 request_execute=225051 body_drain=1250 connect=968 dns=0 tcp=0 tls=0 transfer=203021 request_format=2986 pool_checkout=1972 send_on_conn=217640 http1_write=24015 http1_encode=1036 http1_write_io=22228 response_head=182879 response_read=179060 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=103 response_decode=3427 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=proxy-mtls-https-origin client=ylong_http_client connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=84514 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=59 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=30268 tunnel_send_to_client_events=1052 tunnel_send_to_origin_us=15961 tunnel_send_to_origin_events=1052 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=proxy-mtls-https-origin client=ylong_http_client connections=1 requests=1050 tls_connections=1 request_header_bytes=59850 request_body_bytes=0 response_body_bytes=4300800 response_send_us=32090 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=proxy-mtls-https-origin requests=1000 concurrency=1 repeat=2 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 119.914613ms for 1000 requests
+libcurl_stats: p50_us=79 p95_us=251 cpu_us=36494 rss_peak_bytes=15138816 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=114138 for 1000 requests
+
+proxy_trace: scenario=proxy-mtls-https-origin client=libcurl connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=86705 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=89 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=17980 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=8964 tunnel_send_to_origin_events=1053 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=proxy-mtls-https-origin client=libcurl connections=1 requests=1050 tls_connections=1 request_header_bytes=61950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=18604 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=proxy-mtls-https-origin requests=1000 concurrency=1 repeat=3 ylong_concurrency_model=threaded client=ylong_http_client
+
+ylong_http_client: 167.733231ms for 1000 requests
+ylong_http_client_stats: p50_us=114 p95_us=250 cpu_us=69557 rss_peak_bytes=16031744 errors=0 for 1000 requests
+ylong_http_client_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+ylong_http_client_phase_us: request_build=1065 request_execute=153091 body_drain=747 connect=649 dns=0 tcp=0 tls=0 transfer=138278 request_format=1932 pool_checkout=1342 send_on_conn=148255 http1_write=16228 http1_encode=725 http1_write_io=14991 response_head=124474 response_read=122053 response_read_polls=2000 response_read_pending=1000 response_pre_read_bytes=4096000 response_pre_read_events=1000 response_intercept=71 response_decode=2143 libcurl_perform=0 for 1000 requests
+
+proxy_trace: scenario=proxy-mtls-https-origin client=ylong_http_client connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=84514 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=59 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=20139 tunnel_send_to_client_events=1052 tunnel_send_to_origin_us=10755 tunnel_send_to_origin_events=1052 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=proxy-mtls-https-origin client=ylong_http_client connections=1 requests=1050 tls_connections=1 request_header_bytes=59850 request_body_bytes=0 response_body_bytes=4300800 response_send_us=21162 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+### scenario=proxy-mtls-https-origin requests=1000 concurrency=1 repeat=3 ylong_concurrency_model=threaded client=libcurl
+
+libcurl: 227.208456ms for 1000 requests
+libcurl_stats: p50_us=207 p95_us=226 cpu_us=99180 rss_peak_bytes=15040512 errors=0 for 1000 requests
+libcurl_body_stats: chunks=1000 bytes=4096000 for 1000 requests
+libcurl_phase_us: request_build=0 request_execute=0 body_drain=0 connect=0 dns=0 tcp=0 tls=0 transfer=0 request_format=0 pool_checkout=0 send_on_conn=0 http1_write=0 http1_encode=0 http1_write_io=0 response_head=0 response_read=0 response_read_polls=0 response_read_pending=0 response_pre_read_bytes=0 response_pre_read_events=0 response_intercept=0 response_decode=0 libcurl_perform=209980 for 1000 requests
+
+proxy_trace: scenario=proxy-mtls-https-origin client=libcurl connections=1 forward_requests=0 connect_requests=1 tunnel_bytes_from_client=86705 tunnel_bytes_from_origin=4437120 tls_client_auth_failures=0 request_header_bytes=89 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=29288 tunnel_send_to_client_events=1053 tunnel_send_to_origin_us=15647 tunnel_send_to_origin_events=1053 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1
+
+origin_trace: scenario=proxy-mtls-https-origin client=libcurl connections=1 requests=1050 tls_connections=1 request_header_bytes=61950 request_body_bytes=0 response_body_bytes=4300800 response_send_us=29367 response_send_events=1050 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=1

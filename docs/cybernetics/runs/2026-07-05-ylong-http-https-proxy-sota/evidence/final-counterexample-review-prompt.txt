@@ -1,0 +1,10 @@
+Independent S10 Counterexample Gate review request for gen-005.
+
+Review the current workspace artifacts and try to disprove the runtime claim:
+- S8 passes the user-approved SOTA threshold: fair same-process libcurl HTTPS proxy matrix, throughput geomean >= 1.20, zero protocol/TLS/proxy/request errors.
+- S9 passes: the S8 passing result uses the real ylong_http_client public sync request path and is causally supported by ablation/fairness evidence, not curl CLI startup overhead, TLS/mTLS mismatch, pooling mismatch, response-validation mismatch, disabled verification, or benchmark-only request bypass.
+- Final completion can proceed only if S8, S9, all required outcomes, and all required result paths are covered.
+
+Review required files: gen-005/runtime.control.json, evidence/sota-threshold-matrix.json, evidence/gen005-s8-candidate-counterexamples.json, evidence/real-client-path.json, evidence/performance-causality.json, the passing S8 comparison/summary CSVs, and source paths referenced by real-client-path evidence.
+
+Return verdict, counterexamples, S8/S9/S10 coverage sufficiency, and reviewer id.

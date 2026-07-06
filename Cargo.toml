@@ -4,3 +4,8 @@ members = [
     "ylong_http",
     "ylong_http_client",
 ]
+
+[patch."https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git"]
+ylong_io = { path = "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_io" }
+ylong_runtime = { path = "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime" }
+ylong_runtime_macros = { path = "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime_macros" }

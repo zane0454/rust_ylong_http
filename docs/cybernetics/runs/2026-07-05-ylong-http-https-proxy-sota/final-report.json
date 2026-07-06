@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at": "2026-07-06T20:09:58+08:00",
+  "run_id": "2026-07-05-ylong-http-https-proxy-sota",
+  "runtime_generation": "gen-005",
+  "status": "sota_verified",
+  "goal_achieved": true,
+  "what_counts_as_done_met": true,
+  "summary": "SOTA verified under the user-approved 20% contest threshold: S8 reached 1.228x throughput geomean against same-process libcurl with zero errors; S9 real-client-path and causal evidence passed; S10 independent Counterexample Gate passed; final verifier permits goal_achieved.",
+  "work_coverage": {
+    "status": "complete",
+    "completed_required_steps": [
+      "S1-current-audit",
+      "S2-protocol-correctness",
+      "S3-proxy-tls-mtls",
+      "S4-sync-async-proxy-semantics",
+      "S5-test-matrix",
+      "S6-benchmark-fairness",
+      "S7-report-evidence-chain",
+      "S8-sota-20-percent-threshold-matrix",
+      "S9-causal-performance-evidence",
+      "S10-final-counterexample-gate"
+    ],
+    "remaining_required_steps": []
+  },
+  "evidence": [
+    "evidence.current-audit",
+    "evidence.connect-2xx-tests",
+    "evidence.proxy-tls-mtls-tests",
+    "evidence.sync-async-proxy-tests",
+    "evidence.test-matrix-run",
+    "evidence.benchmark-fairness",
+    "evidence.report-diff",
+    "evidence.sota-threshold-matrix",
+    "evidence.real-client-path",
+    "evidence.performance-causality",
+    "evidence.final-counterexample-review",
+    "evidence/sota-threshold-matrix.json",
+    "evidence/real-client-path.json",
+    "evidence/performance-causality.json",
+    "evidence/final-counterexample-review.json",
+    "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20/https_proxy_bench_summary.csv"
+  ],
+  "remaining_gaps": [],
+  "next_required_action": {
+    "owner": "none",
+    "next_step": "complete",
+    "actions": [],
+    "not_allowed": []
+  },
+  "last_evidence": "evidence/gen005-s8-candidate-counterexamples.json",
+  "completed_required_outcomes": [
+    "O-current-audit",
+    "O-protocol-correctness",
+    "O-proxy-tls-mtls",
+    "O-sync-async-proxy-semantics",
+    "O-test-matrix",
+    "O-benchmark-fairness",
+    "O-report-evidence-chain",
+    "O-sota-threshold-matrix",
+    "O-causal-performance-evidence",
+    "O-final-counterexample-gate"
+  ],
+  "completed_required_result_paths": [
+    "RP-current-audit-to-workplan",
+    "RP-final-counterexample-to-sota-claim",
+    "RP-http-over-https-proxy",
+    "RP-https-over-https-proxy",
+    "RP-proxy-tls-fail-closed",
+    "RP-shared-proxy-semantics",
+    "RP-fair-benchmark-to-report",
+    "RP-sota-threshold-verdict",
+    "RP-real-client-causal-performance"
+  ],
+  "sota_threshold_result": {
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.2280045027021633,
+    "required_throughput_geomean_ratio": 1.2,
+    "errors_sum_total": 0,
+    "baseline": "same-process libcurl library",
+    "result_dir": "docs/benchmarks/results/gen005-sync-refencoder-bodybuf-headerref-s8-sota20"
+  },
+  "counterexample_gate": {
+    "status": "pass",
+    "verdict": "approved",
+    "reviewer": "independent-s10-reviewer-orion",
+    "evidence": "evidence/final-counterexample-review.json"
+  },
+  "verification": {
+    "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+    "status": "pass",
+    "goal_achieved_permitted": true,
+    "verified_at": "2026-07-06T20:09:58+08:00"
+  }
+}

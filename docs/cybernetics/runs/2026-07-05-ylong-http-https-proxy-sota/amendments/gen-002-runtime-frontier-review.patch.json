@@ -1,0 +1,321 @@
+{
+  "artifact_type": "amendment.patch",
+  "schema_version": "1.0.0",
+  "amendment_id": "A2-runtime-frontier-review",
+  "runtime_generation": "gen-001",
+  "parent_generation": "gen-001",
+  "proposed_generation": "gen-002",
+  "strategy_kind": "amendment",
+  "status": "proposed",
+  "reason": "gen-001 expanded authority to ylong_runtime readiness/parking work and produced multiple behavior-preserving candidates, but the canonical and focused evidence now refutes the current strategy as SOTA-scale. The retained FIFO/dequeue candidate reaches only 1.1057x canonical throughput geomean with 0.9344x worst throughput and p95 max 1.3257x; later block_on-driver and block_on-atomic candidates regress focused matrices. Continuing to add runtime micro-candidates without an architecture-level upper-bound review would be guesswork rather than implementation-level convergence.",
+  "target_anchor_changes": {
+    "semantic_base_change": false,
+    "required_outcomes_changed": false,
+    "numeric_hard_threshold_policy_changed": false,
+    "sota_fixed_target_changed": false,
+    "completion_standard_changed": false
+  },
+  "authority": {
+    "authority_expanded": false,
+    "requires_human_reapproval": false,
+    "current_writable_source_scope": [
+      "evidence/",
+      "ylong_http_client/",
+      "ylong_http_client/vendor/",
+      "benches/",
+      "README.md",
+      "docs/"
+    ],
+    "requested_writable_source_scope": [
+      "evidence/",
+      "ylong_http_client/",
+      "ylong_http_client/vendor/",
+      "benches/",
+      "README.md",
+      "docs/"
+    ],
+    "rationale": "The requested change is strategy sequencing only. It keeps the same runtime source authority but requires an explicit architecture-frontier review before any further implementation candidate is attempted."
+  },
+  "affected_source_requirements": [
+    "SR-sota-fixed-target",
+    "SR-sota-hard-metrics",
+    "SR-sota-definition",
+    "SR-performance-threshold-above-contest-floor",
+    "SR-implementation-level-convergence",
+    "SR-no-planned-stop-exit",
+    "SR-no-intermediate-terminal-statuses"
+  ],
+  "affected_required_outcomes": [
+    "O-causal-performance-evidence",
+    "O-final-counterexample-gate"
+  ],
+  "affected_required_result_paths": [
+    "RP-real-client-causal-performance",
+    "RP-sota-threshold-verdict",
+    "RP-final-counterexample-to-sota-claim"
+  ],
+  "evidence_basis": [
+    "evidence/ylong-client-production-lever-hard-negative.json",
+    "evidence/runtime-readiness-profile.json",
+    "evidence/runtime-readiness-candidate-s9d-counterexample.json",
+    "evidence/runtime-dequeue-candidate-s9d-counterexample.json",
+    "evidence/runtime-blockon-driver-candidate-rejected.json",
+    "evidence/runtime-blockon-atomic-candidate-rejected.json",
+    "evidence/runtime-periodic-candidate-rejected.json",
+    "evidence/runtime-sleeper-steal-candidates-rejected.json",
+    "evidence/a2-optimistic-readiness-candidate-rejected.json",
+    "evidence/a2-no-yield-parker-candidate-rejected.json",
+    "evidence/a2-no-steal-sleep-candidate-rejected.json",
+    "evidence/performance-causality.json",
+    "evidence/real-client-path.json",
+    "evidence/sota-threshold-matrix.json"
+  ],
+  "required_steps": [
+    {
+      "step_id": "S1-current-audit",
+      "transition": "Current HTTPS proxy implementation is audited before patches are applied.",
+      "evidence": [
+        "evidence.current-audit"
+      ],
+      "satisfies_outcomes": [
+        "O-current-audit"
+      ],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S2-protocol-correctness",
+      "transition": "HTTPS proxy CONNECT handling follows required protocol semantics and fails closed on invalid responses.",
+      "evidence": [
+        "evidence.connect-2xx-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-protocol-correctness"
+      ],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S3-proxy-tls-mtls",
+      "transition": "Proxy TLS and proxy mutual TLS are verified end to end and kept distinct from origin TLS.",
+      "evidence": [
+        "evidence.proxy-tls-mtls-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-proxy-tls-mtls"
+      ],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S4-sync-async-proxy-semantics",
+      "transition": "Sync and async proxy semantics are verified and accurately represented.",
+      "evidence": [
+        "evidence.sync-async-proxy-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-sync-async-proxy-semantics"
+      ],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S5-test-matrix",
+      "transition": "A contest-critical HTTPS proxy test matrix is implemented and run.",
+      "evidence": [
+        "evidence.test-matrix-run"
+      ],
+      "satisfies_outcomes": [
+        "O-test-matrix"
+      ],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S6-benchmark-fairness",
+      "transition": "Benchmark methodology and claims are fair, reproducible, and correctly labeled.",
+      "evidence": [
+        "evidence.benchmark-fairness"
+      ],
+      "satisfies_outcomes": [
+        "O-benchmark-fairness"
+      ],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S7-report-evidence-chain",
+      "transition": "README/report narrative is revised to match verified implementation and benchmark evidence.",
+      "evidence": [
+        "evidence.report-diff"
+      ],
+      "satisfies_outcomes": [
+        "O-report-evidence-chain"
+      ],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S8-sota-threshold-matrix",
+      "transition": "SOTA performance status is evaluated against the predeclared numeric hard-threshold matrix.",
+      "evidence": [
+        "evidence.sota-threshold-matrix"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S9A-runtime-source-pin",
+      "transition": "Pin and review the exact ylong_runtime source used by the ylong_base benchmark build without changing SOTA target semantics.",
+      "evidence": [
+        "evidence.runtime-source-pin"
+      ],
+      "satisfies_outcomes": [],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S9B-runtime-readiness-profile",
+      "transition": "Instrument or trace runtime readiness/parking around nested HTTPS-over-HTTPS-proxy I/O and show a causal gap relative to libcurl/tokio observations.",
+      "evidence": [
+        "evidence.runtime-readiness-profile"
+      ],
+      "satisfies_outcomes": [],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S9C-runtime-readiness-candidate",
+      "transition": "Implement a behavior-preserving runtime readiness/parking candidate and prove it does not change HTTP/TLS/proxy semantics.",
+      "evidence": [
+        "evidence.runtime-readiness-candidate"
+      ],
+      "satisfies_outcomes": [],
+      "imported_from_generation": "gen-001",
+      "import_status": "evidence_imported"
+    },
+    {
+      "step_id": "S9E-runtime-frontier-review",
+      "transition": "Derive an architecture-level upper-bound and candidate-surface review from current S8/S9 evidence before any further runtime implementation attempt.",
+      "evidence": [
+        "evidence.runtime-frontier-review"
+      ],
+      "satisfies_outcomes": [],
+      "completion_gate": [
+        "Enumerate every remaining plausible implementation surface in ylong_runtime, ylong_http_client, benchmark harness, and dependency configuration.",
+        "For each surface, state whether it is already rejected, too small by measured upper bound, benchmark-only/disallowed, or still implementation-plausible.",
+        "For any still-plausible surface, provide a minimal measurable hypothesis with an expected effect large enough to reach the fixed SOTA gates.",
+        "If no surface remains plausible, propose the exact next human or external-resource decision without claiming S9/S10 completion."
+      ]
+    },
+    {
+      "step_id": "S9F-runtime-frontier-candidate",
+      "transition": "Only if S9E identifies a still-plausible implementation surface, implement one behavior-preserving candidate with a RED/GREEN or diagnostic test first, then run focused and canonical matrices.",
+      "evidence": [
+        "evidence.runtime-frontier-candidate",
+        "evidence.performance-causality",
+        "evidence.sota-threshold-matrix",
+        "evidence.real-client-path"
+      ],
+      "satisfies_outcomes": [
+        "O-causal-performance-evidence"
+      ],
+      "completion_gate": [
+        "No production code before a failing test or explicit diagnostic reproduction.",
+        "Focused benchmark must plausibly satisfy all fixed SOTA gates before full canonical matrix rerun.",
+        "Full canonical matrix must satisfy the unchanged fixed SOTA thresholds before S10 can run."
+      ]
+    },
+    {
+      "step_id": "S10-final-counterexample-gate",
+      "transition": "Run final counterexample review only after S9F evidence passes the unchanged fixed SOTA thresholds.",
+      "evidence": [
+        "evidence.final-counterexample-review"
+      ],
+      "satisfies_outcomes": [
+        "O-final-counterexample-gate"
+      ]
+    }
+  ],
+  "runtime_updates": {
+    "writable_evidence_paths": [
+      "evidence/",
+      "ylong_http_client/",
+      "ylong_http_client/vendor/",
+      "benches/",
+      "README.md",
+      "docs/"
+    ],
+    "verifier": {
+      "required_before_goal_achieved": true,
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py",
+      "required_outcomes": [
+        "O-current-audit",
+        "O-protocol-correctness",
+        "O-proxy-tls-mtls",
+        "O-sync-async-proxy-semantics",
+        "O-test-matrix",
+        "O-benchmark-fairness",
+        "O-report-evidence-chain",
+        "O-sota-threshold-matrix",
+        "O-causal-performance-evidence",
+        "O-final-counterexample-gate"
+      ],
+      "output_schema": "final-report.schema.json"
+    },
+    "imported_evidence": [
+      "evidence.current-audit",
+      "evidence.connect-2xx-tests",
+      "evidence.proxy-tls-mtls-tests",
+      "evidence.sync-async-proxy-tests",
+      "evidence.test-matrix-run",
+      "evidence.benchmark-fairness",
+      "evidence.report-diff",
+      "evidence.sota-threshold-matrix",
+      "evidence.performance-causality",
+      "evidence.real-client-path",
+      "evidence.runtime-source-pin",
+      "evidence.runtime-readiness-profile",
+      "evidence.runtime-readiness-candidate",
+      "evidence.runtime-readiness-candidate-s9d-counterexample",
+      "evidence.runtime-dequeue-candidate-focused",
+      "evidence.runtime-dequeue-candidate-s9d-counterexample",
+      "evidence.runtime-blockon-driver-candidate-rejected",
+      "evidence.runtime-blockon-atomic-candidate-rejected",
+      "evidence.runtime-periodic-candidate-rejected",
+      "evidence.runtime-sleeper-steal-candidates-rejected",
+      "evidence.a2-optimistic-readiness-candidate-rejected",
+      "evidence.a2-no-yield-parker-candidate-rejected",
+      "evidence.a2-no-steal-sleep-candidate-rejected",
+      "evidence.ylong-client-production-lever-hard-negative"
+    ],
+    "invalidated_evidence": [
+      "runtime-readiness-candidate canonical matrix as SOTA proof",
+      "dequeue fast-path canonical matrix as SOTA proof",
+      "block_on-driver focused matrix as SOTA proof",
+      "block_on-atomic focused matrix as SOTA proof",
+      "any rejected benchmark-only runtime candidate as real-client SOTA evidence"
+    ]
+  },
+  "forbidden_substitutes": [
+    "Do not weaken the fixed SOTA thresholds.",
+    "Do not mark S9E, S9F, S10, or goal_achieved complete from counterexample evidence.",
+    "Do not re-run rejected candidates unless S9E records new evidence contradicting their rejection.",
+    "Do not treat benchmark-only runtime rewrites as real-client-path SOTA evidence.",
+    "Do not ask the user to approve internal agent-owned review steps unless a control gate explicitly requires a human-owned decision."
+  ],
+  "review_required": {
+    "kind": "counterexample-gate",
+    "reason": "The amendment does not change target anchors, but it changes the execution strategy after repeated candidate counterexamples. Review must challenge whether S9E adds a legitimate convergence gate or merely hides a weakened/non-terminal status.",
+    "must_check": [
+      "source requirements and hard SOTA thresholds are unchanged",
+      "S9E cannot become a terminal blocked or non-SOTA completion state",
+      "S9F cannot run without a concrete implementation-plausible surface",
+      "S10 remains forbidden until the unchanged numeric matrix passes",
+      "all rejected candidates are preserved as counterexamples and not recycled as support"
+    ]
+  }
+}

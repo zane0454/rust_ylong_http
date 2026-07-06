@@ -1,0 +1,142 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "evidence.runtime-io-home-stickiness-candidate-rejected",
+  "runtime_generation": "gen-003",
+  "required_step": "S9H-runtime-io-home-stickiness-candidate",
+  "classification": "s9h_runtime_io_home_stickiness_candidate_rejected",
+  "occurred_at": "2026-07-06T15:58:00+08:00",
+  "status": "rejected",
+  "summary": "S9H tested a behavior-preserving ylong_runtime IO home-worker stickiness candidate. The RED/GREEN unit evidence confirmed the implementation could prevent a task last polled on worker 1 and IO-woken on worker 0 from being dequeued by worker 0 before worker 1's first poll. A traced smoke run reduced IO wake locality mismatches to 0/91. The focused all-scenario libcurl matrix still rejected the candidate because HTTPS proxy and proxy mTLS scenarios regressed on throughput, latency, CPU, and RSS. Production scheduling changes were rolled back; S9H, O-causal-performance-evidence, S10, and goal_achieved remain incomplete.",
+  "candidate": {
+    "name": "ylong_runtime_io_home_worker_stickiness",
+    "source_scope": [
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/worker.rs",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/raw.rs",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/task_handle.rs"
+    ],
+    "mechanism": [
+      "record last poll worker in task header",
+      "mark IO-readiness wakes as home-protected",
+      "enqueue protected tasks into per-worker non-stealable home inbox",
+      "let home worker dequeue home inbox before local, global, or steal paths"
+    ],
+    "source_changes": "rolled_back_after_focused_rejection",
+    "retained_non_production_tooling": [
+      "docs/benchmarks/analyze_runtime_frontier_trace.py accepts scheduler_enqueue_io_home trace events",
+      "docs/benchmarks/test_runtime_frontier_trace.py includes an io_home trace parser regression"
+    ]
+  },
+  "red_green_evidence": {
+    "red_command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml ut_io_readiness_wake_keeps_task_for_last_poll_worker_first --features net,sync,fs,macros,time",
+    "red_result": {
+      "status": "fail_expected",
+      "failure": "IO readiness task was dequeued by a non-home worker before home first poll"
+    },
+    "green_command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml ut_io_readiness_wake_keeps_task_for_last_poll_worker_first --features net,sync,fs,macros,time",
+    "green_result": {
+      "status": "pass",
+      "tests": "1 passed; 0 failed"
+    },
+    "module_regression_command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml executor::async_pool::test:: --features net,sync,fs,macros,time",
+    "module_regression_before_rollback": {
+      "status": "pass",
+      "tests": "16 passed; 0 failed"
+    }
+  },
+  "trace_smoke": {
+    "command": "YLONG_RUNTIME_TRACE_FILE=docs/benchmarks/results/s9h-io-home-stickiness-smoke/runtime-trace.jsonl python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin target/release/https_proxy_bench --baseline libcurl --scenario https-over-https-proxy --requests 32 --repeats 1 --warmup 8 --concurrency 8 --ylong-concurrency-model single-client --result-dir docs/benchmarks/results/s9h-io-home-stickiness-smoke --figure-dir docs/figures/s9h-io-home-stickiness-smoke && python3 docs/benchmarks/analyze_runtime_frontier_trace.py docs/benchmarks/results/s9h-io-home-stickiness-smoke/runtime-trace.jsonl > docs/benchmarks/results/s9h-io-home-stickiness-smoke/runtime-frontier-analysis.json",
+    "result_dir": "docs/benchmarks/results/s9h-io-home-stickiness-smoke",
+    "analysis": {
+      "io_wake_enqueue_chains": 91,
+      "complete_chains": 91,
+      "incomplete_chains": 0,
+      "locality_mismatches": 0,
+      "mismatch_ratio": 0.0
+    }
+  },
+  "focused_matrix": {
+    "command": "python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin target/release/https_proxy_bench --baseline libcurl --scenario all --requests 1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --result-dir docs/benchmarks/results/s9h-io-home-stickiness-focused --figure-dir docs/figures/s9h-io-home-stickiness-focused",
+    "result_dir": "docs/benchmarks/results/s9h-io-home-stickiness-focused",
+    "baseline": "libcurl",
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "concurrency": 8,
+    "ylong_concurrency_model": "single-client",
+    "phase_timing": false,
+    "errors_sum_total": 0,
+    "threshold_eval": {
+      "sota_verified": false,
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9142476707872258,
+      "throughput_min_ratio_ylong_over_libcurl": 0.695293846080088,
+      "throughput_max_ratio_ylong_over_libcurl": 1.4269828146081607,
+      "p50_geomean_ratio_ylong_over_libcurl": 1.0984155115620229,
+      "p50_max_ratio_ylong_over_libcurl": 1.4491253123884327,
+      "p95_geomean_ratio_ylong_over_libcurl": 1.122189362072305,
+      "p95_max_ratio_ylong_over_libcurl": 1.3300620869216904,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.4920395318681197,
+      "cpu_max_ratio_ylong_over_libcurl": 1.5609526657446515,
+      "rss_geomean_ratio_ylong_over_libcurl": 1.1412940962805245,
+      "rss_max_ratio_ylong_over_libcurl": 1.1469145365349858
+    },
+    "scenario_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "throughput_rps_ratio": 1.4269828146081607,
+        "p50_us_ratio": 0.6930147058823529,
+        "p95_us_ratio": 0.8608247422680413,
+        "cpu_us_per_request_ratio": 1.452176631596409,
+        "rss_peak_bytes_ratio": 1.1469145365349858,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "throughput_rps_ratio": 0.695293846080088,
+        "p50_us_ratio": 1.4491253123884327,
+        "p95_us_ratio": 1.3300620869216904,
+        "cpu_us_per_request_ratio": 1.5609526657446515,
+        "rss_peak_bytes_ratio": 1.144370534614437,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "throughput_rps_ratio": 0.7702016759277601,
+        "p50_us_ratio": 1.3196281730425454,
+        "p95_us_ratio": 1.2342745861733202,
+        "cpu_us_per_request_ratio": 1.4653177568344695,
+        "rss_peak_bytes_ratio": 1.1326480665687715,
+        "errors_sum": 0
+      }
+    ],
+    "gate_decision": "fail_focused_matrix_do_not_run_canonical"
+  },
+  "postrollback_verification": [
+    {
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml executor::async_pool::test:: --features net,sync,fs,macros,time",
+      "status": "pass",
+      "result": "15 passed; 0 failed"
+    },
+    {
+      "command": "python3 docs/benchmarks/test_runtime_frontier_trace.py",
+      "status": "pass",
+      "result": "3 passed; 0 failed"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo test -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "status": "pass",
+      "result": "7 passed; 0 failed"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo check -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "status": "pass"
+    }
+  ],
+  "completion_effect": {
+    "S9H-runtime-io-home-stickiness-candidate": "not_complete_candidate_rejected",
+    "O-causal-performance-evidence": "not_satisfied",
+    "S10-final-counterexample-gate": "disallowed",
+    "goal_achieved": false
+  },
+  "next_action": "Do not claim S9H completion from this candidate. The current gen-003 route has rejected its approved implementation surface; any further route requires reviewed replanning without weakening the fixed SOTA thresholds."
+}

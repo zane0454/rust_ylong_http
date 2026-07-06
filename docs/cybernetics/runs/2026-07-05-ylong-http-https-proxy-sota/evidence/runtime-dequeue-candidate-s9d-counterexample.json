@@ -1,0 +1,96 @@
+{
+  "evidence_id": "evidence.runtime-dequeue-candidate-s9d-counterexample",
+  "runtime_generation": "gen-001",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "required_step": "S9D-runtime-canonical-matrix",
+  "status": "canonical_candidate_failed_sota_thresholds",
+  "verified_at": "2026-07-06T13:09:18+08:00",
+  "summary": "The stacked ylong_runtime FIFO wake-suppression plus dequeue fast-path candidate completed the approved S9D canonical matrix with zero benchmark errors, but it failed the fixed SOTA thresholds. It improves several HTTPS-origin cells and CPU point estimates, but throughput geomean is only 1.1057x, the worst throughput cell is 0.9344x, p95 max is 1.3257x, and CPU geomean is 0.8566x. This is counterexample evidence only; S9D is not complete and S10 remains disallowed.",
+  "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --concurrency 1 --bench-bin /tmp/ylong_http_target_s9d_dequeue_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-dequeue-candidate-s9d --figure-dir docs/figures/ylong-runtime-dequeue-candidate-s9d",
+  "build_command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_dequeue_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --offline",
+  "matrix": {
+    "baseline": "same-process libcurl",
+    "ylong_client": "async",
+    "ylong_concurrency_model": "threaded",
+    "scenario": "all",
+    "requests": [
+      200,
+      1000,
+      3000
+    ],
+    "repeats": 5,
+    "warmup": 50,
+    "concurrency": 1,
+    "phase_timing": false,
+    "errors_sum_total": 0
+  },
+  "threshold_eval": {
+    "sota_verified": false,
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.1057178257457998,
+    "throughput_min_ratio_ylong_over_libcurl": 0.9344353474147318,
+    "throughput_max_ratio_ylong_over_libcurl": 1.301586528571668,
+    "p50_max_ratio_ylong_over_libcurl": 1.162037037037037,
+    "p95_min_ratio_ylong_over_libcurl": 0.884185303514377,
+    "p95_max_ratio_ylong_over_libcurl": 1.3256880733944953,
+    "cpu_geomean_ratio_ylong_over_libcurl": 0.8565957153286522,
+    "cpu_max_ratio_ylong_over_libcurl": 0.938437346925084,
+    "rss_max_ratio_ylong_over_libcurl": 1.0693989071038252
+  },
+  "failing_cells": [
+    {
+      "scenario": "http-over-https-proxy",
+      "requests": 200,
+      "throughput_rps_ratio": 0.9344353474147318,
+      "p50_us_ratio": 0.9036363636363637,
+      "p95_us_ratio": 1.243421052631579,
+      "cpu_us_per_request_ratio": 0.9037354520273119,
+      "rss_peak_bytes_ratio": 1.0693989071038252
+    },
+    {
+      "scenario": "http-over-https-proxy",
+      "requests": 3000,
+      "throughput_rps_ratio": 0.9372743037572594,
+      "p50_us_ratio": 1.162037037037037,
+      "p95_us_ratio": 1.0527272727272727,
+      "cpu_us_per_request_ratio": 0.938437346925084,
+      "rss_peak_bytes_ratio": 1.0635917030567685
+    },
+    {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 200,
+      "throughput_rps_ratio": 1.0247971376599445,
+      "p50_us_ratio": 0.9558693733451015,
+      "p95_us_ratio": 1.3256880733944953,
+      "cpu_us_per_request_ratio": 0.9196897352871231,
+      "rss_peak_bytes_ratio": 1.0569347004856988
+    }
+  ],
+  "passing_gates": [
+    "zero benchmark errors",
+    "five measured repetitions after warmup",
+    "RSS max ratio remains below 1.10",
+    "CPU max ratio remains below 1.00"
+  ],
+  "failing_gates": [
+    "throughput geomean hard threshold",
+    "every-cell throughput hard threshold",
+    "p50 hard threshold",
+    "p95 hard threshold",
+    "flagship generational-gap hard threshold",
+    "CPU geomean hard threshold"
+  ],
+  "hashes": {
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-s9d/https_proxy_bench_results.csv": "sha256:072a5b5523711c4c6103fdd7f8d11cd4bc925e06efb542dfd460c195be4c9c1e",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-s9d/https_proxy_bench_summary.csv": "sha256:dad6ad4658fdaaee4a8c8865675c5d37fc9b4c2b4e63a5f3e6bcd0962bd5b946",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-s9d/https_proxy_bench_comparison.csv": "sha256:f19939bbfa7befd59cc3eb62e58560d9a8ee3a0c27dcd0309e9ba4eb6ab791e9",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-s9d/https_proxy_bench_env.json": "sha256:9aa583a7b02d16d2045e9f167ab7c47ac2d0c36be227e2e22ef95290d52e92ff",
+    "docs/benchmarks/results/ylong-runtime-dequeue-candidate-s9d/https_proxy_bench_raw.txt": "sha256:f79155da8a8c99f5a5b58d041cfebb60867bc0b5529829ff085256c5601c2eff",
+    "/tmp/ylong_http_target_s9d_dequeue_release/release/https_proxy_bench": "sha256:cab297826026901e9d6646d5961f71bee084ecc2b7eb20275e3e795e4a07237e"
+  },
+  "completion_effect": {
+    "S9D-runtime-canonical-matrix": "not complete",
+    "O-causal-performance-evidence": "not satisfied",
+    "S10-final-counterexample-gate": "not allowed",
+    "goal_achieved": false
+  }
+}

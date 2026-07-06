@@ -1,0 +1,297 @@
+{
+  "evidence_id": "evidence.runtime-source-pin",
+  "runtime_generation": "gen-001",
+  "created_at": "2026-07-06T12:20:57+08:00",
+  "status": "pass",
+  "required_step": "S9A-runtime-source-pin",
+  "summary": "Pinned the exact ylong_runtime source used by the ylong_base HTTPS proxy benchmark build and identified readiness/parking source boundaries for S9B.",
+  "cargo_lock_pin": {
+    "source": "git+https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c",
+    "packages": [
+      "ylong_io",
+      "ylong_runtime",
+      "ylong_runtime_macros"
+    ],
+    "lock_lines": "Cargo.lock:728-750",
+    "head": "0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c"
+  },
+  "workspace_feature_binding": {
+    "ylong_http_client_feature": "ylong_base = [\"ylong_runtime\", \"ylong_http/ylong_base\"]",
+    "ylong_http_feature": "ylong_base = [\"ylong_runtime\"]",
+    "benchmark_feature_set": [
+      "async",
+      "http1_1",
+      "ylong_base",
+      "c_openssl_3_0",
+      "libcurl_bench"
+    ],
+    "metadata_summary": {
+      "ylong_http": {
+        "manifest_path": "/home/ender/Workspace/rust_ylong_http/ylong_http/Cargo.toml",
+        "features": {
+          "http1_1": [],
+          "ylong_base": [
+            "ylong_runtime"
+          ],
+          "ylong_runtime": [
+            "dep:ylong_runtime"
+          ]
+        },
+        "ylong_runtime_dependencies": [
+          {
+            "name": "ylong_runtime",
+            "source": "git+https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git",
+            "req": "*",
+            "kind": null,
+            "rename": null,
+            "optional": true,
+            "uses_default_features": true,
+            "features": [
+              "fs",
+              "sync"
+            ],
+            "target": null,
+            "registry": null
+          }
+        ]
+      },
+      "ylong_http_client": {
+        "manifest_path": "/home/ender/Workspace/rust_ylong_http/ylong_http_client/Cargo.toml",
+        "features": {
+          "__c_openssl": [
+            "__tls",
+            "libc"
+          ],
+          "__tls": [],
+          "async": [],
+          "c_openssl_3_0": [
+            "__c_openssl"
+          ],
+          "http1_1": [
+            "ylong_http/http1_1"
+          ],
+          "libcurl_bench": [
+            "libc"
+          ],
+          "ylong_base": [
+            "ylong_runtime",
+            "ylong_http/ylong_base"
+          ],
+          "ylong_runtime": [
+            "dep:ylong_runtime"
+          ]
+        },
+        "ylong_runtime_dependencies": [
+          {
+            "name": "ylong_runtime",
+            "source": "git+https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git",
+            "req": "*",
+            "kind": null,
+            "rename": null,
+            "optional": true,
+            "uses_default_features": true,
+            "features": [
+              "net",
+              "sync",
+              "fs",
+              "macros",
+              "time"
+            ],
+            "target": null,
+            "registry": null
+          }
+        ]
+      }
+    },
+    "cargo_tree_relevant_lines": [
+      "ylong_http_client v1.0.0 (/home/ender/Workspace/rust_ylong_http/ylong_http_client)",
+      "├── ylong_http feature \"default\"",
+      "│   └── ylong_http v1.0.0 (/home/ender/Workspace/rust_ylong_http/ylong_http)",
+      "│       ├── ylong_runtime feature \"default\"",
+      "│       │   └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b)",
+      "│       │       ├── ylong_io feature \"default\"",
+      "│       │       │   ├── ylong_io v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b)",
+      "│       │       │   ├── ylong_io feature \"tcp\"",
+      "│       │       │   │   └── ylong_io v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+      "│       │       │   └── ylong_io feature \"udp\"",
+      "│       │       │       └── ylong_io v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+      "│       │       └── ylong_runtime_macros feature \"default\"",
+      "│       │           └── ylong_runtime_macros v1.0.0 (proc-macro) (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b)",
+      "│       ├── ylong_runtime feature \"fs\"",
+      "│       │   ├── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+      "│       │   └── ylong_runtime feature \"sync\"",
+      "│       │       └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+      "│       └── ylong_runtime feature \"sync\" (*)",
+      "├── ylong_runtime feature \"default\" (*)",
+      "├── ylong_runtime feature \"fs\" (*)",
+      "├── ylong_runtime feature \"macros\"",
+      "│   ├── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+      "│   └── ylong_runtime feature \"ylong_runtime_macros\"",
+      "│       └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+      "├── ylong_runtime feature \"net\"",
+      "│   ├── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+      "│   ├── ylong_runtime feature \"ylong_io\"",
+      "│   │   └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+      "│   ├── ylong_io feature \"tcp\" (*)",
+      "│   └── ylong_io feature \"udp\" (*)",
+      "├── ylong_runtime feature \"sync\" (*)",
+      "└── ylong_runtime feature \"time\"",
+      "    └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)"
+    ]
+  },
+  "local_checkout": {
+    "path": "/home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7",
+    "head": "0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c",
+    "tree": "380ed16c9693833112f3a533a9504a7190c94ba1",
+    "remote": [
+      "origin\tfile:///home/ender/.cargo/git/db/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5 (fetch)",
+      "origin\tfile:///home/ender/.cargo/git/db/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5 (push)"
+    ],
+    "log_1": [
+      "0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c",
+      "1760327057",
+      "openharmony_ci <openharmony_ci@noreply.gitcode.com>",
+      "!199 merge master into master"
+    ],
+    "diff_name_only": [],
+    "diff_cached_name_only": [],
+    "status_short_untracked_all": [
+      "?? .cargo-ok"
+    ],
+    "source_dirty": false,
+    "untracked_note": "Only .cargo-ok is untracked in the cargo git checkout; tracked source diff is empty."
+  },
+  "hashes": [
+    "c44f67bb3ee9110107aab383ff9322b9d1a903bf752085b07d3bfc14206e83f5  Cargo.lock",
+    "56a17a4151a2b75c13cef523d816cce6954296075f9bddd4a807912fbb7fa47a  ylong_http_client/Cargo.toml",
+    "740c8c726974b3b4f31d84eef57de31ad1ced0212fcc38020a646de16fee5126  ylong_http/Cargo.toml",
+    "fc5695b4eeed720f8ece0f2bc2bac47ea370125fbfcc93a37980716d67d0b38f  /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/Cargo.toml",
+    "ca727d6c85af0ce9330fefe1932792beb3934e88e4dff3f326e9b9371c1aba22  /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/ylong_runtime/Cargo.toml",
+    "90c96e2fa4d91ca3004505e48eb313e051404e39cca04ca6f5ed4ade82494fdd  /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/ylong_io/Cargo.toml"
+  ],
+  "source_review": [
+    {
+      "component": "readiness pending and waiter registration",
+      "file": "ylong_runtime/src/net/schedule_io.rs",
+      "line_range": "128-157",
+      "finding": "ScheduleIO::poll_readiness returns Pending when readiness is empty after storing the reader/writer waker; this is the direct inner readiness pending point for S9B."
+    },
+    {
+      "component": "WouldBlock readiness clearing",
+      "file": "ylong_runtime/src/net/async_source.rs",
+      "line_range": "119-150",
+      "finding": "AsyncSource::poll_io clears readiness after WouldBlock and loops; S9B must separate legitimate clear_readiness from duplicate pending."
+    },
+    {
+      "component": "worker park boundary",
+      "file": "ylong_runtime/src/executor/worker.rs",
+      "line_range": "181-203",
+      "finding": "Worker::park_timeout enters Parker::park when no local work exists; S9B must correlate response-read pending with this park path."
+    },
+    {
+      "component": "driver vs condvar park",
+      "file": "ylong_runtime/src/executor/parker.rs",
+      "line_range": "73-178",
+      "finding": "Parker first yields three times, then may run the IO driver, then falls back to condvar parking; this is where unnecessary park/epoll_wait must be ruled in or out."
+    },
+    {
+      "component": "steal-search sleep",
+      "file": "ylong_runtime/src/executor/async_pool.rs",
+      "line_range": "264-309",
+      "finding": "MultiThreadScheduler::get_task_from_searching sleeps 1 microsecond between failed steals; prior A2 candidates touched this area and were rejected, so S9B must measure before another change."
+    }
+  ],
+  "authority_review": {
+    "current_workspace_vendor_path_exists": false,
+    "current_workspace_patch_override_found": false,
+    "finding": "The active build consumes Cargo git checkout source, not a workspace-vendored runtime. A durable S9C runtime candidate must either add an explicit local [patch] or vendor/review the runtime source under approved authority before benchmark claims are made."
+  },
+  "commands": {
+    "cargo_metadata": {
+      "cmd": "cargo metadata --offline --format-version 1 --no-deps --no-default-features --features ylong_http_client/async,ylong_http_client/http1_1,ylong_http_client/ylong_base,ylong_http_client/c_openssl_3_0,ylong_http_client/libcurl_bench",
+      "returncode": 0,
+      "stderr": ""
+    },
+    "cargo_tree": {
+      "cmd": "cargo tree --offline -p ylong_http_client -e features --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "returncode": 0,
+      "stderr": "",
+      "relevant_stdout": [
+        "ylong_http_client v1.0.0 (/home/ender/Workspace/rust_ylong_http/ylong_http_client)",
+        "├── ylong_http feature \"default\"",
+        "│   └── ylong_http v1.0.0 (/home/ender/Workspace/rust_ylong_http/ylong_http)",
+        "│       ├── ylong_runtime feature \"default\"",
+        "│       │   └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b)",
+        "│       │       ├── ylong_io feature \"default\"",
+        "│       │       │   ├── ylong_io v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b)",
+        "│       │       │   ├── ylong_io feature \"tcp\"",
+        "│       │       │   │   └── ylong_io v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+        "│       │       │   └── ylong_io feature \"udp\"",
+        "│       │       │       └── ylong_io v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+        "│       │       └── ylong_runtime_macros feature \"default\"",
+        "│       │           └── ylong_runtime_macros v1.0.0 (proc-macro) (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b)",
+        "│       ├── ylong_runtime feature \"fs\"",
+        "│       │   ├── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+        "│       │   └── ylong_runtime feature \"sync\"",
+        "│       │       └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+        "│       └── ylong_runtime feature \"sync\" (*)",
+        "├── ylong_runtime feature \"default\" (*)",
+        "├── ylong_runtime feature \"fs\" (*)",
+        "├── ylong_runtime feature \"macros\"",
+        "│   ├── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+        "│   └── ylong_runtime feature \"ylong_runtime_macros\"",
+        "│       └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+        "├── ylong_runtime feature \"net\"",
+        "│   ├── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+        "│   ├── ylong_runtime feature \"ylong_io\"",
+        "│   │   └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)",
+        "│   ├── ylong_io feature \"tcp\" (*)",
+        "│   └── ylong_io feature \"udp\" (*)",
+        "├── ylong_runtime feature \"sync\" (*)",
+        "└── ylong_runtime feature \"time\"",
+        "    └── ylong_runtime v1.0.0 (https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b) (*)"
+      ]
+    },
+    "git_head": {
+      "cmd": "git rev-parse HEAD",
+      "returncode": 0,
+      "stdout": "0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c",
+      "stderr": ""
+    },
+    "git_tree": {
+      "cmd": "git rev-parse HEAD^{tree}",
+      "returncode": 0,
+      "stdout": "380ed16c9693833112f3a533a9504a7190c94ba1",
+      "stderr": ""
+    },
+    "git_status": {
+      "cmd": "git status --short --untracked-files=all",
+      "returncode": 0,
+      "stdout": "?? .cargo-ok",
+      "stderr": ""
+    },
+    "git_diff_name_only": {
+      "cmd": "git diff --name-only",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "git_diff_cached_name_only": {
+      "cmd": "git diff --cached --name-only",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "manifest_hashes": {
+      "cmd": "sha256sum Cargo.lock ylong_http_client/Cargo.toml ylong_http/Cargo.toml /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/Cargo.toml /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/ylong_runtime/Cargo.toml /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/ylong_io/Cargo.toml",
+      "returncode": 0,
+      "stdout": "c44f67bb3ee9110107aab383ff9322b9d1a903bf752085b07d3bfc14206e83f5  Cargo.lock\n56a17a4151a2b75c13cef523d816cce6954296075f9bddd4a807912fbb7fa47a  ylong_http_client/Cargo.toml\n740c8c726974b3b4f31d84eef57de31ad1ced0212fcc38020a646de16fee5126  ylong_http/Cargo.toml\nfc5695b4eeed720f8ece0f2bc2bac47ea370125fbfcc93a37980716d67d0b38f  /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/Cargo.toml\nca727d6c85af0ce9330fefe1932792beb3934e88e4dff3f326e9b9371c1aba22  /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/ylong_runtime/Cargo.toml\n90c96e2fa4d91ca3004505e48eb313e051404e39cca04ca6f5ed4ade82494fdd  /home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7/ylong_io/Cargo.toml",
+      "stderr": ""
+    }
+  },
+  "s9b_entry_conditions": [
+    "Measure the pinned source at HEAD 0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c before changing runtime behavior.",
+    "Separate TcpStream readiness, task scheduling, and OpenSSL wrapper pending by instrumentation rather than inference.",
+    "Do not treat previous A2 scheduler candidates as production fixes; they are imported counterexamples."
+  ]
+}

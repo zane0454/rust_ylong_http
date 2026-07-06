@@ -1,0 +1,5 @@
+Human approval review for A1-runtime-readiness-s9 / gen-001.
+
+Review the amendment patch amendments/gen-001-runtime-readiness-authority.patch.json and decide whether to allow reviewed replanning from gen-000 to gen-001. Approval expands writable source authority to local pinned ylong_runtime source or an equivalent reviewed dependency patch while preserving the fixed SOTA target, all required outcomes, numeric hard thresholds, no-intermediate-terminal-status policy, and final Counterexample Gate.
+
+Reject if this weakens the target, treats rejected A2 candidates as production fixes, treats diagnostic current-thread/runtime mode as SOTA evidence, or cannot be reproduced against a pinned runtime source.

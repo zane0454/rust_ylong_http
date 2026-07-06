@@ -1,0 +1,31 @@
+{
+  "artifact_type": "requirements.human_reapproval",
+  "schema_version": "1.0.0",
+  "evidence_id": "evidence.human-reapproval-sota-20-percent",
+  "runtime_generation": "gen-004",
+  "created_at": "2026-07-06T16:29:00+08:00",
+  "approved_by": "user",
+  "decision": "approved",
+  "user_instruction": "SOTA按照20%,别的批准",
+  "meaning": {
+    "sota_threshold": "20% improvement",
+    "other_required_authority": "approved",
+    "supersedes_prior_requirement": "SR-performance-threshold-above-contest-floor",
+    "superseded_prior_meaning": "20% improvement was only the contest floor and not enough for SOTA."
+  },
+  "control_effect": {
+    "changes_what_counts_as_done": true,
+    "changes_semantic_base": true,
+    "changes_required_outcome_interpretation": true,
+    "ordinary_amendment_supported": false,
+    "reason_ordinary_amendment_not_supported": "The current amendment_orchestrator only applies anchor-preserving patches and authority expansion; it rejects semantic_base_change and required_outcomes_changed as requiring requirements reapproval.",
+    "requires_requirements_reanalysis": true,
+    "requires_pregoal_recompile": true
+  },
+  "not_a_completion_claim": true,
+  "not_allowed_without_recompile": [
+    "do not claim goal_achieved under the old requirements hash chain",
+    "do not treat 20% as SOTA while requirements.control.json still states stricter thresholds",
+    "do not start S10 without a verifier-permitted current runtime chain"
+  ]
+}

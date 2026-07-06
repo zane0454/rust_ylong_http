@@ -14,7 +14,7 @@
 use std::io::{Read, Write};
 
 use ylong_http::body::sync_impl::Body;
-use ylong_http::h1::{RequestEncoder, ResponseDecoder};
+use ylong_http::h1::{RequestRefEncoder, ResponseDecoder};
 use ylong_http::request::uri::Scheme;
 use ylong_http::request::Request;
 use ylong_http::response::Response;
@@ -25,6 +25,10 @@ use crate::sync_impl::HttpBody;
 use crate::util::dispatcher::http1::Http1Conn;
 
 const TEMP_BUF_SIZE: usize = 16 * 1024;
+
+fn request_part_encoder<T>(request: &Request<T>) -> RequestRefEncoder<'_> {
+    RequestRefEncoder::new(request.part())
+}
 
 pub(crate) fn request<S, T>(
     mut conn: Http1Conn<S>,
@@ -37,27 +41,35 @@ where
 {
     let mut buf = vec![0u8; TEMP_BUF_SIZE];
 
-    // Encodes request.
-    let mut part_encoder = RequestEncoder::new(request.part().clone());
-    if is_proxy && request.uri().scheme() == Some(&Scheme::HTTP) {
-        part_encoder.absolute_uri(true);
-    }
-    let mut encode_part = Some(part_encoder);
-    let mut encode_body = Some(request.body_mut());
     let mut write = 0;
-    while encode_part.is_some() || encode_body.is_some() {
-        if write < buf.len() {
-            if let Some(part) = encode_part.as_mut() {
-                let size = part
-                    .encode(&mut buf[write..])
-                    .map_err(|e| HttpClientError::from_error(ErrorKind::Request, e))?;
-                write += size;
-                if size == 0 {
-                    encode_part = None;
-                }
-            }
+
+    // Encodes request line and headers before borrowing the request body.
+    {
+        let mut part_encoder = request_part_encoder(request);
+        if is_proxy && request.uri().scheme() == Some(&Scheme::HTTP) {
+            part_encoder.absolute_uri(true);
         }
 
+        loop {
+            if write == buf.len() {
+                conn.raw_mut()
+                    .write_all(&buf[..write])
+                    .map_err(|e| HttpClientError::from_error(ErrorKind::Request, e))?;
+                write = 0;
+            }
+
+            let size = part_encoder
+                .encode(&mut buf[write..])
+                .map_err(|e| HttpClientError::from_error(ErrorKind::Request, e))?;
+            write += size;
+            if size == 0 {
+                break;
+            }
+        }
+    }
+
+    let mut encode_body = Some(request.body_mut());
+    while encode_body.is_some() {
         if write < buf.len() {
             if let Some(body) = encode_body.as_mut() {
                 let size = body
@@ -137,5 +149,20 @@ impl<S: Read> Read for Http1Conn<S> {
 impl<S: Read> StreamData for Http1Conn<S> {
     fn shutdown(&self) {
         Self::shutdown(self)
+    }
+}
+
+#[cfg(test)]
+mod ut_sync_http1 {
+    use ylong_http::body::EmptyBody;
+    use ylong_http::request::Request;
+
+    use super::request_part_encoder;
+
+    #[test]
+    fn ut_request_part_encoder_borrows_request_part() {
+        let request = Request::get("http://example.com/").body(EmptyBody).unwrap();
+        let _encoder = request_part_encoder(&request);
+        assert_eq!(request.uri().to_string(), "http://example.com/");
     }
 }

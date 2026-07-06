@@ -1,0 +1,19 @@
+### scenario=https-over-https-proxy requests=32 concurrency=8 repeat=1 ylong_concurrency_model=single-client client=ylong_http_client
+
+ylong_http_client: 6.93996ms for 32 requests
+ylong_http_client_stats: p50_us=1386 p95_us=2623 cpu_us=4787 rss_peak_bytes=19030016 errors=0 for 32 requests
+ylong_http_client_body_stats: chunks=32 bytes=131072 for 32 requests
+
+proxy_trace: scenario=https-over-https-proxy client=ylong_http_client connections=8 forward_requests=0 connect_requests=8 tunnel_bytes_from_client=15672 tunnel_bytes_from_origin=192680 tls_client_auth_failures=0 request_header_bytes=472 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=8335 tunnel_send_to_client_events=61 tunnel_send_to_origin_us=10806 tunnel_send_to_origin_events=56 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8
+
+origin_trace: scenario=https-over-https-proxy client=ylong_http_client connections=8 requests=40 tls_connections=8 request_header_bytes=2280 request_body_bytes=0 response_body_bytes=163840 response_send_us=8543 response_send_events=40 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8
+
+### scenario=https-over-https-proxy requests=32 concurrency=8 repeat=1 ylong_concurrency_model=single-client client=libcurl
+
+libcurl: 9.027118ms for 32 requests
+libcurl_stats: p50_us=1768 p95_us=4391 cpu_us=6302 rss_peak_bytes=16445440 errors=0 for 32 requests
+libcurl_body_stats: chunks=32 bytes=131072 for 32 requests
+
+proxy_trace: scenario=https-over-https-proxy client=libcurl connections=8 forward_requests=0 connect_requests=8 tunnel_bytes_from_client=16480 tunnel_bytes_from_origin=192680 tls_client_auth_failures=0 request_header_bytes=712 request_body_bytes=0 response_body_bytes=0 response_send_us=0 response_send_events=0 tunnel_send_to_client_us=6940 tunnel_send_to_client_events=62 tunnel_send_to_origin_us=14793 tunnel_send_to_origin_events=64 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8
+
+origin_trace: scenario=https-over-https-proxy client=libcurl connections=8 requests=40 tls_connections=8 request_header_bytes=2360 request_body_bytes=0 response_body_bytes=163840 response_send_us=8435 response_send_events=40 tls_fingerprints=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8

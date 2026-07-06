@@ -1,0 +1,17 @@
+Independent Counterexample Gate review request for amendment A4-post-home-frontier-review.
+
+Review artifacts:
+- amendments/gen-004-post-home-frontier-review.patch.json
+- progress.jsonl entries for A4 and S9H rejection
+- evidence/runtime-io-home-stickiness-candidate-rejected.json
+- gen-003/runtime.control.json
+- prior A3/A2 review evidence as needed
+
+Try to disprove that A4 is an anchor-preserving reviewed replanning step:
+1. Does A4 change semantic_base, source requirements, required outcomes/result paths, fixed SOTA thresholds, fair same-process libcurl baseline, public HTTP/TLS/proxy semantics, or authority?
+2. Does A4 improperly convert rejected S9H evidence into SOTA/O-causal/S10 completion evidence?
+3. Does A4 merely repeat rejected runtime micro-scheduling candidates without a new gate that can reject repetition?
+4. Does A4 preserve S10 as forbidden until a future candidate passes unchanged focused/canonical gates and runtime Counterexample Gate?
+5. Does the patch remain internally consistent with gen-003 and the control-json protocol?
+
+Return APPROVE or REJECT. If APPROVE, include a review.control-compatible JSON object.

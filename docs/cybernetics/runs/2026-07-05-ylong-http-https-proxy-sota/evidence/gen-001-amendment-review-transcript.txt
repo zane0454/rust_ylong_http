@@ -1,0 +1,5 @@
+Human reviewer decision: approved.
+
+User message: 批准 A1/gen-001
+
+Approval scope: approve A1-runtime-readiness-s9 and allow gen-001 reviewed replanning with expanded authority for pinned ylong_runtime source or an equivalent reviewed dependency patch. This approval does not mark S9 complete, does not mark goal_achieved true, does not weaken SOTA thresholds, and does not skip S10 final Counterexample Gate.

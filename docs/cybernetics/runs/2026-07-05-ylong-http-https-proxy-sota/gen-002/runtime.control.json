@@ -1,0 +1,257 @@
+{
+  "artifact_type": "runtime.control",
+  "schema_version": "1.0.0",
+  "status": "compiled",
+  "generation": {
+    "id": "gen-002"
+  },
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+  },
+  "approved_control": {
+    "objective": "Perform implementation-level SOTA convergence for the HTTPS proxy contest task: audit the existing implementation, repair protocol and safety issues, add hard tests, fair benchmark evidence, and report revisions.",
+    "what_counts_as_done": "All required outcomes and result paths are directly evidenced; verification commands pass; final report claims are constrained to proven evidence; no required outcome is offset by another outcome; SOTA verified additionally requires the predeclared HTTPS proxy core matrix to pass all hard thresholds against a fair same-model libcurl-library baseline: throughput geomean ratio >= 2.00 using the lower bound of the 95% confidence interval; every scenario throughput ratio >= 1.50 using the lower bound; every scenario p50 latency ratio <= 0.60 using the upper bound; every scenario p95 latency ratio <= 0.70 using the upper bound; at least one flagship scenario reaches throughput ratio >= 3.00 or p95 latency ratio <= 0.50; CPU time per successful request <= 0.80x libcurl-library geometric mean and <= 1.00x in every scenario; peak RSS <= 1.10x in every scenario; both clients have zero protocol, TLS, proxy, and request errors; at least 5 measured repetitions after warmup; coefficient of variation <= 5% or confidence intervals still satisfy every hard threshold; both clients use the same proxy/origin topology, TLS verification, mTLS material, request payload, concurrency, connection reuse, timeout policy, and response validation."
+  },
+  "approved_control_hashes": {
+    "amendments/A2-runtime-frontier-review.review.control.json": "sha256:74a9bab5b4085dc4b5a7934a16d0b920ae50801e93ce258654ea03ecba34c321",
+    "requirements.control.json": "sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc",
+    "run.control.json": "sha256:b771f5d75b8cbd3746b41d14a1f0b933eebe3fa747f87c9975c6046e322234c9",
+    "gen-002/runtime.control.json": "sha256:3d296259722fdade9f9d5d986f3b616e8e0bc73d3907ecbaad136cf8365c115d"
+  },
+  "runtime": {
+    "readonly_files": [
+      "requirements.control.json",
+      "run.control.json",
+      "amendments/A2-runtime-frontier-review.review.control.json",
+      "gen-002/runtime.control.json"
+    ],
+    "writable_files": [
+      "progress.jsonl",
+      "runtime-status.json",
+      "final-report.json"
+    ],
+    "writable_evidence_paths": [
+      "evidence/",
+      "ylong_http_client/",
+      "ylong_http_client/vendor/",
+      "benches/",
+      "README.md",
+      "docs/"
+    ]
+  },
+  "required_steps": [
+    {
+      "step_id": "S1-current-audit",
+      "transition": "Current HTTPS proxy implementation is audited before patches are applied.",
+      "evidence": [
+        "evidence.current-audit"
+      ],
+      "satisfies_outcomes": [
+        "O-current-audit"
+      ]
+    },
+    {
+      "step_id": "S2-protocol-correctness",
+      "transition": "HTTPS proxy CONNECT handling follows required protocol semantics and fails closed on invalid responses.",
+      "evidence": [
+        "evidence.connect-2xx-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-protocol-correctness"
+      ]
+    },
+    {
+      "step_id": "S3-proxy-tls-mtls",
+      "transition": "Proxy TLS and proxy mutual TLS are verified end to end and kept distinct from origin TLS.",
+      "evidence": [
+        "evidence.proxy-tls-mtls-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-proxy-tls-mtls"
+      ]
+    },
+    {
+      "step_id": "S4-sync-async-proxy-semantics",
+      "transition": "Sync and async proxy semantics are verified and accurately represented.",
+      "evidence": [
+        "evidence.sync-async-proxy-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-sync-async-proxy-semantics"
+      ]
+    },
+    {
+      "step_id": "S5-test-matrix",
+      "transition": "A contest-critical HTTPS proxy test matrix is implemented and run.",
+      "evidence": [
+        "evidence.test-matrix-run"
+      ],
+      "satisfies_outcomes": [
+        "O-test-matrix"
+      ]
+    },
+    {
+      "step_id": "S6-benchmark-fairness",
+      "transition": "Benchmark methodology and claims are fair, reproducible, and correctly labeled.",
+      "evidence": [
+        "evidence.benchmark-fairness"
+      ],
+      "satisfies_outcomes": [
+        "O-benchmark-fairness"
+      ]
+    },
+    {
+      "step_id": "S7-report-evidence-chain",
+      "transition": "README/report narrative is revised to match verified implementation and benchmark evidence.",
+      "evidence": [
+        "evidence.report-diff"
+      ],
+      "satisfies_outcomes": [
+        "O-report-evidence-chain"
+      ]
+    },
+    {
+      "step_id": "S8-sota-threshold-matrix",
+      "transition": "SOTA performance status is evaluated against the predeclared numeric hard-threshold matrix.",
+      "evidence": [
+        "evidence.sota-threshold-matrix"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ]
+    },
+    {
+      "step_id": "S9A-runtime-source-pin",
+      "transition": "Pin and review the exact ylong_runtime source used by the ylong_base benchmark build without changing SOTA target semantics.",
+      "evidence": [
+        "evidence.runtime-source-pin"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ]
+    },
+    {
+      "step_id": "S9B-runtime-readiness-profile",
+      "transition": "Instrument or trace runtime readiness/parking around nested HTTPS-over-HTTPS-proxy I/O and show a causal gap relative to libcurl/tokio observations.",
+      "evidence": [
+        "evidence.runtime-readiness-profile"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ]
+    },
+    {
+      "step_id": "S9C-runtime-readiness-candidate",
+      "transition": "Implement a behavior-preserving runtime readiness/parking candidate and prove it does not change HTTP/TLS/proxy semantics.",
+      "evidence": [
+        "evidence.runtime-readiness-candidate"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ]
+    },
+    {
+      "step_id": "S9E-runtime-frontier-review",
+      "transition": "Derive an architecture-level upper-bound and candidate-surface review from current S8/S9 evidence before any further runtime implementation attempt.",
+      "evidence": [
+        "evidence.runtime-frontier-review"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ]
+    },
+    {
+      "step_id": "S9F-runtime-frontier-candidate",
+      "transition": "Only if S9E identifies a still-plausible implementation surface, implement one behavior-preserving candidate with a RED/GREEN or diagnostic test first, then run focused and canonical matrices.",
+      "evidence": [
+        "evidence.runtime-frontier-candidate",
+        "evidence.performance-causality",
+        "evidence.sota-threshold-matrix",
+        "evidence.real-client-path"
+      ],
+      "satisfies_outcomes": [
+        "O-causal-performance-evidence"
+      ]
+    },
+    {
+      "step_id": "S10-final-counterexample-gate",
+      "transition": "Run final counterexample review only after S9F evidence passes the unchanged fixed SOTA thresholds.",
+      "evidence": [
+        "evidence.final-counterexample-review"
+      ],
+      "satisfies_outcomes": [
+        "O-final-counterexample-gate"
+      ]
+    }
+  ],
+  "progress": {
+    "event_schema": "progress-event.schema.json",
+    "append_only": true
+  },
+  "verifier": {
+    "required_before_goal_achieved": true,
+    "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py",
+    "required_outcomes": [
+      "O-current-audit",
+      "O-protocol-correctness",
+      "O-proxy-tls-mtls",
+      "O-sync-async-proxy-semantics",
+      "O-test-matrix",
+      "O-benchmark-fairness",
+      "O-report-evidence-chain",
+      "O-sota-threshold-matrix",
+      "O-causal-performance-evidence",
+      "O-final-counterexample-gate"
+    ],
+    "output_schema": "final-report.schema.json"
+  },
+  "imported_evidence": [
+    "evidence.current-audit",
+    "evidence.connect-2xx-tests",
+    "evidence.proxy-tls-mtls-tests",
+    "evidence.sync-async-proxy-tests",
+    "evidence.test-matrix-run",
+    "evidence.benchmark-fairness",
+    "evidence.report-diff",
+    "evidence.sota-threshold-matrix",
+    "evidence.performance-causality",
+    "evidence.real-client-path",
+    "evidence.runtime-source-pin",
+    "evidence.runtime-readiness-profile",
+    "evidence.runtime-readiness-candidate",
+    "evidence.runtime-readiness-candidate-s9d-counterexample",
+    "evidence.runtime-dequeue-candidate-focused",
+    "evidence.runtime-dequeue-candidate-s9d-counterexample",
+    "evidence.runtime-blockon-driver-candidate-rejected",
+    "evidence.runtime-blockon-atomic-candidate-rejected",
+    "evidence.runtime-periodic-candidate-rejected",
+    "evidence.runtime-sleeper-steal-candidates-rejected",
+    "evidence.a2-optimistic-readiness-candidate-rejected",
+    "evidence.a2-no-yield-parker-candidate-rejected",
+    "evidence.a2-no-steal-sleep-candidate-rejected",
+    "evidence.ylong-client-production-lever-hard-negative"
+  ],
+  "invalidated_evidence": [
+    "runtime-readiness-candidate canonical matrix as SOTA proof",
+    "dequeue fast-path canonical matrix as SOTA proof",
+    "block_on-driver focused matrix as SOTA proof",
+    "block_on-atomic focused matrix as SOTA proof",
+    "any rejected benchmark-only runtime candidate as real-client SOTA evidence"
+  ],
+  "control_level": 4,
+  "target_model": {
+    "result_orientation": [
+      "state_change",
+      "knowledge_production",
+      "judgment"
+    ],
+    "result_content": "partially_specified",
+    "path": "partially_known",
+    "result_placement": "multi_place",
+    "impact_scope": "persistent_internal"
+  },
+  "strategy_policy": "reviewed_replanning",
+  "gate_mode": "human_gate",
+  "phase_structure": "adaptive_loop"
+}

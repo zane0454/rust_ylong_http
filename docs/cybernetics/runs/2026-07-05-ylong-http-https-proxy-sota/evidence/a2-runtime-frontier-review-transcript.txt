@@ -1,0 +1,17 @@
+Subagent: Ohm
+Subagent id: 019f3608-e574-7f32-9f0b-591bdb77f36d
+Mode: read-only independent Counterexample Gate review
+
+verdict: approve
+
+1. A2 keeps anchors unchanged: semantic_base_change=false, required_outcomes_changed=false, numeric_hard_threshold_policy_changed=false, sota_fixed_target_changed=false, completion_standard_changed=false. Authority is also not expanded; current and requested writable scopes match and authority_expanded=false.
+
+2. A2 does not weaken required outcomes or fixed SOTA thresholds. The requirements done standard still requires 2.00x throughput geomean, 1.50x every scenario throughput, p50<=0.60, p95<=0.70, CPU geomean<=0.80/every scenario<=1.00, RSS<=1.10, and related hard gates. Required outcomes still include O-sota-threshold-matrix, O-causal-performance-evidence, and O-final-counterexample-gate.
+
+3. A2 S9E does not create a forbidden terminal blocked/non-SOTA state. S9E requires enumeration of remaining implementation surfaces. If no plausible surface remains, it may only propose an exact human/external-resource next decision and may not claim S9/S10 completion. A2 also forbids marking S9D/S9F/S10/goal_achieved complete from counterexample evidence.
+
+4. No evidence-supported, uncovered candidate surface close enough to the fixed 2x/1.5x/p95/CPU gates was found. The strongest remaining pointer is ylong_runtime readiness/parking, but A2 S9E covers ylong_runtime, ylong_http_client, benchmark harness, and dependency configuration. Existing candidates are not close to SOTA: dequeue is 1.1057x geomean, 0.9344x worst throughput, p95 max 1.3257x, CPU geomean 0.8566x; block_on-atomic focused is 0.889x geomean and CPU regresses; performance-causality's best tokio_dynamic result is 1.133x geomean, 0.809x worst throughput, and p95 1.142x.
+
+5. Required field or sentence changes: none. A2 already preserves hard thresholds and authority, rejects failed S9D/rejected candidates as completion evidence, and requires S10 only after unchanged fixed SOTA thresholds pass.
+
+Read-only validation: all required JSON files parsed with jq. Repository files were not modified by the reviewer.

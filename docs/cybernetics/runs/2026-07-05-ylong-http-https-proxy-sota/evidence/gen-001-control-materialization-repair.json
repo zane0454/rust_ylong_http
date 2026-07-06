@@ -1,0 +1,219 @@
+{
+  "evidence_id": "evidence.gen-001-control-materialization-repair",
+  "created_at": "2026-07-06T12:17:58+08:00",
+  "runtime_generation": "gen-001",
+  "status": "pass",
+  "reason": "Repair materialization defects after user approved A1/gen-001 so verifier can correctly import gen-000 S1-S8 progress without treating S10 as imported.",
+  "repairs": [
+    {
+      "issue": "imported_evidence used evidence file paths instead of progress evidence ids",
+      "fix": "gen-001 imported_evidence now uses evidence ids from gen-000 progress events."
+    },
+    {
+      "issue": "S10-final-counterexample-gate was duplicated and one copy was incorrectly marked imported_from_generation=gen-000",
+      "fix": "Removed imported S10; S10 remains a current gen-001 required step after S9D."
+    },
+    {
+      "issue": "runtime approved_control_hashes no longer matched repaired run/runtime control content",
+      "fix": "Recomputed gen-001 runtime approved_control_hashes after repair."
+    }
+  ],
+  "imported_evidence": [
+    "evidence.current-audit",
+    "evidence.connect-2xx-tests",
+    "evidence.proxy-tls-mtls-tests",
+    "evidence.sync-async-proxy-tests",
+    "evidence.test-matrix-run",
+    "evidence.benchmark-fairness",
+    "evidence.report-diff",
+    "evidence.sota-threshold-matrix",
+    "evidence.performance-causality",
+    "evidence.real-client-path",
+    "evidence.tokio-runtime-candidate",
+    "evidence.preread-buffer-candidate",
+    "evidence.tls-io-diagnostic",
+    "evidence.concurrency-diagnostic",
+    "evidence.pool-capacity-candidate",
+    "evidence.response-poll-diagnostic",
+    "evidence.sync-client-candidate",
+    "evidence.async-single-client-concurrency-candidate",
+    "evidence.async-single-client-maxh1-candidate",
+    "evidence.body-stats-diagnostic",
+    "evidence.tokio-single-client-maxh1-candidate",
+    "evidence.tls-fingerprint-diagnostic",
+    "evidence.nested-tls-variant-candidate",
+    "evidence.response-preread-diagnostic",
+    "evidence.s9-ylong-runtime-current-thread-candidate-rejected",
+    "evidence.ylong-client-production-lever-hard-negative",
+    "evidence.a1-runtime-readiness-profile",
+    "evidence.a2-optimistic-readiness-candidate-rejected",
+    "evidence.a2-no-yield-parker-candidate-rejected",
+    "evidence.a2-no-steal-sleep-candidate-rejected"
+  ],
+  "required_steps": [
+    "S1-current-audit",
+    "S2-protocol-correctness",
+    "S3-proxy-tls-mtls",
+    "S4-sync-async-proxy-semantics",
+    "S5-test-matrix",
+    "S6-benchmark-fairness",
+    "S7-report-evidence-chain",
+    "S8-sota-threshold-matrix",
+    "S9A-runtime-source-pin",
+    "S9B-runtime-readiness-profile",
+    "S9C-runtime-readiness-candidate",
+    "S9D-runtime-canonical-matrix",
+    "S10-final-counterexample-gate"
+  ],
+  "runtime_hashes": {
+    "requirements.control.json": "sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc",
+    "run.control.json": "sha256:d655be5bc3571ae7dab4d24ddd548c1a7802f259df28e1b941f3c1ea9a0f5e90",
+    "gen-001/review.control.json": "sha256:d074a3e3dc50a7c4de5614455a0cf86e258b02e422b41f62230bbbe0a7230630",
+    "gen-001/runtime.control.json": "sha256:37a18c138051848b39ed93686cf6657b458b4f98c682f7b1a3299d0d8ac87f6c"
+  },
+  "validation": {
+    "validate_control_chain": {
+      "cmd": "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "returncode": 0,
+      "stdout": "{\n  \"ok\": true,\n  \"errors\": [],\n  \"run_dir\": \"docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota\"\n}",
+      "stderr": "",
+      "json": {
+        "ok": true,
+        "errors": [],
+        "run_dir": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota"
+      }
+    },
+    "verify_runtime_progress": {
+      "cmd": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "returncode": 1,
+      "stdout": "{\n  \"ok\": false,\n  \"errors\": [\n    \"missing mainline evidence-backed progress for required steps: S10-final-counterexample-gate, S9A-runtime-source-pin, S9B-runtime-readiness-profile, S9C-runtime-readiness-candidate, S9D-runtime-canonical-matrix\",\n    \"missing mainline evidence-backed progress for blocking required outcomes: O-causal-performance-evidence, O-final-counterexample-gate\",\n    \"missing required evidence for blocking required outcomes: O-causal-performance-evidence: evidence.performance-causality, evidence.real-client-path; O-final-counterexample-gate: evidence.final-counterexample-review\",\n    \"missing completed evidence for blocking source requirements: SR-counterexample-gate, SR-no-intermediate-terminal-statuses, SR-no-planned-stop-exit, SR-sota-fixed-target\",\n    \"missing runtime counterexample review for required steps: S1-current-audit, S10-final-counterexample-gate, S2-protocol-correctness, S3-proxy-tls-mtls, S4-sync-async-proxy-semantics, S5-test-matrix, S6-benchmark-fairness, S7-report-evidence-chain, S8-sota-threshold-matrix, S9A-runtime-source-pin, S9B-runtime-readiness-profile, S9C-runtime-readiness-candidate, S9D-runtime-canonical-matrix\",\n    \"missing runtime counterexample review for blocking required outcomes: O-benchmark-fairness, O-causal-performance-evidence, O-current-audit, O-final-counterexample-gate, O-protocol-correctness, O-proxy-tls-mtls, O-report-evidence-chain, O-sota-threshold-matrix, O-sync-async-proxy-semantics, O-test-matrix\",\n    \"missing runtime counterexample review for required result paths: RP-current-audit-to-workplan, RP-fair-benchmark-to-report, RP-final-counterexample-to-sota-claim, RP-http-over-https-proxy, RP-https-over-https-proxy, RP-proxy-tls-fail-closed, RP-real-client-causal-performance, RP-shared-proxy-semantics, RP-sota-threshold-verdict\",\n    \"runtime counterexample review missing required gate points: CONNECT_RFC_semantics->parser_tests, all_outcomes->SOTA_claim, all_result_paths->SOTA_claim, benchmark_harness->real_client_path, benchmark_matrix->numeric_threshold_verdict, benchmark_result->numeric_SOTA_threshold_verdict, benchmark_result->performance_claim, causal_explanation->final_SOTA_status, causal_performance_evidence->final_SOTA_status, completion_or_remaining_required_work, evidence->report_claims, forbidden_terminal_statuses->final_answer, libcurl_baseline->same_model_semantics, numeric_SOTA_threshold_verdict->causal_performance_evidence, numeric_SOTA_threshold_verdict->final_SOTA_status, numeric_threshold_result->causal_explanation, numeric_threshold_verdict->final_SOTA_status, numeric_threshold_verdict->goal_achieved_status, numeric_threshold_verdict->report_claims, pre_runtime_compile, proxy_tls_config->endpoint_evidence, real_client_path_evidence->numeric_threshold_verdict, remaining_required_work->next_required_action, report_claims->SOTA_claim, required_outcome:O-benchmark-fairness->completion_gate, required_outcome:O-causal-performance-evidence->completion_gate, required_outcome:O-current-audit->completion_gate, required_outcome:O-final-counterexample-gate->completion_gate, required_outcome:O-protocol-correctness->completion_gate, required_outcome:O-proxy-tls-mtls->completion_gate, required_outcome:O-report-evidence-chain->completion_gate, required_outcome:O-sota-threshold-matrix->completion_gate, required_outcome:O-sync-async-proxy-semantics->completion_gate, required_outcome:O-test-matrix->completion_gate, required_outcomes->required_steps, required_result_paths->required_steps, required_steps->runtime_steps, required_steps->work_packages, result_path:RP-current-audit-to-workplan->completion_gate, result_path:RP-current-audit-to-workplan->required_steps, result_path:RP-fair-benchmark-to-report->completion_gate, result_path:RP-fair-benchmark-to-report->required_steps, result_path:RP-final-counterexample-to-sota-claim->completion_gate, result_path:RP-final-counterexample-to-sota-claim->required_steps, result_path:RP-http-over-https-proxy->completion_gate, result_path:RP-http-over-https-proxy->required_steps, result_path:RP-https-over-https-proxy->completion_gate, result_path:RP-https-over-https-proxy->required_steps, result_path:RP-proxy-tls-fail-closed->completion_gate, result_path:RP-proxy-tls-fail-closed->required_steps, result_path:RP-real-client-causal-performance->completion_gate, result_path:RP-real-client-causal-performance->required_steps, result_path:RP-shared-proxy-semantics->completion_gate, result_path:RP-shared-proxy-semantics->required_steps, result_path:RP-sota-threshold-verdict->completion_gate, result_path:RP-sota-threshold-verdict->required_steps, source_audit->work_packages, source_requirements->required_outcomes, source_requirements->required_result_paths, source_requirements:SOTA_metrics->benchmark_matrix, test_matrix->SOTA_claim\",\n    \"missing runtime final report: final-report.json\",\n    \"not-done final report cannot be treated as success\",\n    \"what_counts_as_done_met must be true\",\n    \"work coverage must be complete before goal_achieved true\",\n    \"final-report.json must include evidence\",\n    \"final-report.json runtime_generation must match current_generation\"\n  ],\n  \"goal_achieved_permitted\": false,\n  \"completed_required_steps\": [\n    \"S1-current-audit\",\n    \"S2-protocol-correctness\",\n    \"S3-proxy-tls-mtls\",\n    \"S4-sync-async-proxy-semantics\",\n    \"S5-test-matrix\",\n    \"S6-benchmark-fairness\",\n    \"S7-report-evidence-chain\",\n    \"S8-sota-threshold-matrix\"\n  ],\n  \"required_steps\": [\n    \"S1-current-audit\",\n    \"S10-final-counterexample-gate\",\n    \"S2-protocol-correctness\",\n    \"S3-proxy-tls-mtls\",\n    \"S4-sync-async-proxy-semantics\",\n    \"S5-test-matrix\",\n    \"S6-benchmark-fairness\",\n    \"S7-report-evidence-chain\",\n    \"S8-sota-threshold-matrix\",\n    \"S9A-runtime-source-pin\",\n    \"S9B-runtime-readiness-profile\",\n    \"S9C-runtime-readiness-candidate\",\n    \"S9D-runtime-canonical-matrix\"\n  ],\n  \"completed_required_outcomes\": [\n    \"O-benchmark-fairness\",\n    \"O-current-audit\",\n    \"O-protocol-correctness\",\n    \"O-proxy-tls-mtls\",\n    \"O-report-evidence-chain\",\n    \"O-sota-threshold-matrix\",\n    \"O-sync-async-proxy-semantics\",\n    \"O-test-matrix\"\n  ],\n  \"required_outcomes\": [\n    \"O-benchmark-fairness\",\n    \"O-causal-performance-evidence\",\n    \"O-current-audit\",\n    \"O-final-counterexample-gate\",\n    \"O-protocol-correctness\",\n    \"O-proxy-tls-mtls\",\n    \"O-report-evidence-chain\",\n    \"O-sota-threshold-matrix\",\n    \"O-sync-async-proxy-semantics\",\n    \"O-test-matrix\"\n  ],\n  \"completed_source_requirements\": [\n    \"SR-benchmark-fairness\",\n    \"SR-code-audit\",\n    \"SR-implementation-level-convergence\",\n    \"SR-performance-threshold-above-contest-floor\",\n    \"SR-protocol-correctness\",\n    \"SR-proxy-tls-mtls\",\n    \"SR-report-evidence-chain\",\n    \"SR-sota-definition\",\n    \"SR-sota-hard-metrics\",\n    \"SR-sota-not-correctness-only\",\n    \"SR-sync-async-proxy-semantics\",\n    \"SR-test-matrix\"\n  ],\n  \"source_requirements\": [\n    \"SR-benchmark-fairness\",\n    \"SR-code-audit\",\n    \"SR-counterexample-gate\",\n    \"SR-implementation-level-convergence\",\n    \"SR-no-intermediate-terminal-statuses\",\n    \"SR-no-planned-stop-exit\",\n    \"SR-performance-threshold-above-contest-floor\",\n    \"SR-protocol-correctness\",\n    \"SR-proxy-tls-mtls\",\n    \"SR-report-evidence-chain\",\n    \"SR-sota-definition\",\n    \"SR-sota-fixed-target\",\n    \"SR-sota-hard-metrics\",\n    \"SR-sota-not-correctness-only\",\n    \"SR-sync-async-proxy-semantics\",\n    \"SR-test-matrix\"\n  ],\n  \"current_generation\": \"gen-001\",\n  \"unresolved_amendments\": [],\n  \"anchor_changing_amendments\": [],\n  \"proposed_amendments\": [],\n  \"counterexample_reviewed_steps\": [],\n  \"counterexample_reviewed_outcomes\": [],\n  \"counterexample_reviewed_result_paths\": []\n}",
+      "stderr": "",
+      "json": {
+        "ok": false,
+        "errors": [
+          "missing mainline evidence-backed progress for required steps: S10-final-counterexample-gate, S9A-runtime-source-pin, S9B-runtime-readiness-profile, S9C-runtime-readiness-candidate, S9D-runtime-canonical-matrix",
+          "missing mainline evidence-backed progress for blocking required outcomes: O-causal-performance-evidence, O-final-counterexample-gate",
+          "missing required evidence for blocking required outcomes: O-causal-performance-evidence: evidence.performance-causality, evidence.real-client-path; O-final-counterexample-gate: evidence.final-counterexample-review",
+          "missing completed evidence for blocking source requirements: SR-counterexample-gate, SR-no-intermediate-terminal-statuses, SR-no-planned-stop-exit, SR-sota-fixed-target",
+          "missing runtime counterexample review for required steps: S1-current-audit, S10-final-counterexample-gate, S2-protocol-correctness, S3-proxy-tls-mtls, S4-sync-async-proxy-semantics, S5-test-matrix, S6-benchmark-fairness, S7-report-evidence-chain, S8-sota-threshold-matrix, S9A-runtime-source-pin, S9B-runtime-readiness-profile, S9C-runtime-readiness-candidate, S9D-runtime-canonical-matrix",
+          "missing runtime counterexample review for blocking required outcomes: O-benchmark-fairness, O-causal-performance-evidence, O-current-audit, O-final-counterexample-gate, O-protocol-correctness, O-proxy-tls-mtls, O-report-evidence-chain, O-sota-threshold-matrix, O-sync-async-proxy-semantics, O-test-matrix",
+          "missing runtime counterexample review for required result paths: RP-current-audit-to-workplan, RP-fair-benchmark-to-report, RP-final-counterexample-to-sota-claim, RP-http-over-https-proxy, RP-https-over-https-proxy, RP-proxy-tls-fail-closed, RP-real-client-causal-performance, RP-shared-proxy-semantics, RP-sota-threshold-verdict",
+          "runtime counterexample review missing required gate points: CONNECT_RFC_semantics->parser_tests, all_outcomes->SOTA_claim, all_result_paths->SOTA_claim, benchmark_harness->real_client_path, benchmark_matrix->numeric_threshold_verdict, benchmark_result->numeric_SOTA_threshold_verdict, benchmark_result->performance_claim, causal_explanation->final_SOTA_status, causal_performance_evidence->final_SOTA_status, completion_or_remaining_required_work, evidence->report_claims, forbidden_terminal_statuses->final_answer, libcurl_baseline->same_model_semantics, numeric_SOTA_threshold_verdict->causal_performance_evidence, numeric_SOTA_threshold_verdict->final_SOTA_status, numeric_threshold_result->causal_explanation, numeric_threshold_verdict->final_SOTA_status, numeric_threshold_verdict->goal_achieved_status, numeric_threshold_verdict->report_claims, pre_runtime_compile, proxy_tls_config->endpoint_evidence, real_client_path_evidence->numeric_threshold_verdict, remaining_required_work->next_required_action, report_claims->SOTA_claim, required_outcome:O-benchmark-fairness->completion_gate, required_outcome:O-causal-performance-evidence->completion_gate, required_outcome:O-current-audit->completion_gate, required_outcome:O-final-counterexample-gate->completion_gate, required_outcome:O-protocol-correctness->completion_gate, required_outcome:O-proxy-tls-mtls->completion_gate, required_outcome:O-report-evidence-chain->completion_gate, required_outcome:O-sota-threshold-matrix->completion_gate, required_outcome:O-sync-async-proxy-semantics->completion_gate, required_outcome:O-test-matrix->completion_gate, required_outcomes->required_steps, required_result_paths->required_steps, required_steps->runtime_steps, required_steps->work_packages, result_path:RP-current-audit-to-workplan->completion_gate, result_path:RP-current-audit-to-workplan->required_steps, result_path:RP-fair-benchmark-to-report->completion_gate, result_path:RP-fair-benchmark-to-report->required_steps, result_path:RP-final-counterexample-to-sota-claim->completion_gate, result_path:RP-final-counterexample-to-sota-claim->required_steps, result_path:RP-http-over-https-proxy->completion_gate, result_path:RP-http-over-https-proxy->required_steps, result_path:RP-https-over-https-proxy->completion_gate, result_path:RP-https-over-https-proxy->required_steps, result_path:RP-proxy-tls-fail-closed->completion_gate, result_path:RP-proxy-tls-fail-closed->required_steps, result_path:RP-real-client-causal-performance->completion_gate, result_path:RP-real-client-causal-performance->required_steps, result_path:RP-shared-proxy-semantics->completion_gate, result_path:RP-shared-proxy-semantics->required_steps, result_path:RP-sota-threshold-verdict->completion_gate, result_path:RP-sota-threshold-verdict->required_steps, source_audit->work_packages, source_requirements->required_outcomes, source_requirements->required_result_paths, source_requirements:SOTA_metrics->benchmark_matrix, test_matrix->SOTA_claim",
+          "missing runtime final report: final-report.json",
+          "not-done final report cannot be treated as success",
+          "what_counts_as_done_met must be true",
+          "work coverage must be complete before goal_achieved true",
+          "final-report.json must include evidence",
+          "final-report.json runtime_generation must match current_generation"
+        ],
+        "goal_achieved_permitted": false,
+        "completed_required_steps": [
+          "S1-current-audit",
+          "S2-protocol-correctness",
+          "S3-proxy-tls-mtls",
+          "S4-sync-async-proxy-semantics",
+          "S5-test-matrix",
+          "S6-benchmark-fairness",
+          "S7-report-evidence-chain",
+          "S8-sota-threshold-matrix"
+        ],
+        "required_steps": [
+          "S1-current-audit",
+          "S10-final-counterexample-gate",
+          "S2-protocol-correctness",
+          "S3-proxy-tls-mtls",
+          "S4-sync-async-proxy-semantics",
+          "S5-test-matrix",
+          "S6-benchmark-fairness",
+          "S7-report-evidence-chain",
+          "S8-sota-threshold-matrix",
+          "S9A-runtime-source-pin",
+          "S9B-runtime-readiness-profile",
+          "S9C-runtime-readiness-candidate",
+          "S9D-runtime-canonical-matrix"
+        ],
+        "completed_required_outcomes": [
+          "O-benchmark-fairness",
+          "O-current-audit",
+          "O-protocol-correctness",
+          "O-proxy-tls-mtls",
+          "O-report-evidence-chain",
+          "O-sota-threshold-matrix",
+          "O-sync-async-proxy-semantics",
+          "O-test-matrix"
+        ],
+        "required_outcomes": [
+          "O-benchmark-fairness",
+          "O-causal-performance-evidence",
+          "O-current-audit",
+          "O-final-counterexample-gate",
+          "O-protocol-correctness",
+          "O-proxy-tls-mtls",
+          "O-report-evidence-chain",
+          "O-sota-threshold-matrix",
+          "O-sync-async-proxy-semantics",
+          "O-test-matrix"
+        ],
+        "completed_source_requirements": [
+          "SR-benchmark-fairness",
+          "SR-code-audit",
+          "SR-implementation-level-convergence",
+          "SR-performance-threshold-above-contest-floor",
+          "SR-protocol-correctness",
+          "SR-proxy-tls-mtls",
+          "SR-report-evidence-chain",
+          "SR-sota-definition",
+          "SR-sota-hard-metrics",
+          "SR-sota-not-correctness-only",
+          "SR-sync-async-proxy-semantics",
+          "SR-test-matrix"
+        ],
+        "source_requirements": [
+          "SR-benchmark-fairness",
+          "SR-code-audit",
+          "SR-counterexample-gate",
+          "SR-implementation-level-convergence",
+          "SR-no-intermediate-terminal-statuses",
+          "SR-no-planned-stop-exit",
+          "SR-performance-threshold-above-contest-floor",
+          "SR-protocol-correctness",
+          "SR-proxy-tls-mtls",
+          "SR-report-evidence-chain",
+          "SR-sota-definition",
+          "SR-sota-fixed-target",
+          "SR-sota-hard-metrics",
+          "SR-sota-not-correctness-only",
+          "SR-sync-async-proxy-semantics",
+          "SR-test-matrix"
+        ],
+        "current_generation": "gen-001",
+        "unresolved_amendments": [],
+        "anchor_changing_amendments": [],
+        "proposed_amendments": [],
+        "counterexample_reviewed_steps": [],
+        "counterexample_reviewed_outcomes": [],
+        "counterexample_reviewed_result_paths": []
+      }
+    },
+    "expected_verifier_state": {
+      "goal_achieved_permitted": false,
+      "completed_required_steps": [
+        "S1-current-audit",
+        "S2-protocol-correctness",
+        "S3-proxy-tls-mtls",
+        "S4-sync-async-proxy-semantics",
+        "S5-test-matrix",
+        "S6-benchmark-fairness",
+        "S7-report-evidence-chain",
+        "S8-sota-threshold-matrix"
+      ],
+      "pending_required_steps": [
+        "S9A-runtime-source-pin",
+        "S9B-runtime-readiness-profile",
+        "S9C-runtime-readiness-candidate",
+        "S9D-runtime-canonical-matrix",
+        "S10-final-counterexample-gate"
+      ]
+    }
+  }
+}

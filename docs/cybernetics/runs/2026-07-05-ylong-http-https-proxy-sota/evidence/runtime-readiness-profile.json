@@ -1,0 +1,982 @@
+{
+  "schema": "s9b-runtime-readiness-profile/v1",
+  "evidence_id": "evidence.runtime-readiness-profile",
+  "runtime_generation": "gen-001",
+  "created_at": "2026-07-06T12:27:53+08:00",
+  "status": "pass",
+  "required_step": "S9B-runtime-readiness-profile",
+  "source_trace_provenance": {
+    "note": "Reanalysis of raw A1 JSONL traces under gen-001 after S9A pinned the runtime source. No production code was changed for S9B.",
+    "ylong_client_trace": "docs/benchmarks/results/a1-runtime-readiness-profile-warm/ylong/client-trace.jsonl",
+    "ylong_runtime_trace": "docs/benchmarks/results/a1-runtime-readiness-profile-warm/ylong/runtime-trace.jsonl",
+    "tokio_client_trace": "docs/benchmarks/results/a1-runtime-readiness-profile-warm/tokio/client-trace.jsonl",
+    "strace_evidence": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/strace-diagnostic.json",
+    "measured_req_ids": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40
+    ],
+    "scenario": "https-over-https-proxy",
+    "requests": 32,
+    "warmup": 8,
+    "concurrency": 8,
+    "ylong_concurrency_model": "single-client"
+  },
+  "client_layer_summary": {
+    "ylong_base": {
+      "write_done_to_first_response_poll_us": {
+        "count": 32,
+        "min_us": 0.544,
+        "p50_us": 4.555,
+        "mean_us": 6.269,
+        "p95_us": 20.467,
+        "max_us": 32.566
+      },
+      "first_pending_to_next_response_poll_us": {
+        "count": 32,
+        "min_us": 197.844,
+        "p50_us": 1022.483,
+        "mean_us": 1141.258,
+        "p95_us": 2112.785,
+        "max_us": 2234.465
+      },
+      "write_done_to_response_ready_us": {
+        "count": 32,
+        "min_us": 414.239,
+        "p50_us": 1195.512,
+        "mean_us": 1321.074,
+        "p95_us": 2287.629,
+        "max_us": 2498.666
+      },
+      "poll_count_per_request": {
+        "count": 32,
+        "min": 2,
+        "p50": 2.0,
+        "mean": 2.0,
+        "p95": 2.0,
+        "max": 2
+      },
+      "pending_count_per_request": {
+        "count": 32,
+        "min": 1,
+        "p50": 1.0,
+        "mean": 1.0,
+        "p95": 1.0,
+        "max": 1
+      }
+    },
+    "tokio_base": {
+      "write_done_to_first_response_poll_us": {
+        "count": 32,
+        "min_us": 3.15,
+        "p50_us": 6.681,
+        "mean_us": 7.938,
+        "p95_us": 19.213,
+        "max_us": 24.583
+      },
+      "first_pending_to_next_response_poll_us": {
+        "count": 32,
+        "min_us": 973.324,
+        "p50_us": 2117.865,
+        "mean_us": 2268.681,
+        "p95_us": 4341.853,
+        "max_us": 5047.719
+      },
+      "write_done_to_response_ready_us": {
+        "count": 32,
+        "min_us": 1102.386,
+        "p50_us": 2302.54,
+        "mean_us": 2423.389,
+        "p95_us": 4481.664,
+        "max_us": 5219.909
+      },
+      "poll_count_per_request": {
+        "count": 32,
+        "min": 2,
+        "p50": 2.0,
+        "mean": 2.0,
+        "p95": 2.0,
+        "max": 2
+      },
+      "pending_count_per_request": {
+        "count": 32,
+        "min": 1,
+        "p50": 1.0,
+        "mean": 1.0,
+        "p95": 1.0,
+        "max": 1
+      }
+    }
+  },
+  "hard_question_answers": {
+    "1_write_done_to_first_response_poll_runtime_yield_or_park": {
+      "answer": "No request-task runtime yield/park was observed between client_write_done and the first client_response_poll_enter. The interval is immediate user-code continuation, mean 6.269 us, p95 20.467 us. Two same-worker park/yield events appear globally in overlapping windows, but zero same-task runtime events occur.",
+      "metrics": {
+        "interval_summary": {
+          "count": 32,
+          "min_us": 0.544,
+          "p50_us": 4.555,
+          "mean_us": 6.269,
+          "p95_us": 20.467,
+          "max_us": 32.566
+        },
+        "same_task_runtime_events_total": 0,
+        "same_worker_park_or_yield_events_total": 2,
+        "rows_with_same_task_runtime_events": [],
+        "rows_with_same_worker_park_or_yield_events": [
+          {
+            "req_id": 23,
+            "interval_us": 10.833,
+            "same_task_runtime_events": 0,
+            "same_worker_park_or_yield_events": 1,
+            "global_runtime_events": 1
+          },
+          {
+            "req_id": 40,
+            "interval_us": 3.965,
+            "same_task_runtime_events": 0,
+            "same_worker_park_or_yield_events": 1,
+            "global_runtime_events": 3
+          }
+        ]
+      }
+    },
+    "2_wake_to_next_poll_latency": {
+      "answer": "task_wake_by_ref/task_wake_enqueue to next client_response_poll_enter is small relative to response wait time: mean 52.812 us, p50 40.374 us, p95 145.871 us, max 208.020 us over 32 measured requests.",
+      "metrics": {
+        "count": 32,
+        "min_us": 3.007,
+        "p50_us": 40.374,
+        "mean_us": 52.812,
+        "p95_us": 145.871,
+        "max_us": 208.02
+      }
+    },
+    "3_pending_then_unnecessary_epoll_wait": {
+      "answer": "No systemic IO-driver/epoll-style drive was observed after the request task was woken and before its next poll: 1 of 32 intervals had any such event, 2 events total. Most IO drive activity occurs before the task wake while the runtime is waiting for network readiness. However, the interval still contains many empty driver exits before wake, and strace shows ylong has much higher epoll_wait/futex/nanosleep/yield counts than libcurl, so the problem is global runtime driver/parking churn during wait, not wake-to-poll delay after readiness.",
+      "metrics": {
+        "intervals": 32,
+        "intervals_with_io_after_wake_before_next_poll": 1,
+        "total_io_after_wake_before_next_poll": 2,
+        "intervals_with_empty_io_drive_exit": 25,
+        "total_empty_io_drive_exits": 97,
+        "total_blocking_io_drive_enters": 92,
+        "total_zero_timeout_io_drive_enters": 152,
+        "sample_rows": [
+          {
+            "req_id": 9,
+            "io_driver_events_before_wake": 16,
+            "io_driver_events_after_wake_before_next_poll": 0,
+            "empty_io_drive_exits_pending_to_next_poll": 5,
+            "blocking_io_drive_enters_pending_to_next_poll": 2,
+            "zero_timeout_io_drive_enters_pending_to_next_poll": 6
+          },
+          {
+            "req_id": 10,
+            "io_driver_events_before_wake": 10,
+            "io_driver_events_after_wake_before_next_poll": 0,
+            "empty_io_drive_exits_pending_to_next_poll": 4,
+            "blocking_io_drive_enters_pending_to_next_poll": 1,
+            "zero_timeout_io_drive_enters_pending_to_next_poll": 4
+          },
+          {
+            "req_id": 11,
+            "io_driver_events_before_wake": 32,
+            "io_driver_events_after_wake_before_next_poll": 0,
+            "empty_io_drive_exits_pending_to_next_poll": 10,
+            "blocking_io_drive_enters_pending_to_next_poll": 4,
+            "zero_timeout_io_drive_enters_pending_to_next_poll": 12
+          },
+          {
+            "req_id": 12,
+            "io_driver_events_before_wake": 18,
+            "io_driver_events_after_wake_before_next_poll": 0,
+            "empty_io_drive_exits_pending_to_next_poll": 5,
+            "blocking_io_drive_enters_pending_to_next_poll": 2,
+            "zero_timeout_io_drive_enters_pending_to_next_poll": 7
+          },
+          {
+            "req_id": 13,
+            "io_driver_events_before_wake": 38,
+            "io_driver_events_after_wake_before_next_poll": 0,
+            "empty_io_drive_exits_pending_to_next_poll": 11,
+            "blocking_io_drive_enters_pending_to_next_poll": 5,
+            "zero_timeout_io_drive_enters_pending_to_next_poll": 14
+          },
+          {
+            "req_id": 14,
+            "io_driver_events_before_wake": 22,
+            "io_driver_events_after_wake_before_next_poll": 2,
+            "empty_io_drive_exits_pending_to_next_poll": 6,
+            "blocking_io_drive_enters_pending_to_next_poll": 3,
+            "zero_timeout_io_drive_enters_pending_to_next_poll": 9
+          },
+          {
+            "req_id": 15,
+            "io_driver_events_before_wake": 6,
+            "io_driver_events_after_wake_before_next_poll": 0,
+            "empty_io_drive_exits_pending_to_next_poll": 1,
+            "blocking_io_drive_enters_pending_to_next_poll": 2,
+            "zero_timeout_io_drive_enters_pending_to_next_poll": 1
+          },
+          {
+            "req_id": 16,
+            "io_driver_events_before_wake": 36,
+            "io_driver_events_after_wake_before_next_poll": 0,
+            "empty_io_drive_exits_pending_to_next_poll": 10,
+            "blocking_io_drive_enters_pending_to_next_poll": 5,
+            "zero_timeout_io_drive_enters_pending_to_next_poll": 13
+          }
+        ]
+      }
+    },
+    "4_task_worker_migration": {
+      "answer": "Yes. In the measured ylong window, 27/32 requests touched multiple workers, and all 8 measured task ids appeared on multiple workers. Tokio current-thread trace has no comparable worker migration fields.",
+      "metrics": {
+        "requests_with_multiple_workers": 27,
+        "request_count": 32,
+        "tasks_with_multiple_workers": 8,
+        "task_count": 8,
+        "task_workers": {
+          "110208950358192": [
+            12,
+            14,
+            16
+          ],
+          "110208950399936": [
+            4,
+            12,
+            13
+          ],
+          "110208950441680": [
+            4,
+            12,
+            13,
+            16
+          ],
+          "110208950483424": [
+            12,
+            13,
+            16
+          ],
+          "110208950525168": [
+            0,
+            4,
+            13,
+            14,
+            19
+          ],
+          "110208950566912": [
+            4,
+            12,
+            13,
+            16
+          ],
+          "110208950650400": [
+            4,
+            12,
+            13,
+            14,
+            16
+          ],
+          "110208950608656": [
+            13,
+            14,
+            16,
+            19
+          ]
+        },
+        "migrated_request_workers": {
+          "10": [
+            12,
+            13
+          ],
+          "11": [
+            12,
+            13
+          ],
+          "12": [
+            12,
+            16
+          ],
+          "13": [
+            13,
+            19
+          ],
+          "14": [
+            13,
+            16
+          ],
+          "15": [
+            12,
+            14
+          ],
+          "16": [
+            16,
+            19
+          ],
+          "18": [
+            12,
+            14
+          ],
+          "19": [
+            13,
+            16
+          ],
+          "20": [
+            12,
+            14
+          ],
+          "22": [
+            13,
+            16
+          ],
+          "23": [
+            12,
+            13
+          ],
+          "24": [
+            12,
+            16
+          ],
+          "25": [
+            12,
+            16
+          ],
+          "26": [
+            13,
+            14
+          ],
+          "27": [
+            14,
+            19
+          ],
+          "28": [
+            12,
+            13
+          ],
+          "29": [
+            14,
+            16
+          ],
+          "31": [
+            13,
+            16
+          ],
+          "32": [
+            12,
+            16
+          ],
+          "34": [
+            0,
+            14
+          ],
+          "35": [
+            4,
+            12
+          ],
+          "36": [
+            13,
+            14
+          ],
+          "37": [
+            4,
+            12
+          ],
+          "38": [
+            4,
+            12
+          ],
+          "39": [
+            0,
+            4
+          ],
+          "40": [
+            4,
+            13
+          ]
+        }
+      }
+    },
+    "5_steal_search_park_correlation": {
+      "answer": "Yes, strongly correlated in this diagnostic run. Across 32 measured requests, write_done_to_response_ready_us correlates with park events at r=0.9587, steal/search events at r=0.9404, and IO-driver events at r=0.7982. Because request windows overlap under concurrency, this is causal-location evidence, not a standalone fix proof.",
+      "metrics": {
+        "pearson_write_to_ready_vs_park_events": 0.9587,
+        "pearson_write_to_ready_vs_steal_search_events": 0.9404,
+        "pearson_write_to_ready_vs_io_driver_events": 0.7982,
+        "event_count_summaries": {
+          "park_events": {
+            "count": 32,
+            "min": 32,
+            "p50": 76.5,
+            "mean": 83.781,
+            "p95": 139.8,
+            "max": 164
+          },
+          "steal_search_events": {
+            "count": 32,
+            "min": 30,
+            "p50": 65.0,
+            "mean": 68.625,
+            "p95": 112.15,
+            "max": 124
+          },
+          "io_driver_events": {
+            "count": 32,
+            "min": 10,
+            "p50": 37.0,
+            "mean": 41.188,
+            "p95": 85.6,
+            "max": 95
+          }
+        },
+        "slowest_rows": [
+          {
+            "req_id": 16,
+            "write_to_ready_us": 2498.666,
+            "park_events": 164,
+            "steal_search_events": 116,
+            "io_driver_events": 90,
+            "workers": [
+              16,
+              19
+            ]
+          },
+          {
+            "req_id": 13,
+            "write_to_ready_us": 2459.88,
+            "park_events": 153,
+            "steal_search_events": 124,
+            "io_driver_events": 95,
+            "workers": [
+              13,
+              19
+            ]
+          },
+          {
+            "req_id": 21,
+            "write_to_ready_us": 2146.696,
+            "park_events": 129,
+            "steal_search_events": 108,
+            "io_driver_events": 57,
+            "workers": [
+              16
+            ]
+          },
+          {
+            "req_id": 29,
+            "write_to_ready_us": 2114.821,
+            "park_events": 119,
+            "steal_search_events": 101,
+            "io_driver_events": 47,
+            "workers": [
+              14,
+              16
+            ]
+          },
+          {
+            "req_id": 17,
+            "write_to_ready_us": 2090.863,
+            "park_events": 125,
+            "steal_search_events": 109,
+            "io_driver_events": 68,
+            "workers": [
+              13
+            ]
+          },
+          {
+            "req_id": 28,
+            "write_to_ready_us": 1980.924,
+            "park_events": 106,
+            "steal_search_events": 80,
+            "io_driver_events": 41,
+            "workers": [
+              12,
+              13
+            ]
+          },
+          {
+            "req_id": 20,
+            "write_to_ready_us": 1882.838,
+            "park_events": 123,
+            "steal_search_events": 96,
+            "io_driver_events": 59,
+            "workers": [
+              12,
+              14
+            ]
+          },
+          {
+            "req_id": 11,
+            "write_to_ready_us": 1748.302,
+            "park_events": 116,
+            "steal_search_events": 98,
+            "io_driver_events": 82,
+            "workers": [
+              12,
+              13
+            ]
+          }
+        ]
+      }
+    },
+    "6_nested_tls_inner_outer_pending": {
+      "answer": "Nested TLS produces paired inner/outer pending in both ylong_base and tokio_base, so this is not a ylong-specific duplicate-pending bug. In the measured wall-clock window each runtime has 32 client response pendings, 64 inner underlying-read pendings, and 64 outer SSL-read pendings. All 64 outer pendings have a same-thread/task inner pending within 50 us for both runtimes.",
+      "metrics": {
+        "ylong_base_measured_window": {
+          "window_start_ts_ns": 1783309944892215581,
+          "window_end_ts_ns": 1783309944898419234,
+          "event_count": 927,
+          "client_response_pending": 32,
+          "tls_inner_underlying_read_pending": 64,
+          "tls_outer_ssl_read_pending": 64,
+          "outer_pending_with_inner_pending_same_thread_task_within_25us": 63,
+          "outer_pending_with_inner_pending_same_thread_task_within_50us": 64,
+          "outer_pending_total": 64
+        },
+        "tokio_base_measured_window": {
+          "window_start_ts_ns": 1783309947130264874,
+          "window_end_ts_ns": 1783309947141659351,
+          "event_count": 927,
+          "client_response_pending": 32,
+          "tls_inner_underlying_read_pending": 64,
+          "tls_outer_ssl_read_pending": 64,
+          "outer_pending_with_inner_pending_same_thread_task_within_25us": 64,
+          "outer_pending_with_inner_pending_same_thread_task_within_50us": 64,
+          "outer_pending_total": 64
+        }
+      }
+    },
+    "7_layer_split_ylong_vs_tokio_vs_libcurl": {
+      "answer": "The trace does not support blaming HTTP response polling or the OpenSSL wrapper: ylong_base and tokio_base both have exactly 2 response polls and 1 client-level pending per request, and the measured window has the same 64/64 inner/outer TLS pending shape. The ylong-specific evidence is in runtime scheduling/parking: worker migration, strong park/steal correlation, and strace syscall shape. Relative to libcurl, recvfrom/sendto counts are similar while epoll_wait/futex/clock_nanosleep/sched_yield are much higher in ylong. Thus S9C should target runtime scheduling/readiness churn only if it preserves TLS/HTTP semantics and improves CPU/RSS without hurting p95.",
+      "metrics": {
+        "client_layer_summary_ref": "client_layer_summary",
+        "strace_syscall_summary": {
+          "ylong_http_client": {
+            "total_calls": 6369,
+            "total_seconds": 0.416725,
+            "top_calls": {
+              "recvfrom": {
+                "calls": 966,
+                "errors": 276,
+                "seconds": 0.017583
+              },
+              "sendto": {
+                "calls": 290,
+                "errors": 0,
+                "seconds": 0.011074
+              },
+              "read": {
+                "calls": 694,
+                "errors": 0,
+                "seconds": 0.010268
+              },
+              "futex": {
+                "calls": 489,
+                "errors": 34,
+                "seconds": 0.273185
+              },
+              "clock_nanosleep": {
+                "calls": 624,
+                "errors": 0,
+                "seconds": 0.038542
+              },
+              "epoll_wait": {
+                "calls": 338,
+                "errors": 0,
+                "seconds": 0.017926
+              },
+              "sched_yield": {
+                "calls": 930,
+                "errors": 0,
+                "seconds": 0.01475
+              }
+            }
+          },
+          "libcurl": {
+            "total_calls": 4786,
+            "total_seconds": 0.026135,
+            "top_calls": {
+              "recvfrom": {
+                "calls": 1006,
+                "errors": 318,
+                "seconds": 0.003042
+              },
+              "sendto": {
+                "calls": 300,
+                "errors": 0,
+                "seconds": 0.002427
+              },
+              "read": {
+                "calls": 602,
+                "errors": 0,
+                "seconds": 0.002023
+              },
+              "futex": {
+                "calls": 25,
+                "errors": 0,
+                "seconds": 8.5e-05
+              },
+              "clock_nanosleep": {
+                "calls": 38,
+                "errors": 0,
+                "seconds": 0.003188
+              },
+              "epoll_wait": {
+                "calls": 3,
+                "errors": 0,
+                "seconds": 0.00013
+              },
+              "sched_yield": {
+                "calls": 60,
+                "errors": 0,
+                "seconds": 0.000957
+              }
+            }
+          }
+        },
+        "warm_profile_benchmark_rows": {
+          "ylong:ylong_http_client": {
+            "requests": "32",
+            "concurrency": "8",
+            "ylong_concurrency_model": "single-client",
+            "scenario": "https-over-https-proxy",
+            "repeat": "1",
+            "client": "ylong_http_client",
+            "elapsed_ms": "6.314133",
+            "latency_ms": "0.19731665625",
+            "throughput_rps": "5067.995875284857",
+            "p50_us": "1252",
+            "p95_us": "2568",
+            "cpu_us": "15961",
+            "cpu_us_per_request": "498.78125",
+            "rss_peak_bytes": "19251200",
+            "errors": "0",
+            "proxy_connections": "8",
+            "proxy_forward_requests": "0",
+            "proxy_connect_requests": "8",
+            "proxy_tunnel_bytes_from_client": "15672",
+            "proxy_tunnel_bytes_from_origin": "192680",
+            "proxy_tls_client_auth_failures": "0",
+            "proxy_request_header_bytes": "472",
+            "proxy_request_body_bytes": "0",
+            "proxy_response_body_bytes": "0",
+            "proxy_response_send_us": "0",
+            "proxy_response_send_events": "0",
+            "proxy_tunnel_send_to_client_us": "6802",
+            "proxy_tunnel_send_to_client_events": "61",
+            "proxy_tunnel_send_to_origin_us": "6389",
+            "proxy_tunnel_send_to_origin_events": "56",
+            "origin_connections": "8",
+            "origin_requests": "40",
+            "origin_tls_connections": "8",
+            "origin_request_header_bytes": "2280",
+            "origin_request_body_bytes": "0",
+            "origin_response_body_bytes": "163840",
+            "origin_response_send_us": "5781",
+            "origin_response_send_events": "40",
+            "phase_request_build_us": "75",
+            "phase_request_execute_us": "45286",
+            "phase_body_drain_us": "46",
+            "phase_connect_us": "53",
+            "phase_dns_us": "0",
+            "phase_tcp_us": "0",
+            "phase_tls_us": "0",
+            "phase_transfer_us": "43823",
+            "phase_request_format_us": "134",
+            "phase_pool_checkout_us": "101",
+            "phase_send_on_conn_us": "44936",
+            "phase_http1_write_us": "1553",
+            "phase_http1_encode_us": "48",
+            "phase_http1_write_io_us": "1472",
+            "phase_response_head_us": "42436",
+            "phase_response_read_us": "42243",
+            "phase_response_read_polls": "64",
+            "phase_response_read_pending": "32",
+            "phase_response_pre_read_bytes": "131072",
+            "phase_response_pre_read_events": "32",
+            "phase_response_intercept_us": "3",
+            "phase_response_decode_us": "174",
+            "phase_libcurl_perform_us": "0",
+            "tls_ssl_read_calls": "160",
+            "tls_ssl_read_pending": "64",
+            "tls_ssl_write_calls": "64",
+            "tls_ssl_write_pending": "0",
+            "tls_underlying_read_calls": "192",
+            "tls_underlying_read_pending": "64",
+            "tls_underlying_write_calls": "64",
+            "tls_underlying_write_pending": "0",
+            "body_chunks": "32",
+            "body_bytes": "131072",
+            "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+            "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+          },
+          "ylong:libcurl": {
+            "requests": "32",
+            "concurrency": "8",
+            "ylong_concurrency_model": "single-client",
+            "scenario": "https-over-https-proxy",
+            "repeat": "1",
+            "client": "libcurl",
+            "elapsed_ms": "9.436274",
+            "latency_ms": "0.2948835625",
+            "throughput_rps": "3391.16901438004",
+            "p50_us": "1768",
+            "p95_us": "4553",
+            "cpu_us": "6131",
+            "cpu_us_per_request": "191.59375",
+            "rss_peak_bytes": "16621568",
+            "errors": "0",
+            "proxy_connections": "8",
+            "proxy_forward_requests": "0",
+            "proxy_connect_requests": "8",
+            "proxy_tunnel_bytes_from_client": "16480",
+            "proxy_tunnel_bytes_from_origin": "192680",
+            "proxy_tls_client_auth_failures": "0",
+            "proxy_request_header_bytes": "712",
+            "proxy_request_body_bytes": "0",
+            "proxy_response_body_bytes": "0",
+            "proxy_response_send_us": "0",
+            "proxy_response_send_events": "0",
+            "proxy_tunnel_send_to_client_us": "10890",
+            "proxy_tunnel_send_to_client_events": "62",
+            "proxy_tunnel_send_to_origin_us": "14481",
+            "proxy_tunnel_send_to_origin_events": "64",
+            "origin_connections": "8",
+            "origin_requests": "40",
+            "origin_tls_connections": "8",
+            "origin_request_header_bytes": "2360",
+            "origin_request_body_bytes": "0",
+            "origin_response_body_bytes": "163840",
+            "origin_response_send_us": "9731",
+            "origin_response_send_events": "40",
+            "phase_request_build_us": "0",
+            "phase_request_execute_us": "0",
+            "phase_body_drain_us": "0",
+            "phase_connect_us": "0",
+            "phase_dns_us": "0",
+            "phase_tcp_us": "0",
+            "phase_tls_us": "0",
+            "phase_transfer_us": "0",
+            "phase_request_format_us": "0",
+            "phase_pool_checkout_us": "0",
+            "phase_send_on_conn_us": "0",
+            "phase_http1_write_us": "0",
+            "phase_http1_encode_us": "0",
+            "phase_http1_write_io_us": "0",
+            "phase_response_head_us": "0",
+            "phase_response_read_us": "0",
+            "phase_response_read_polls": "0",
+            "phase_response_read_pending": "0",
+            "phase_response_pre_read_bytes": "0",
+            "phase_response_pre_read_events": "0",
+            "phase_response_intercept_us": "0",
+            "phase_response_decode_us": "0",
+            "phase_libcurl_perform_us": "0",
+            "tls_ssl_read_calls": "0",
+            "tls_ssl_read_pending": "0",
+            "tls_ssl_write_calls": "0",
+            "tls_ssl_write_pending": "0",
+            "tls_underlying_read_calls": "0",
+            "tls_underlying_read_pending": "0",
+            "tls_underlying_write_calls": "0",
+            "tls_underlying_write_pending": "0",
+            "body_chunks": "32",
+            "body_bytes": "131072",
+            "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+            "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+          },
+          "tokio:ylong_http_client": {
+            "requests": "32",
+            "concurrency": "8",
+            "ylong_concurrency_model": "single-client",
+            "scenario": "https-over-https-proxy",
+            "repeat": "1",
+            "client": "ylong_http_client",
+            "elapsed_ms": "11.56732",
+            "latency_ms": "0.36147875",
+            "throughput_rps": "2766.4143466248015",
+            "p50_us": "2416",
+            "p95_us": "5213",
+            "cpu_us": "10598",
+            "cpu_us_per_request": "331.1875",
+            "rss_peak_bytes": "17481728",
+            "errors": "0",
+            "proxy_connections": "8",
+            "proxy_forward_requests": "0",
+            "proxy_connect_requests": "8",
+            "proxy_tunnel_bytes_from_client": "15672",
+            "proxy_tunnel_bytes_from_origin": "192680",
+            "proxy_tls_client_auth_failures": "0",
+            "proxy_request_header_bytes": "472",
+            "proxy_request_body_bytes": "0",
+            "proxy_response_body_bytes": "0",
+            "proxy_response_send_us": "0",
+            "proxy_response_send_events": "0",
+            "proxy_tunnel_send_to_client_us": "10438",
+            "proxy_tunnel_send_to_client_events": "62",
+            "proxy_tunnel_send_to_origin_us": "11641",
+            "proxy_tunnel_send_to_origin_events": "56",
+            "origin_connections": "8",
+            "origin_requests": "40",
+            "origin_tls_connections": "8",
+            "origin_request_header_bytes": "2280",
+            "origin_request_body_bytes": "0",
+            "origin_response_body_bytes": "163840",
+            "origin_response_send_us": "13411",
+            "origin_response_send_events": "40",
+            "phase_request_build_us": "95",
+            "phase_request_execute_us": "81031",
+            "phase_body_drain_us": "85",
+            "phase_connect_us": "68",
+            "phase_dns_us": "0",
+            "phase_tcp_us": "0",
+            "phase_tls_us": "0",
+            "phase_transfer_us": "79148",
+            "phase_request_format_us": "183",
+            "phase_pool_checkout_us": "136",
+            "phase_send_on_conn_us": "80556",
+            "phase_http1_write_us": "1604",
+            "phase_http1_encode_us": "76",
+            "phase_http1_write_io_us": "1479",
+            "phase_response_head_us": "77669",
+            "phase_response_read_us": "77415",
+            "phase_response_read_polls": "64",
+            "phase_response_read_pending": "32",
+            "phase_response_pre_read_bytes": "131072",
+            "phase_response_pre_read_events": "32",
+            "phase_response_intercept_us": "6",
+            "phase_response_decode_us": "205",
+            "phase_libcurl_perform_us": "0",
+            "tls_ssl_read_calls": "160",
+            "tls_ssl_read_pending": "64",
+            "tls_ssl_write_calls": "64",
+            "tls_ssl_write_pending": "0",
+            "tls_underlying_read_calls": "192",
+            "tls_underlying_read_pending": "64",
+            "tls_underlying_write_calls": "64",
+            "tls_underlying_write_pending": "0",
+            "body_chunks": "32",
+            "body_bytes": "131072",
+            "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+            "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+          },
+          "tokio:libcurl": {
+            "requests": "32",
+            "concurrency": "8",
+            "ylong_concurrency_model": "single-client",
+            "scenario": "https-over-https-proxy",
+            "repeat": "1",
+            "client": "libcurl",
+            "elapsed_ms": "10.77389",
+            "latency_ms": "0.3366840625",
+            "throughput_rps": "2970.1435600326345",
+            "p50_us": "2331",
+            "p95_us": "4672",
+            "cpu_us": "6157",
+            "cpu_us_per_request": "192.40625",
+            "rss_peak_bytes": "16429056",
+            "errors": "0",
+            "proxy_connections": "8",
+            "proxy_forward_requests": "0",
+            "proxy_connect_requests": "8",
+            "proxy_tunnel_bytes_from_client": "16480",
+            "proxy_tunnel_bytes_from_origin": "192680",
+            "proxy_tls_client_auth_failures": "0",
+            "proxy_request_header_bytes": "712",
+            "proxy_request_body_bytes": "0",
+            "proxy_response_body_bytes": "0",
+            "proxy_response_send_us": "0",
+            "proxy_response_send_events": "0",
+            "proxy_tunnel_send_to_client_us": "13269",
+            "proxy_tunnel_send_to_client_events": "62",
+            "proxy_tunnel_send_to_origin_us": "14545",
+            "proxy_tunnel_send_to_origin_events": "64",
+            "origin_connections": "8",
+            "origin_requests": "40",
+            "origin_tls_connections": "8",
+            "origin_request_header_bytes": "2360",
+            "origin_request_body_bytes": "0",
+            "origin_response_body_bytes": "163840",
+            "origin_response_send_us": "11170",
+            "origin_response_send_events": "40",
+            "phase_request_build_us": "0",
+            "phase_request_execute_us": "0",
+            "phase_body_drain_us": "0",
+            "phase_connect_us": "0",
+            "phase_dns_us": "0",
+            "phase_tcp_us": "0",
+            "phase_tls_us": "0",
+            "phase_transfer_us": "0",
+            "phase_request_format_us": "0",
+            "phase_pool_checkout_us": "0",
+            "phase_send_on_conn_us": "0",
+            "phase_http1_write_us": "0",
+            "phase_http1_encode_us": "0",
+            "phase_http1_write_io_us": "0",
+            "phase_response_head_us": "0",
+            "phase_response_read_us": "0",
+            "phase_response_read_polls": "0",
+            "phase_response_read_pending": "0",
+            "phase_response_pre_read_bytes": "0",
+            "phase_response_pre_read_events": "0",
+            "phase_response_intercept_us": "0",
+            "phase_response_decode_us": "0",
+            "phase_libcurl_perform_us": "0",
+            "tls_ssl_read_calls": "0",
+            "tls_ssl_read_pending": "0",
+            "tls_ssl_write_calls": "0",
+            "tls_ssl_write_pending": "0",
+            "tls_underlying_read_calls": "0",
+            "tls_underlying_read_pending": "0",
+            "tls_underlying_write_calls": "0",
+            "tls_underlying_write_pending": "0",
+            "body_chunks": "32",
+            "body_bytes": "131072",
+            "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+            "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+          }
+        }
+      }
+    }
+  },
+  "root_cause_hypothesis_for_s9c": {
+    "hypothesis": "The remaining SOTA gap is not CONNECT/TLS protocol behavior or repeated response polling. The strongest measured lever is ylong_runtime scheduler/readiness churn under nested TLS waits: tasks migrate across workers and slow request windows carry high park/steal/io-driver activity; libcurl avoids the same scheduler syscall shape.",
+    "confidence": "moderate",
+    "limits": [
+      "The diagnostic request windows overlap under concurrency, so correlation is not an isolated per-request proof.",
+      "The warm 32-request trace is not a SOTA threshold benchmark; S9D must re-run the canonical matrix.",
+      "Prior broad scheduler candidates were rejected, so S9C must be narrower and evidence-driven."
+    ],
+    "s9c_allowed_direction": "A candidate may reduce redundant runtime scheduling/readiness churn only if it is behavior-preserving and if S9D proves hard SOTA thresholds. Do not modify HTTP/TLS semantics based on this evidence."
+  }
+}

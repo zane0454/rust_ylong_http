@@ -1,0 +1,120 @@
+{
+  "evidence_id": "evidence.runtime-readiness-candidate-s9d-counterexample",
+  "runtime_generation": "gen-001",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "required_step": "S9D-runtime-canonical-matrix",
+  "status": "counterexample",
+  "verified_at": "2026-07-06T12:52:14+08:00",
+  "summary": "The S9C vendored ylong_runtime readiness candidate completed the approved S9D canonical HTTPS proxy matrix with zero errors, but failed the fixed SOTA thresholds. It improves some cells but does not establish O-causal-performance-evidence and must not unlock S10.",
+  "candidate_under_test": {
+    "source_evidence": "evidence/runtime-readiness-candidate.json",
+    "runtime_source": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime",
+    "behavior_change": "same-runtime local FIFO enqueue wakes another worker only when the local queue was full before enqueue"
+  },
+  "canonical_matrix": {
+    "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --concurrency 1 --bench-bin /tmp/ylong_http_target_s9d_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d --figure-dir docs/figures/ylong-runtime-readiness-candidate-s9d",
+    "build_command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --offline",
+    "baseline": "same-process libcurl",
+    "scenarios": [
+      "http-over-https-proxy",
+      "https-over-https-proxy",
+      "proxy-mtls-https-origin"
+    ],
+    "requests": [
+      200,
+      1000,
+      3000
+    ],
+    "repeats": 5,
+    "warmup": 50,
+    "concurrency": 1,
+    "ylong_concurrency_model": "threaded",
+    "phase_timing": false,
+    "errors_sum_total": 0
+  },
+  "result_files": [
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_results.csv",
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_summary.csv",
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_env.json",
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_raw.txt",
+    "docs/figures/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_performance.png",
+    "docs/figures/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_performance.pdf"
+  ],
+  "hashes": {
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_results.csv": "sha256:a3d0f5ee09ed4b5a0e711d68ec609ec3cdf4807b3bf3ddf8594bd88c072cadad",
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_summary.csv": "sha256:6d575cd5cbe2ec482b6d20b83594b0a376a083eeea78484e06a7a3c5e786020a",
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_comparison.csv": "sha256:601bf94647dd15b2a42c4e63180e366e9885dae0a60d96d09369367f1b864ee4",
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_env.json": "sha256:c87f33be3a719b0bcffd5df86c13fd4c82b3e5b8ab7ac4c1d6d8090cde8f4798",
+    "docs/benchmarks/results/ylong-runtime-readiness-candidate-s9d/https_proxy_bench_raw.txt": "sha256:f171753e3f3fc6a9fcb1c884f5eb90ae8da0385115139ee67f26865d9ed8e042",
+    "/tmp/ylong_http_target_s9d_release/release/https_proxy_bench": "sha256:b93eff9c76faef6ff648a414e5c69d3860d09c5dc3bd77908e2ba26e4caaf6cf"
+  },
+  "threshold_eval": {
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.0445009718622875,
+    "throughput_min_ratio_ylong_over_libcurl": 0.7351392716797351,
+    "throughput_max_ratio_ylong_over_libcurl": 1.3036753450199454,
+    "p50_max_ratio_ylong_over_libcurl": 1.315143246930423,
+    "p95_min_ratio_ylong_over_libcurl": 0.7911571025399812,
+    "p95_max_ratio_ylong_over_libcurl": 1.239795918367347,
+    "cpu_geomean_ratio_ylong_over_libcurl": 0.9257191014751277,
+    "cpu_max_ratio_ylong_over_libcurl": 1.22239009610403,
+    "rss_max_ratio_ylong_over_libcurl": 1.0746227709190672,
+    "errors_sum_total": 0,
+    "sota_verified": false
+  },
+  "hard_thresholds": {
+    "throughput_geomean_lower_ci": ">= 2.00",
+    "throughput_every_scenario_lower_ci": ">= 1.50",
+    "p50_every_scenario_upper_ci": "<= 0.60",
+    "p95_every_scenario_upper_ci": "<= 0.70",
+    "flagship": "throughput >= 3.00 or p95 <= 0.50",
+    "cpu_geomean": "<= 0.80",
+    "cpu_every_scenario": "<= 1.00",
+    "rss_every_scenario": "<= 1.10",
+    "errors": "0",
+    "repetitions": ">= 5 after warmup"
+  },
+  "worst_cells": {
+    "throughput": {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 1000,
+      "throughput_rps_ratio": 0.7351392716797351,
+      "p50_us_ratio": 1.315143246930423,
+      "p95_us_ratio": 1.1843409316154607,
+      "cpu_us_per_request_ratio": 1.22239009610403,
+      "rss_peak_bytes_ratio": 1.0657823497563617
+    },
+    "p95": {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 200,
+      "throughput_rps_ratio": 1.1147399370584798,
+      "p50_us_ratio": 0.8305709023941069,
+      "p95_us_ratio": 1.239795918367347,
+      "cpu_us_per_request_ratio": 0.8964889270515857,
+      "rss_peak_bytes_ratio": 1.0682741804389055
+    }
+  },
+  "passing_gates": [
+    "benchmark command completed successfully",
+    "all measured rows have zero errors",
+    "same-process libcurl baseline used",
+    "canonical phase_timing=false",
+    "five measured repetitions after warmup",
+    "RSS max ratio remains <= 1.10"
+  ],
+  "failing_gates": [
+    "throughput geomean is 1.0445x, below 2.00x",
+    "worst throughput cell is 0.7351x, below 1.50x",
+    "p50 max ratio is 1.3151x, above 0.60x",
+    "p95 max ratio is 1.2398x, above 0.70x",
+    "CPU geomean is 0.9257x, above 0.80x",
+    "CPU worst cell is 1.2224x, above 1.00x",
+    "no flagship cell reaches the fixed flagship threshold"
+  ],
+  "completion_effect": {
+    "S9D-runtime-canonical-matrix": "not complete",
+    "O-causal-performance-evidence": "not satisfied",
+    "S10-final-counterexample-gate": "not allowed",
+    "goal_achieved": false
+  }
+}

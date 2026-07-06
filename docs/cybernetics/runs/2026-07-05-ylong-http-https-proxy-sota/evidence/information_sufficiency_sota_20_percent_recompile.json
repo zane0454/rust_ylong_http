@@ -1,0 +1,47 @@
+{
+  "artifact_type": "information_sufficiency.counterexample_review.evidence",
+  "schema_version": "1.0.0",
+  "independent_review": true,
+  "status": "pass",
+  "verdict": "approved",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "sota-20-percent-recompile-reviewer-v1"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "id": "sota-20-percent-recompile-reviewer-v1",
+    "agent_id": "019f36e1-25d6-76b0-9f2b-308b3b64e230",
+    "transcript_ref": "evidence/sota-20-percent-recompile-review-transcript.txt",
+    "transcript_hash": "sha256:72a7691523efc7c67f5ff87cfac334b44463c016a6e046d366d01ee09073e8cf"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/sota-20-percent-recompile-review-prompt.txt",
+    "prompt_hash": "sha256:18d6d8e91682a0c9c1881415989f3be178c0601938caada8a977c7a95b0993fd",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json": "sha256:19f872138ab890ca62bd47e21440fb742565959b0f9ed2a12a7bc0458b1e31ce"
+    }
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json": "sha256:19f872138ab890ca62bd47e21440fb742565959b0f9ed2a12a7bc0458b1e31ce"
+  },
+  "checked_facts": [
+    "F-repo-current-proxy-shape",
+    "F-connect-parser-200-only",
+    "F-proxy-mtls-evidence-gap",
+    "F-benchmark-labeling-gap",
+    "F-libcurl-library-baseline-gap",
+    "F-causal-performance-evidence-gap",
+    "F-sota-20-percent-human-reapproval"
+  ],
+  "checked_transformations": [
+    "source_requirements->information_sufficiency_facts",
+    "required_outcomes->information_sufficiency_facts",
+    "information_sufficiency_facts->design_plan_entry",
+    "human_reapproval:SOTA_20_percent->requirements_revision",
+    "old_threshold_rejection->not_current_information_fact"
+  ],
+  "findings": [],
+  "smallest_counterexample": null,
+  "review_summary": "Independent reviewer approved the schema-compliant SOTA 20 percent recompile information-sufficiency fact and found no counterexample after final hash-state review."
+}

@@ -1,0 +1,171 @@
+{
+  "artifact_type": "runtime.frontier_candidate.red_diagnostic",
+  "schema_version": "1.0.0",
+  "evidence_id": "evidence.runtime-frontier-candidate-red-diagnostic",
+  "runtime_generation": "gen-002",
+  "required_step": "S9F-runtime-frontier-candidate",
+  "created_at": "2026-07-06T14:54:01+08:00",
+  "status": "red_diagnostic_pass_not_s9f_completion",
+  "not_a_completion_claim": true,
+  "goal_achieved_permitted": false,
+  "s10_allowed": false,
+  "diagnostic_question": "Does the current ylong_runtime HTTPS-over-HTTPS-proxy slow path show same-task IO-readiness wake locality mismatch before any production worker-affinity scheduling patch?",
+  "answer": "Yes for the diagnostic red gate: the opt-in runtime trace linked IO-readiness task_wake_enqueue -> scheduler_enqueue -> next task_poll_enter for the same task. In a 32 request, concurrency=8, single-client HTTPS-over-HTTPS-proxy run, 89/89 IO wake enqueue chains completed and 22 chains showed locality mismatch, where the task's last-polled worker differed from the enqueue target and/or next-poll worker. This is red diagnostic evidence only; it does not complete S9F because no worker-affine production candidate or focused/canonical performance matrix has passed.",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/runtime_trace.rs",
+      "sha256": "0604c5875339be4ad0b33478d0f9802c555230217dcfa42d31addc8b7ba4f37f",
+      "summary": "Adds diagnostic-only JSONL trace helper controlled by YLONG_RUNTIME_TRACE_FILE. When unset, record calls return without opening a file."
+    },
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/lib.rs",
+      "sha256": "d862142420244112b5ed696529acb3961c5bbac074b7bde586bd7dec4c33a68f",
+      "summary": "Wires private runtime_trace module and adds unit test for event JSONL shape."
+    },
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/waker.rs",
+      "sha256": "7ebb0f0f120c74bb553a000fa222cc678d82b1a8349d5ce1ccc38111738abfe0",
+      "summary": "Records raw waker wake_by_ref task_id and wake_origin when tracing is enabled."
+    },
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/task_handle.rs",
+      "sha256": "ecf923fa0aa82ad2dc973736725f46420113e02a9f2c5b3930f8c7985e69c790",
+      "summary": "Records task poll enter, pending re-enqueue, and task wake enqueue trace events."
+    },
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs",
+      "sha256": "8498b376c00f4fa26dd55329dba3966b0b5561adce26cef533cd8dd1575e29d4",
+      "summary": "Records local/global/lifo scheduler enqueue context and target worker without changing enqueue policy."
+    },
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/net/schedule_io.rs",
+      "sha256": "84b91d578dd4fe9267a2fe1d064a3d71beb94fe0d4e3980f660649b360acf8ee",
+      "summary": "Marks waker wake_by_ref calls made from ScheduleIO::wake0 with wake_origin=io_readiness."
+    },
+    {
+      "file": "docs/benchmarks/analyze_runtime_frontier_trace.py",
+      "sha256": "510630d8673152259e413ea10882ef53e4e52edf4f52c10823ce071f37da6355",
+      "summary": "Adds runtime-frontier trace analyzer that links IO wake enqueue chains to scheduler enqueue and next task poll."
+    },
+    {
+      "file": "docs/benchmarks/test_runtime_frontier_trace.py",
+      "sha256": "259aa97f110dff6f26c7a35ea8403545277fd62ac7c05238e871f707fbf778f4",
+      "summary": "Adds analyzer unit test for detecting a cross-worker IO wake chain."
+    }
+  ],
+  "tdd_evidence": [
+    {
+      "phase": "RED",
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml runtime_trace_event_includes_worker_task_and_origin --features net,sync,fs,macros,time",
+      "expected_failure": "error[E0433]: cannot find runtime_trace in crate"
+    },
+    {
+      "phase": "GREEN",
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml runtime_trace_event_includes_worker_task_and_origin --features net,sync,fs,macros,time",
+      "result": "pass: 1 test passed; existing ylong_runtime warnings only"
+    },
+    {
+      "phase": "RED",
+      "command": "python3 docs/benchmarks/test_runtime_frontier_trace.py",
+      "expected_failure": "FileNotFoundError for docs/benchmarks/analyze_runtime_frontier_trace.py"
+    },
+    {
+      "phase": "GREEN",
+      "command": "python3 docs/benchmarks/test_runtime_frontier_trace.py",
+      "result": "pass: 1 test passed"
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "python3 docs/benchmarks/test_run_https_proxy_bench.py && python3 docs/benchmarks/test_runtime_frontier_trace.py",
+      "result": "pass: 17 benchmark harness tests and 1 runtime-frontier analyzer test"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo check -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "result": "pass with existing repository warnings"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo build -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io --release",
+      "result": "pass with existing repository warnings"
+    },
+    {
+      "command": "YLONG_RUNTIME_TRACE_FILE=$PWD/docs/benchmarks/results/s9f-runtime-frontier-red/runtime-frontier-trace.jsonl python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin target/release/https_proxy_bench --scenario https-over-https-proxy --baseline libcurl --requests 32 --warmup 8 --repeats 1 --concurrency 8 --ylong-concurrency-model single-client --phase-timing --result-dir docs/benchmarks/results/s9f-runtime-frontier-red",
+      "result": "pass: ylong_http_client ok; libcurl ok"
+    },
+    {
+      "command": "python3 docs/benchmarks/analyze_runtime_frontier_trace.py docs/benchmarks/results/s9f-runtime-frontier-red/runtime-frontier-trace.jsonl --output docs/benchmarks/results/s9f-runtime-frontier-red/runtime-frontier-analysis.json",
+      "result": "pass"
+    }
+  ],
+  "result_artifacts": {
+    "benchmark_binary": {
+      "path": "target/release/https_proxy_bench",
+      "sha256": "e72b0bce7080baf6da49dd9d4a725771f860b1a6ba1222385411bd83c4119a79"
+    },
+    "result_dir": "docs/benchmarks/results/s9f-runtime-frontier-red",
+    "runtime_trace": {
+      "path": "docs/benchmarks/results/s9f-runtime-frontier-red/runtime-frontier-trace.jsonl",
+      "sha256": "afd5119adaa1efd091ca9979607f2383f9a13f234cca9c43469b517504955dbe",
+      "line_count": 477
+    },
+    "runtime_frontier_analysis": {
+      "path": "docs/benchmarks/results/s9f-runtime-frontier-red/runtime-frontier-analysis.json",
+      "sha256": "eb1b9df1ef2d4a1b066f1744edfe06b121f54ff4c543073828a6f52185a54829",
+      "io_wake_enqueue_chains": 89,
+      "complete_chains": 89,
+      "incomplete_chains": 0,
+      "locality_mismatches": 22,
+      "mismatch_ratio": 0.24719101123595505
+    },
+    "summary_csv": {
+      "path": "docs/benchmarks/results/s9f-runtime-frontier-red/https_proxy_bench_summary.csv",
+      "sha256": "22d1b54a9d8b7ff3f96f829c2f440210f0e62ddb9788a303a2ba4a978b009fa7"
+    },
+    "comparison_csv": {
+      "path": "docs/benchmarks/results/s9f-runtime-frontier-red/https_proxy_bench_comparison.csv",
+      "sha256": "98f42ec4a3407a5594ced96185da1c03527574b7538e7cdef68736fbaf277180"
+    }
+  },
+  "benchmark_context": {
+    "scenario": "https-over-https-proxy",
+    "requests": 32,
+    "warmup": 8,
+    "repeats": 1,
+    "concurrency": 8,
+    "ylong_concurrency_model": "single-client",
+    "phase_timing": true,
+    "ylong_summary": {
+      "throughput_rps_mean": 3169.1731359889222,
+      "p50_us_mean": 2002.0,
+      "p95_us_mean": 4823.0,
+      "cpu_us_per_request_mean": 279.5625,
+      "errors_sum": 0,
+      "phase_response_read_us_mean": 70073.0,
+      "phase_response_read_polls_mean": 64.0,
+      "phase_response_read_pending_mean": 32.0
+    },
+    "libcurl_summary": {
+      "throughput_rps_mean": 2937.196407478359,
+      "p50_us_mean": 2217.0,
+      "p95_us_mean": 4895.0,
+      "cpu_us_per_request_mean": 190.5,
+      "errors_sum": 0
+    }
+  },
+  "red_gate_interpretation": {
+    "supports_s9e_hypothesis": true,
+    "why": "The same task is frequently woken from IO readiness and enqueued/polled on a worker different from its last-polled worker. This directly tests the S9E surface rather than another generic park/yield/steal knob.",
+    "limitations": [
+      "This is a diagnostic, phase-timing, 32-request run; it is not a focused 1000-request candidate matrix and not canonical SOTA evidence.",
+      "The trace proves the locality mismatch exists but does not by itself prove a worker-affine scheduling change will improve throughput, p95, CPU, or RSS.",
+      "No production worker-affinity scheduling policy has been implemented yet."
+    ],
+    "next_action": "Implement one behavior-preserving worker-affine IO-readiness scheduling candidate guarded by the diagnostic evidence, then run the S9E focused pass bar before any canonical S9F matrix."
+  },
+  "completion_effect": {
+    "S9F-runtime-frontier-candidate": "partial_red_diagnostic_only",
+    "O-causal-performance-evidence": "not_satisfied",
+    "S10-final-counterexample-gate": "disallowed",
+    "goal_achieved": false
+  }
+}

@@ -1,0 +1,96 @@
+Reviewer: subagent 019f366b-e2f5-7921-9df5-441fd854c895 (Noether)
+Verdict: APPROVE.
+
+The reviewer did not edit files. The reviewer tried to disprove A4 against the listed artifacts and did not find a blocking counterexample.
+
+Key checks:
+- A4 keeps anchor fields unchanged: semantic base, required outcomes/result paths, hard SOTA thresholds, libcurl baseline semantics, public HTTP/TLS/proxy semantics, and authority.
+- S9H rejected evidence is not converted into completion evidence. Both progress.jsonl and evidence/runtime-io-home-stickiness-candidate-rejected.json say S9H, O-causal, S10, and goal_achieved remain incomplete.
+- A4 adds S9I as a non-terminal frontier/repetition gate before S9J, so it is not merely rerunning the rejected home-stickiness candidate.
+- S10 remains forbidden until S9J passes unchanged focused/canonical gates and the final runtime Counterexample Gate.
+- Structural checks match this: validate_control_chain.py passed; control_chain_guard.py returned PASS; verify_runtime_progress.py failed as expected because A4 is unresolved and S9H/S10/O-causal/O-final remain incomplete.
+
+Review JSON:
+{
+  "artifact_type": "review.control",
+  "schema_version": "1.0.0",
+  "amendment_id": "A4-post-home-frontier-review",
+  "review_kind": "counterexample-gate",
+  "reviewer": {
+    "kind": "external",
+    "id": "codex-counterexample-gate-a4-post-home-frontier-review",
+    "evidence_ref": "chat:counterexample-gate:A4-post-home-frontier-review:2026-07-06"
+  },
+  "verdict": "APPROVE",
+  "approved": true,
+  "checked_transformations": [
+    "A4.patch->gen-004.strategy-refinement-only",
+    "semantic_base->preserved",
+    "source_requirements->preserved",
+    "required_outcomes->preserved",
+    "required_result_paths->preserved",
+    "numeric_hard_threshold_policy->preserved",
+    "sota_fixed_target->preserved",
+    "same_process_libcurl_baseline->preserved",
+    "public_HTTP_TLS_proxy_semantics->preserved",
+    "authority->not_expanded",
+    "S9H.rejected_evidence->counterexample_not_completion_evidence",
+    "S9I.post_home_frontier_review->non_terminal_repetition_gate",
+    "S9J.post_home_frontier_candidate->O-causal-performance-evidence_only_after_unchanged_gates",
+    "S10.final_counterexample_gate->forbidden_until_S9J_passes_focused_canonical_and_runtime_counterexample_gate",
+    "unresolved_A4->goal_achieved_false_until_reviewed_and_orchestrated"
+  ],
+  "checked_required_result_paths": [
+    "RP-current-audit-to-workplan",
+    "RP-final-counterexample-to-sota-claim",
+    "RP-http-over-https-proxy",
+    "RP-https-over-https-proxy",
+    "RP-proxy-tls-fail-closed",
+    "RP-shared-proxy-semantics",
+    "RP-fair-benchmark-to-report",
+    "RP-sota-threshold-verdict",
+    "RP-real-client-causal-performance"
+  ],
+  "findings": [
+    {
+      "status": "pass",
+      "summary": "A4 declares anchor_changes false and only changes derived runtime strategy by replacing failed S9H completion-bearing route with S9I/S9J."
+    },
+    {
+      "status": "pass",
+      "summary": "S9H rejected evidence remains explicitly rejected and incomplete; verifier still rejects goal_achieved and lists A4 as unresolved."
+    },
+    {
+      "status": "pass",
+      "summary": "S9I adds a required non-terminal review gate that can reject duplicate runtime micro-scheduling candidates before S9J implementation."
+    },
+    {
+      "status": "pass",
+      "summary": "S10 is still gated behind a future S9J pass of unchanged focused and canonical SOTA thresholds plus runtime Counterexample Gate."
+    }
+  ],
+  "conditions": [
+    "S9I must identify a non-duplicative causal surface with measured headroom; otherwise it must reject continuation rather than permit S9J.",
+    "S9J must not cite S9H locality elimination, S9H focused matrix, or any rejected runtime candidate as SOTA/O-causal completion evidence.",
+    "S9J completion requires fresh real-client-path, fair same-process libcurl, unchanged focused pass bar, and unchanged canonical SOTA matrix evidence.",
+    "S10 and goal_achieved remain forbidden until S9J passes and a current-generation runtime Counterexample Gate covers all required steps, outcomes, and result paths."
+  ],
+  "rejected_counterexamples": [
+    {
+      "counterexample": "A4 weakens the fixed SOTA target or hard thresholds.",
+      "rejected_because": "The patch preserves anchor_changes false and retains the same verifier required outcomes and unchanged SOTA gate language."
+    },
+    {
+      "counterexample": "A4 converts rejected S9H evidence into O-causal or S10 evidence.",
+      "rejected_because": "Progress and evidence both state S9H remains incomplete; patch invalidates IO home-stickiness focused results as SOTA proof."
+    },
+    {
+      "counterexample": "A4 merely repeats rejected runtime micro-scheduling work.",
+      "rejected_because": "S9I must first import rejected candidates and reject non-novel or insufficient-headroom surfaces before S9J can run."
+    },
+    {
+      "counterexample": "A4 allows final completion before a future passing candidate.",
+      "rejected_because": "S10 transition is explicitly after S9J passes unchanged fixed SOTA thresholds; current verifier rejects completion."
+    }
+  ]
+}

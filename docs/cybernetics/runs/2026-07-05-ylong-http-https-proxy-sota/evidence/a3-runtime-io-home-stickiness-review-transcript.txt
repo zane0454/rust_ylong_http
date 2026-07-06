@@ -1,0 +1,60 @@
+Verdict: PASS / approve A3 for compilation to gen-003.
+
+Reviewer id: 019f364c-b59b-7700-a1ab-84a54b8d2666 (CODEX_THREAD_ID; no separate agent id was visible).
+
+Checked files:
+- /home/ender/.agents/skills/using-control-json/references/runtime-control-json-protocol.md
+- /home/ender/.agents/skills/references/transition-gate-protocol.md
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/run.control.json
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/gen-002/runtime.control.json
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/progress.jsonl tail around A3
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/amendments/gen-003-runtime-io-home-stickiness.patch.json
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/runtime-frontier-review.json
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/runtime-frontier-candidate-io-affinity-rejected.json
+- requirements.control.json
+
+Findings:
+- A3 preserves anchors. It does not change semantic base, required outcomes, verifier-required outcomes, hard SOTA thresholds, final Counterexample Gate, or writable authority. Real-client-path and causal evidence remain required for O-causal-performance-evidence.
+- A3 is a legitimate refinement from S9F rejection evidence. It narrows from rejected target-only IO enqueue affinity to the still-observed post-enqueue/first-local-poll migration counterexample. It is not a generic rerun of rejected worker-count, park/yield, block_on, dequeue, or benchmark-only knobs.
+- S9G/S9H are strong enough. S9G only satisfies O-sota-threshold-matrix; only S9H can satisfy O-causal-performance-evidence, and S10 remains gated until S9H passes focused gates and the unchanged canonical SOTA matrix.
+- Counterexample risk: A3 imports old performance-causality, sota-threshold-matrix, and real-client-path evidence as background. Its wording prevents using those alone as S9H completion, but the gen-003 review artifact should explicitly state imported evidence is background unless revalidated by a passing S9H candidate. This is not a blocking patch defect because A3 invalidates the rejected target-only evidence and current verifier/progress still blocks completion.
+- Required fixes before compilation: none.
+
+JSON-ready summary:
+{
+  "artifact_type": "amendment.counterexample_review",
+  "schema_version": "1.0.0",
+  "amendment_id": "A3-runtime-io-home-stickiness",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "019f364c-b59b-7700-a1ab-84a54b8d2666",
+    "id_source": "CODEX_THREAD_ID",
+    "name": "Codex Counterexample Gate reviewer"
+  },
+  "status": "pass",
+  "verdict": "approved",
+  "approved_for_compilation": true,
+  "required_fixes": [],
+  "checked_files": [
+    "/home/ender/.agents/skills/using-control-json/references/runtime-control-json-protocol.md",
+    "/home/ender/.agents/skills/references/transition-gate-protocol.md",
+    "run.control.json",
+    "gen-002/runtime.control.json",
+    "progress.jsonl",
+    "amendments/gen-003-runtime-io-home-stickiness.patch.json",
+    "evidence/runtime-frontier-review.json",
+    "evidence/runtime-frontier-candidate-io-affinity-rejected.json",
+    "requirements.control.json"
+  ],
+  "summary": "A3 is anchor-preserving and legitimately refines the rejected S9F target-only IO-affinity route into a narrower post-enqueue home-stickiness hypothesis. It keeps unchanged hard SOTA gates, real-client-path and causal evidence requirements, verifier gating, and final Counterexample Gate. S10 and goal_achieved remain forbidden until S9H passes focused and canonical unchanged gates plus final independent review.",
+  "counterexamples_considered": [
+    "A3 could weaken SOTA by accepting focused-only benchmark evidence: rejected because S9H requires unchanged canonical SOTA matrix before S10.",
+    "A3 could recycle rejected IO-affinity evidence: rejected because A3 invalidates target-only IO wake affinity and scheduler_enqueue_io_affine traces as SOTA proof.",
+    "A3 could become another generic micro-scheduling rerun: rejected because S9G/S9H constrain the candidate to post-enqueue steal/search migration before first local poll with behavior-preserving evidence.",
+    "A3 could bypass real-client-path causality: rejected because O-causal-performance-evidence still requires performance-causality, SOTA matrix, and real-client-path evidence."
+  ],
+  "notes": [
+    "Compilation should preserve the patch's invalidated_evidence list.",
+    "Imported historical evidence should be treated as background/narrowing evidence, not as S9H completion evidence unless the new S9H candidate revalidates the unchanged gates."
+  ]
+}

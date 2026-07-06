@@ -1,0 +1,123 @@
+{
+  "evidence_id": "a2-no-yield-parker-candidate-rejected",
+  "runtime_generation": "gen-000",
+  "recorded_at": "2026-07-06T11:21:17+08:00",
+  "branch": "codex/a2-runtime-readiness-s9",
+  "required_step": "S9-causal-performance-evidence",
+  "candidate": {
+    "name": "a2-no-yield-parker",
+    "classification": "runtime-readiness-candidate",
+    "hypothesis": "The high sched_yield count observed in ylong_base HTTPS proxy benchmarks may come from ylong_runtime::executor::Parker::park spinning with thread::yield_now before parking. Removing the fixed yield loop could reduce scheduler overhead and improve S9 performance without changing ylong_http_client protocol semantics.",
+    "temporary_changes": [
+      "Vendored Cargo.lock-pinned commonlibrary_rust_ylong_runtime checkout under ylong_http_client/vendor/commonlibrary_rust_ylong_runtime.",
+      "Temporarily patched workspace Cargo.toml to resolve ylong_runtime, ylong_io, and ylong_runtime_macros from the vendored runtime path.",
+      "Temporarily replaced Parker::park's fixed three-iteration thread::yield_now loop with a single NOTIFIED-to-IDLE compare_exchange check before normal driver/condvar parking.",
+      "Applied the Rust 1.96 join_set.rs dangerous_implicit_autorefs compatibility fix required to compile the vendored runtime."
+    ],
+    "source_changes_retained": false,
+    "rollback": {
+      "status": "rolled_back",
+      "cargo_toml_diff_bytes_after_rollback": 0,
+      "vendor_path_removed": true
+    }
+  },
+  "commands": {
+    "control_chain_validation_before_candidate": "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+    "approved_control_diff_check_before_candidate": "git diff -- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/run.control.json docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/review.control.json docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/gen-000/runtime.control.json | wc -c",
+    "cargo_tree_candidate": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-noyield-target cargo tree -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench -i ylong_runtime",
+    "cargo_test_candidate": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-noyield-target cargo test -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --bin https_proxy_bench -- --nocapture",
+    "cargo_build_release_candidate": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-noyield-target cargo build -p ylong_http_client --release --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+    "phase_timing_benchmark": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-a2-noyield-target/release/https_proxy_bench --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --baseline libcurl --phase-timing --result-dir docs/benchmarks/results/a2-no-yield-parker-candidate --figure-dir docs/benchmarks/results/a2-no-yield-parker-candidate",
+    "nonphase_benchmark": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-a2-noyield-target/release/https_proxy_bench --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --baseline libcurl --result-dir docs/benchmarks/results/a2-no-yield-parker-nonphase --figure-dir docs/benchmarks/results/a2-no-yield-parker-nonphase"
+  },
+  "command_results": {
+    "control_chain_validation_before_candidate": {
+      "ok": true,
+      "errors": []
+    },
+    "approved_control_diff_bytes_before_candidate": 0,
+    "cargo_tree_candidate": {
+      "ok": true,
+      "ylong_runtime_source": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime"
+    },
+    "cargo_test_candidate": {
+      "ok": true,
+      "tests_passed": 7,
+      "tests_failed": 0
+    },
+    "cargo_build_release_candidate": {
+      "ok": true
+    },
+    "phase_timing_benchmark": {
+      "ok": true,
+      "artifact_dir": "docs/benchmarks/results/a2-no-yield-parker-candidate"
+    },
+    "nonphase_benchmark": {
+      "ok": true,
+      "artifact_dir": "docs/benchmarks/results/a2-no-yield-parker-nonphase"
+    }
+  },
+  "metrics": {
+    "phase_timing": {
+      "throughput_geomean_ratio_vs_libcurl": 0.897105,
+      "throughput_min_ratio_vs_libcurl": 0.744724,
+      "p50_max_ratio_vs_libcurl": 1.378154,
+      "p95_max_ratio_vs_libcurl": 1.260711,
+      "cpu_us_per_request_geomean_ratio_vs_libcurl": 1.206449,
+      "cpu_us_per_request_max_ratio_vs_libcurl": 1.47179,
+      "rss_peak_bytes_max_ratio_vs_libcurl": 1.162963,
+      "rows": [
+        {
+          "requests": 200,
+          "throughput_ratio": 1.080666,
+          "p50_ratio": 0.937517,
+          "p95_ratio": 0.924065,
+          "cpu_ratio": 0.988945,
+          "rss_ratio": 1.162963
+        },
+        {
+          "requests": 1000,
+          "throughput_ratio": 0.744724,
+          "p50_ratio": 1.378154,
+          "p95_ratio": 1.260711,
+          "cpu_ratio": 1.47179,
+          "rss_ratio": 1.158558
+        }
+      ]
+    },
+    "nonphase": {
+      "throughput_geomean_ratio_vs_libcurl": 0.87023,
+      "throughput_min_ratio_vs_libcurl": 0.787078,
+      "p50_max_ratio_vs_libcurl": 1.283405,
+      "p95_max_ratio_vs_libcurl": 1.226589,
+      "cpu_us_per_request_geomean_ratio_vs_libcurl": 1.177754,
+      "cpu_us_per_request_max_ratio_vs_libcurl": 1.326677,
+      "rss_peak_bytes_max_ratio_vs_libcurl": 1.164854,
+      "rows": [
+        {
+          "requests": 200,
+          "throughput_ratio": 0.962167,
+          "p50_ratio": 0.994454,
+          "p95_ratio": 1.13716,
+          "cpu_ratio": 1.045549,
+          "rss_ratio": 1.157168
+        },
+        {
+          "requests": 1000,
+          "throughput_ratio": 0.787078,
+          "p50_ratio": 1.283405,
+          "p95_ratio": 1.226589,
+          "cpu_ratio": 1.326677,
+          "rss_ratio": 1.164854
+        }
+      ]
+    }
+  },
+  "decision": {
+    "verdict": "rejected",
+    "reason": "The candidate fails S9/SOTA gates in both phase-timing and non-phase focused runs. It does not deliver a throughput lead versus libcurl and regresses tail latency, CPU/request, and RSS. The temporary runtime patch is counterexample evidence only and must not be retained as a production or report claim.",
+    "goal_achieved": false,
+    "s9_complete": false,
+    "s10_allowed": false
+  }
+}

@@ -20,7 +20,7 @@
       "README/report narrative and evidence chain",
       "controlled-run progress/final evidence"
     ],
-    "what_counts_as_done": "All required outcomes and result paths are directly evidenced; verification commands pass; final report claims are constrained to proven evidence; no required outcome is offset by another outcome; SOTA verified additionally requires the predeclared HTTPS proxy core matrix to pass all hard thresholds against a fair same-model libcurl-library baseline: throughput geomean ratio >= 2.00 using the lower bound of the 95% confidence interval; every scenario throughput ratio >= 1.50 using the lower bound; every scenario p50 latency ratio <= 0.60 using the upper bound; every scenario p95 latency ratio <= 0.70 using the upper bound; at least one flagship scenario reaches throughput ratio >= 3.00 or p95 latency ratio <= 0.50; CPU time per successful request <= 0.80x libcurl-library geometric mean and <= 1.00x in every scenario; peak RSS <= 1.10x in every scenario; both clients have zero protocol, TLS, proxy, and request errors; at least 5 measured repetitions after warmup; coefficient of variation <= 5% or confidence intervals still satisfy every hard threshold; both clients use the same proxy/origin topology, TLS verification, mTLS material, request payload, concurrency, connection reuse, timeout policy, and response validation.",
+    "what_counts_as_done": "All required outcomes and result paths are directly evidenced; verification commands pass; final report claims are constrained to proven evidence; no required outcome is offset by another outcome; SOTA verified additionally requires the predeclared HTTPS proxy core matrix to pass the approved 20% hard threshold against a fair same-model libcurl-library baseline: throughput geometric-mean ratio >= 1.20; no predeclared core scenario below parity unless the requirements-approved benchmark method explicitly excludes it before measurement; both clients have zero protocol, TLS, proxy, and request errors; both clients use the same proxy/origin topology, TLS verification, mTLS material, request payload, concurrency, connection reuse, timeout policy, and response validation; the benchmark uses the real ylong_http_client public request path and a same-model libcurl-library baseline; causal/profile/ablation evidence rules out benchmark-only fast paths, disabled validation, startup overhead, pooling mismatch, and response-validation mismatch.",
     "final_answer_format": {
       "medium": "chat summary plus run-local JSON/evidence artifacts",
       "required_structure": [
@@ -32,10 +32,6 @@
         "What the User Approved status",
         "response-only next action"
       ]
-    },
-    "semantic_base": {
-      "id": "semantic-base:ylong-http-https-proxy-sota",
-      "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
     },
     "source_requirements": [
       {
@@ -77,12 +73,12 @@
         "blocks_goal_achieved_if_missing": true
       },
       {
-        "id": "SR-performance-threshold-above-contest-floor",
+        "id": "SR-performance-threshold-20-percent-sota",
         "source": {
           "kind": "user_message",
-          "quote": "20% 这个标准我觉得还是太低了。因为这只是比赛的一个门槛，而不是拿奖的门槛"
+          "quote": "SOTA按照20%,别的批准"
         },
-        "required_action": "Treat 20% as only the qualifying contest floor and define a stricter award/SOTA performance target.",
+        "required_action": "Treat a fair 20% HTTPS proxy performance improvement as the approved contest-context first-tier/SOTA numeric threshold while preserving benchmark fairness, real-client-path, causal evidence, correctness, TLS/mTLS, report, and Counterexample Gate requirements.",
         "requirement_type": "produce_empirical_measurement",
         "required_evidence_strength": "benchmark_result",
         "target_objects": [
@@ -91,8 +87,11 @@
           "final SOTA completion claim"
         ],
         "completion_checks": [
-          "A result around 20% improvement is not classified as SOTA verified.",
-          "SOTA/award-level performance requires substantially stronger cross-scenario evidence than the contest floor."
+          "This source requirement supersedes the earlier requirement that treated 20% as only the contest floor.",
+          "SOTA/award-level performance is classified by the approved 20% hard threshold, not by the superseded stricter 2x/3x frontier thresholds.",
+          "The numeric threshold is a fair same-model libcurl-library HTTPS proxy matrix throughput improvement of at least 1.20x with zero protocol/TLS/proxy/request errors.",
+          "A result below 20% improvement, a curl CLI-only result, or a mismatched-baseline result is not classified as SOTA verified.",
+          "Benchmark fairness, real-client-path evidence, causal performance evidence, correctness, TLS/mTLS, report accuracy, and final Counterexample Gate remain required."
         ],
         "blocks_goal_achieved_if_missing": true
       },
@@ -461,7 +460,7 @@
           "statement": "Current benchmark assets use a curl executable/process baseline and do not implement a same-process libcurl-library baseline.",
           "derived_from": {
             "source_requirements": [
-              "SR-performance-threshold-above-contest-floor",
+              "SR-performance-threshold-20-percent-sota",
               "SR-sota-hard-metrics",
               "SR-benchmark-fairness"
             ],
@@ -507,6 +506,29 @@
           "current_status": "satisfied",
           "evidence_ref": "evidence/source_observations.json#facts/F-causal-performance-evidence-gap",
           "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-sota-20-percent-human-reapproval",
+          "statement": "The user explicitly reapproved SOTA as the 20% performance threshold and approved the other required authority for recompile.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-performance-threshold-20-percent-sota",
+              "SR-sota-fixed-target"
+            ],
+            "required_outcomes": [
+              "O-sota-threshold-matrix"
+            ]
+          },
+          "why_needed": "Requirements and runtime recompile must treat the new 20% threshold as approved user meaning rather than an executor-invented weaker substitute.",
+          "acceptable_evidence": [
+            {
+              "kind": "human_decision",
+              "description": "Latest user message recorded in run-local evidence/human-reapproval-sota-20-percent.json."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/human-reapproval-sota-20-percent.json",
+          "blocks_design_or_plan_if_missing": true
         }
       ],
       "counterexample_review": {
@@ -514,8 +536,8 @@
         "verdict": "approved",
         "reviewer": {
           "kind": "subagent",
-          "id": "requirements-information-sufficiency-counterexample-reviewer-v3",
-          "evidence_ref": "evidence/information_sufficiency_counterexample_no_terminal_rerun.json"
+          "id": "sota-20-percent-recompile-reviewer-v1",
+          "evidence_ref": "evidence/information_sufficiency_sota_20_percent_recompile.json"
         },
         "checked_facts": [
           "F-repo-current-proxy-shape",
@@ -523,14 +545,15 @@
           "F-proxy-mtls-evidence-gap",
           "F-benchmark-labeling-gap",
           "F-libcurl-library-baseline-gap",
-          "F-causal-performance-evidence-gap"
+          "F-causal-performance-evidence-gap",
+          "F-sota-20-percent-human-reapproval"
         ],
         "checked_transformations": [
           "source_requirements->information_sufficiency_facts",
           "required_outcomes->information_sufficiency_facts",
           "information_sufficiency_facts->design_plan_entry",
-          "no_non_sota_terminal_status->information_sufficiency",
-          "no_planned_stop_exit->information_sufficiency"
+          "human_reapproval:SOTA_20_percent->requirements_revision",
+          "old_threshold_rejection->not_current_information_fact"
         ],
         "findings": []
       }
@@ -1031,21 +1054,21 @@
       },
       {
         "id": "O-sota-threshold-matrix",
-        "statement": "SOTA performance status is evaluated against the predeclared numeric hard-threshold matrix.",
+        "statement": "SOTA performance status is evaluated against the approved 20% numeric hard-threshold matrix.",
         "source_requirements": [
           "SR-sota-definition",
           "SR-sota-not-correctness-only",
-          "SR-performance-threshold-above-contest-floor",
+          "SR-performance-threshold-20-percent-sota",
           "SR-sota-hard-metrics",
           "SR-no-intermediate-terminal-statuses",
           "SR-no-planned-stop-exit",
           "SR-benchmark-fairness"
         ],
-        "completion_claim": "Completes SOTA-threshold evaluation by measuring every predeclared core scenario, computing every numeric threshold, and allowing only a SOTA verified completion claim when all thresholds pass; any failed or unavailable evidence remains unfinished required work.",
+        "completion_claim": "Completes SOTA-threshold evaluation by measuring every predeclared core scenario, computing the approved 20% numeric threshold, and allowing only a SOTA verified completion claim when the fair same-model libcurl-library matrix reaches at least 1.20x throughput geomean with zero errors; any failed or unavailable evidence remains unfinished required work.",
         "completed_target_objects": [
           "predeclared HTTPS proxy benchmark matrix",
           "libcurl-library baseline evidence",
-          "numeric SOTA threshold verdict"
+          "20% numeric SOTA threshold verdict"
         ],
         "claim_scope": {
           "required_contexts": [
@@ -1055,7 +1078,9 @@
           "forbidden_contexts": [
             "curl CLI-only benchmark",
             "single-scenario benchmark",
-            "benchmark results without confidence-bound threshold evaluation"
+            "mismatched libcurl baseline",
+            "benchmark results below the approved 1.20x throughput threshold",
+            "benchmark results without zero-error and same-model checks"
           ]
         },
         "blocks_goal_achieved_if_missing": true,
@@ -1063,22 +1088,22 @@
           {
             "evidence_id": "evidence.sota-threshold-matrix",
             "kind": "command_result",
-            "description": "Per-scenario libcurl-library benchmark comparison with throughput, p50, p95, CPU/request, RSS, errors, repetitions, confidence intervals, and pass/fail for every numeric hard threshold.",
+            "description": "Per-scenario libcurl-library benchmark comparison with throughput, errors, repetitions, same-model topology checks, and pass/fail verdict for the approved 20% numeric hard threshold.",
             "evidence_strength": "benchmark_result",
             "satisfies_source_requirements": [
               "SR-sota-definition",
               "SR-sota-not-correctness-only",
-              "SR-performance-threshold-above-contest-floor",
+              "SR-performance-threshold-20-percent-sota",
               "SR-sota-hard-metrics"
             ],
-            "evidence_claim": "The final SOTA performance status is classified by the approved numeric hard-threshold matrix.",
+            "evidence_claim": "The final SOTA performance status is classified by the approved 20% numeric hard-threshold matrix.",
             "completed_target_objects": [
               "requirements.control.json",
               "final SOTA completion claim",
               "benchmark methodology",
               "benchmark results",
               "SOTA definition",
-              "numeric SOTA verdict"
+              "20% numeric SOTA verdict"
             ],
             "claim_scope": {
               "applies_when": [
@@ -1086,7 +1111,7 @@
                 "remaining required work list when SOTA verified is not proven",
                 "after benchmark harness execution with required libcurl-library and topology resources available"
               ],
-              "proves": "Whether local evidence satisfies every numeric SOTA hard threshold.",
+              "proves": "Whether local evidence satisfies the approved 20% numeric SOTA hard threshold.",
               "does_not_prove": [
                 "Protocol correctness if tests fail",
                 "TLS/mTLS security behavior if endpoint tests are missing",
@@ -1098,11 +1123,11 @@
         "not_satisfied_by": [
           "A fair benchmark methodology without numeric pass/fail results.",
           "A curl CLI-only result.",
-          "A result around the 20% contest floor.",
-          "A report that replaces SOTA verified with a weaker terminal label instead of evaluating the SOTA hard-threshold matrix."
+          "A result below 1.20x throughput geometric-mean improvement.",
+          "A report that replaces SOTA verified with a weaker terminal label instead of evaluating the approved 20% SOTA matrix."
         ],
         "counterexample_gate": {
-          "completion_standard": "SOTA threshold evaluation is complete only when every predeclared core scenario and every numeric hard threshold has a measured pass/fail verdict; unavailable measurement resources require exact next actions and leave this outcome incomplete.",
+          "completion_standard": "SOTA threshold evaluation is complete only when every predeclared core scenario and the approved 20% numeric hard threshold has a measured pass/fail verdict; unavailable measurement resources require exact next actions and leave this outcome incomplete.",
           "required_checked_transformations": [
             "required_outcome:O-sota-threshold-matrix->completion_gate",
             "source_requirements:SOTA_metrics->benchmark_matrix",
@@ -1113,27 +1138,27 @@
             "evidence.sota-threshold-matrix"
           ],
           "reject_if": [
-            "SOTA verified is claimed when any numeric hard threshold fails or is unavailable.",
-            "20%+ contest-floor evidence is treated as SOTA verified evidence.",
+            "SOTA verified is claimed when the approved 20% numeric hard threshold fails or is unavailable.",
+            "A result below 1.20x throughput geometric-mean improvement is treated as SOTA verified evidence.",
             "Any predeclared core scenario is missing without keeping completion unclaimed.",
-            "Confidence-bound, repetition, CPU, RSS, or zero-error requirements are omitted from the verdict.",
+            "Zero-error, same-model libcurl-library, real-client-path, or response-validation requirements are omitted from the verdict.",
             "curl CLI evidence is used to satisfy libcurl-library hard thresholds."
           ]
         }
       },
       {
         "id": "O-causal-performance-evidence",
-        "statement": "SOTA performance advantage is causally tied to the real ylong_http_client HTTPS proxy implementation and not to benchmark-only shortcuts or mismatched baseline mechanics.",
+        "statement": "The approved 20% SOTA performance advantage is causally tied to the real ylong_http_client HTTPS proxy implementation and not to benchmark-only shortcuts or mismatched baseline mechanics.",
         "source_requirements": [
           "SR-sota-definition",
           "SR-sota-not-correctness-only",
-          "SR-performance-threshold-above-contest-floor",
+          "SR-performance-threshold-20-percent-sota",
           "SR-sota-hard-metrics",
           "SR-no-intermediate-terminal-statuses",
           "SR-no-planned-stop-exit",
           "SR-benchmark-fairness"
         ],
-        "completion_claim": "Completes causal SOTA performance validation by showing that benchmark traffic uses the production client path, that libcurl comparison uses the same model, and that the observed advantage is explained by profiling or ablation evidence rather than disabled semantics, startup overhead, or pooling mismatch.",
+        "completion_claim": "Completes causal 20% SOTA performance validation by showing that benchmark traffic uses the production client path, that libcurl comparison uses the same model, and that the observed >=1.20x advantage is explained by profiling or ablation evidence rather than disabled semantics, startup overhead, or pooling mismatch.",
         "completed_target_objects": [
           "benchmark harness",
           "ylong_http_client production proxy path",
@@ -1186,14 +1211,14 @@
           {
             "evidence_id": "evidence.performance-causality",
             "kind": "command_result",
-            "description": "Profiling, tracing, or ablation evidence explaining the performance delta and ruling out curl CLI startup overhead, pooling mismatch, disabled verification, missing mTLS, response-validation mismatch, and benchmark-only fast paths.",
+            "description": "Profiling, tracing, or ablation evidence explaining the >=1.20x performance delta and ruling out curl CLI startup overhead, pooling mismatch, disabled verification, missing mTLS, response-validation mismatch, and benchmark-only fast paths.",
             "evidence_strength": "benchmark_result",
             "satisfies_source_requirements": [
               "SR-sota-definition",
-              "SR-performance-threshold-above-contest-floor",
+              "SR-performance-threshold-20-percent-sota",
               "SR-sota-hard-metrics"
             ],
-            "evidence_claim": "The measured advantage is causally attributable to implementation choices under same-model semantics.",
+            "evidence_claim": "The measured >=1.20x advantage is causally attributable to implementation choices under same-model semantics.",
             "completed_target_objects": [
               "requirements.control.json",
               "final SOTA completion claim",
@@ -1224,7 +1249,7 @@
           "A performance explanation asserted only in prose without profiling, tracing, or ablation evidence."
         ],
         "counterexample_gate": {
-          "completion_standard": "Causal performance evidence is complete only when the real production client path and same-model baseline are shown, and profiling/tracing/ablation evidence rules out benchmark-only shortcuts and startup/pooling artifacts.",
+          "completion_standard": "Causal performance evidence is complete only when the real production client path and same-model baseline are shown, and profiling/tracing/ablation evidence rules out benchmark-only shortcuts and startup/pooling artifacts for the approved 20% performance claim.",
           "required_checked_transformations": [
             "required_outcome:O-causal-performance-evidence->completion_gate",
             "benchmark_harness->real_client_path",
@@ -1252,7 +1277,7 @@
           "SR-sota-fixed-target",
           "SR-sota-definition",
           "SR-sota-not-correctness-only",
-          "SR-performance-threshold-above-contest-floor",
+          "SR-performance-threshold-20-percent-sota",
           "SR-sota-hard-metrics",
           "SR-no-intermediate-terminal-statuses",
           "SR-no-planned-stop-exit"
@@ -1534,11 +1559,11 @@
       },
       {
         "path_id": "RP-sota-threshold-verdict",
-        "statement": "A reviewer can trace the SOTA verified completion claim to a per-scenario numeric hard-threshold verdict instead of a generic fair-benchmark claim or weaker terminal label.",
+        "statement": "A reviewer can trace the SOTA verified completion claim to the approved 20% per-matrix numeric hard-threshold verdict instead of a generic fair-benchmark claim or weaker terminal label.",
         "source_requirements": [
           "SR-sota-definition",
           "SR-sota-not-correctness-only",
-          "SR-performance-threshold-above-contest-floor",
+          "SR-performance-threshold-20-percent-sota",
           "SR-sota-hard-metrics",
           "SR-no-intermediate-terminal-statuses",
           "SR-no-planned-stop-exit",
@@ -1553,11 +1578,11 @@
         "path_steps": [
           "declare the core HTTPS proxy benchmark matrix",
           "run the same-model libcurl-library comparison, or request the exact missing live/resource access needed to run it",
-          "compute each numeric SOTA threshold with required confidence-bound rules",
+          "compute the approved 20% numeric SOTA threshold with required zero-error and same-model checks",
           "claim completion only if SOTA verified passes",
           "otherwise record remaining required work and keep completion unclaimed"
         ],
-        "completion_standard": "Path is complete only when completion is claimed exclusively as SOTA verified and no weaker terminal label can be emitted.",
+        "completion_standard": "Path is complete only when completion is claimed exclusively as SOTA verified under the approved 20% threshold and no weaker terminal label can be emitted.",
         "counterexample_gate": {
           "required_checked_transformations": [
             "result_path:RP-sota-threshold-verdict->required_steps",
@@ -1566,8 +1591,8 @@
             "numeric_threshold_verdict->goal_achieved_status"
           ],
           "reject_if": [
-            "The final answer says SOTA verified without a complete passing hard-threshold matrix.",
-            "The report claims first-tier/SOTA based only on correctness or 20%+ improvement.",
+            "The final answer says SOTA verified without a complete passing approved 20% hard-threshold matrix.",
+            "The report claims first-tier/SOTA based only on correctness, TLS, or a curl CLI/mismatched baseline benchmark.",
             "Unavailable libcurl-library evidence is hidden or converted into a weaker terminal label instead of remaining required work.",
             "A failed threshold is offset by passing protocol, TLS, or report evidence."
           ]
@@ -1575,11 +1600,11 @@
       },
       {
         "path_id": "RP-real-client-causal-performance",
-        "statement": "A reviewer can trace any SOTA performance claim from benchmark result back to the real ylong_http_client code path and causal evidence, not a benchmark-only shortcut or baseline mismatch.",
+        "statement": "A reviewer can trace any approved 20% SOTA performance claim from benchmark result back to the real ylong_http_client code path and causal evidence, not a benchmark-only shortcut or baseline mismatch.",
         "source_requirements": [
           "SR-sota-definition",
           "SR-sota-not-correctness-only",
-          "SR-performance-threshold-above-contest-floor",
+          "SR-performance-threshold-20-percent-sota",
           "SR-sota-hard-metrics",
           "SR-no-intermediate-terminal-statuses",
           "SR-no-planned-stop-exit",
@@ -1599,7 +1624,7 @@
           "rule out startup overhead, pooling mismatch, disabled verification, and benchmark-only fast paths",
           "claim completion only if SOTA verified is causally supported; otherwise record remaining required work and keep completion unclaimed"
         ],
-        "completion_standard": "Path is complete only when a SOTA performance claim cannot be produced without real-client-path evidence and causal performance evidence.",
+        "completion_standard": "Path is complete only when an approved 20% SOTA performance claim cannot be produced without real-client-path evidence and causal performance evidence.",
         "counterexample_gate": {
           "required_checked_transformations": [
             "result_path:RP-real-client-causal-performance->required_steps",
@@ -1679,7 +1704,7 @@
       ]
     },
     "counterexample_gate_contract": {
-      "quality_standard": "Independent review must try to disprove that all implementation, test, benchmark, and report evidence is enough to claim first-tier/SOTA completion in the contest context.",
+      "quality_standard": "Independent review must try to disprove that all implementation, test, benchmark, and report evidence is enough to claim approved 20% first-tier/SOTA completion in the contest context.",
       "required_checked_transformations": [
         "source_requirements->required_outcomes",
         "source_requirements->required_result_paths",
@@ -1721,10 +1746,14 @@
         "SOTA verified is claimed without a complete passing O-sota-threshold-matrix verdict.",
         "SOTA verified is claimed without real-client-path evidence and causal profiling, tracing, or ablation evidence.",
         "A benchmark-only fast path, curl CLI startup cost, connection reuse mismatch, disabled TLS verification, missing mTLS, or response-validation mismatch can explain the performance result.",
-        "A 20%+ contest-floor result is treated as SOTA verified.",
+        "A result below the approved 20% same-model libcurl-library threshold is treated as SOTA verified.",
         "A failed or unavailable numeric SOTA threshold is offset by correctness, TLS, benchmark fairness, or report evidence.",
         "All component tests pass but a required user result path still fails."
       ]
+    },
+    "semantic_base": {
+      "id": "semantic-base:ylong-http-https-proxy-sota",
+      "hash": "sha256:045c1e71e92b1249c51321c8ca0356eccc2708674995633135e6b993eff0c1ea"
     }
   }
 }

@@ -1,0 +1,140 @@
+{
+  "evidence_id": "evidence.a2-optimistic-readiness-candidate-rejected",
+  "runtime_generation": "gen-000",
+  "work_package_id": "WP-S9",
+  "required_step": "S9-causal-performance-evidence",
+  "status": "candidate_rejected",
+  "classification": "performance_counterexample",
+  "reviewed_at": "2026-07-06T11:05:41+08:00",
+  "branch": "codex/a2-runtime-readiness-s9",
+  "source_pin": {
+    "dependency": "ylong_runtime",
+    "cargo_lock_source": "git+https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c",
+    "local_cargo_checkout": "/home/ender/.cargo/git/checkouts/commonlibrary_rust_ylong_runtime-1c8d09d08daeacf5/0538ca7",
+    "local_checkout_head": "0538ca7b6635e0ac27cf7242d4c2dcf519ce0f5c"
+  },
+  "hypothesis": {
+    "name": "optimistic_nonblocking_io_before_readiness_wait",
+    "summary": "In ylong_runtime AsyncSource::poll_io, try the nonblocking socket operation once before waiting for reactor readiness; if it returns WouldBlock, fall back to the original poll_ready and clear_readiness loop.",
+    "expected_effect": "Avoid readiness-bit and waker registration overhead when nested TLS data is already available before the reactor readiness bit is observed.",
+    "semantic_constraint": "No HTTP proxy, CONNECT, TLS, mTLS, certificate verification, request validation, response validation, or libcurl baseline semantics may change."
+  },
+  "temporary_candidate_changes": [
+    "Copied the Cargo.lock-pinned commonlibrary_rust_ylong_runtime source into ylong_http_client/vendor/commonlibrary_rust_ylong_runtime for a reproducible branch-local test.",
+    "Temporarily added a workspace [patch.\"https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git\"] section pointing ylong_runtime, ylong_io, and ylong_runtime_macros to the vendored source.",
+    "Temporarily patched ylong_runtime/src/net/async_source.rs so AsyncSource::poll_io attempted f() once before the existing readiness-first loop.",
+    "Applied a minimal vendored-source compatibility fix in ylong_runtime/src/task/join_set.rs for Rust 1.96 dangerous_implicit_autorefs lint.",
+    "Removed the workspace patch and vendored runtime source after the benchmark rejected the candidate."
+  ],
+  "verification_commands": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-target cargo tree -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench -i ylong_runtime",
+      "result": "pass",
+      "output_summary": "Cargo resolved ylong_runtime, ylong_io, and ylong_runtime_macros from ylong_http_client/vendor/commonlibrary_rust_ylong_runtime during the temporary candidate test."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-target cargo test -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --bin https_proxy_bench -- --nocapture",
+      "result": "pass",
+      "output_summary": "7 https_proxy_bench unit tests passed with the temporary vendored runtime candidate after the join_set compatibility fix."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-target cargo build -p ylong_http_client --release --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass",
+      "output_summary": "Release benchmark binary built successfully with the temporary vendored runtime candidate."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-a2-target/release/https_proxy_bench --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --baseline libcurl --phase-timing --result-dir docs/benchmarks/results/a2-optimistic-readiness-candidate --figure-dir docs/benchmarks/results/a2-optimistic-readiness-candidate",
+      "result": "pass",
+      "output_summary": "Focused phase-timing HTTPS-over-HTTPS-proxy matrix completed with zero request/protocol/TLS/proxy errors, but failed performance thresholds."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-a2-target/release/https_proxy_bench --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --baseline libcurl --result-dir docs/benchmarks/results/a2-optimistic-readiness-nonphase --figure-dir docs/benchmarks/results/a2-optimistic-readiness-nonphase",
+      "result": "pass",
+      "output_summary": "Focused non-phase HTTPS-over-HTTPS-proxy matrix completed with zero request/protocol/TLS/proxy errors, but failed performance thresholds."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=/tmp/ylong-http-a2-postrollback-target cargo tree --offline -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench -i ylong_runtime",
+      "result": "pass",
+      "output_summary": "After rollback, Cargo resolved ylong_runtime from the original git pin https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b, not from a vendored patch."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=/tmp/ylong-http-a2-postrollback-target cargo test --offline -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --bin https_proxy_bench -- --nocapture",
+      "result": "pass",
+      "output_summary": "After rollback, 7 https_proxy_bench unit tests passed using the original git-pinned ylong_runtime dependency. Online final-state cargo verification had failed earlier only because gitee fetch timed out."
+    }
+  ],
+  "result_artifacts": [
+    "docs/benchmarks/results/a2-optimistic-readiness-candidate/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/a2-optimistic-readiness-candidate/https_proxy_bench_summary.csv",
+    "docs/benchmarks/results/a2-optimistic-readiness-candidate/https_proxy_bench_env.json",
+    "docs/benchmarks/results/a2-optimistic-readiness-nonphase/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/a2-optimistic-readiness-nonphase/https_proxy_bench_summary.csv",
+    "docs/benchmarks/results/a2-optimistic-readiness-nonphase/https_proxy_bench_env.json"
+  ],
+  "focused_phase_timing_vs_libcurl": {
+    "https_over_https_proxy_concurrency_8_single_client": {
+      "geomean": {
+        "throughput_rps_ratio": 0.8487966201375472,
+        "p50_us_max_ratio": 1.4103585657370519,
+        "p95_us_max_ratio": 1.324348016655709,
+        "cpu_us_per_request_ratio": 1.2836002440181478,
+        "rss_peak_bytes_max_ratio": 1.1774592189817104
+      },
+      "requests_200": {
+        "throughput_rps_ratio": 0.9927799989395563,
+        "p50_us_ratio": 1.002562131693569,
+        "p95_us_ratio": 0.9981389578163772,
+        "cpu_us_per_request_ratio": 1.0895091434071222,
+        "rss_peak_bytes_ratio": 1.1774592189817104,
+        "errors_sum": 0
+      },
+      "requests_1000": {
+        "throughput_rps_ratio": 0.7256952226338993,
+        "p50_us_ratio": 1.4103585657370519,
+        "p95_us_ratio": 1.324348016655709,
+        "cpu_us_per_request_ratio": 1.512267791797476,
+        "rss_peak_bytes_ratio": 1.1521418020679468,
+        "errors_sum": 0
+      }
+    }
+  },
+  "focused_nonphase_vs_libcurl": {
+    "https_over_https_proxy_concurrency_8_single_client": {
+      "geomean": {
+        "throughput_rps_ratio": 0.8232239643361664,
+        "p50_us_max_ratio": 1.4170524691358024,
+        "p95_us_max_ratio": 1.4298342541436464,
+        "cpu_us_per_request_ratio": 1.2970221213750865,
+        "rss_peak_bytes_max_ratio": 1.1692573402417963
+      },
+      "requests_200": {
+        "throughput_rps_ratio": 0.9624917540317258,
+        "p50_us_ratio": 1.063943161634103,
+        "p95_us_ratio": 0.9956860793097726,
+        "cpu_us_per_request_ratio": 1.103219696969697,
+        "rss_peak_bytes_ratio": 1.1692573402417963,
+        "errors_sum": 0
+      },
+      "requests_1000": {
+        "throughput_rps_ratio": 0.7041075340319388,
+        "p50_us_ratio": 1.4170524691358024,
+        "p95_us_ratio": 1.4298342541436464,
+        "cpu_us_per_request_ratio": 1.5248697860971365,
+        "rss_peak_bytes_ratio": 1.1676143386897404,
+        "errors_sum": 0
+      }
+    }
+  },
+  "counterexample_gate_observation": {
+    "summary": "The optimistic poll_io pre-read candidate increased work on the measured nested TLS path instead of removing the bottleneck. Both phase and non-phase focused runs were below libcurl throughput geomean and regressed median latency, tail latency, CPU/request, and RSS in the 1000-request row.",
+    "sota_effect": "fails: throughput is below libcurl, p50/p95 ratios exceed hard limits, CPU and RSS regress, and no flagship threshold is reached.",
+    "s9_effect": "does not provide causal production performance evidence for a winning ylong_http_client HTTPS proxy path."
+  },
+  "decision": {
+    "candidate": "reject",
+    "source_changes": "rolled_back",
+    "goal_achieved": false,
+    "s9_status_after_review": "active",
+    "next_action": "Do not reintroduce readiness-before-wait optimistic I/O as a production/SOTA candidate. Continue A2 only with a different runtime/readiness hypothesis or with evidence that contradicts this counterexample."
+  }
+}

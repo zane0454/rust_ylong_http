@@ -1,0 +1,187 @@
+{
+  "evidence_id": "evidence.runtime-sleeper-steal-candidates-rejected",
+  "runtime_generation": "gen-001",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "required_step": "S9D-runtime-canonical-matrix",
+  "status": "focused_candidates_rejected",
+  "verified_at": "2026-07-06T13:30:58+08:00",
+  "summary": "Two further ylong_runtime scheduler candidates were tested after the dequeue fast path. The first split normal task wakeups from search-handoff suppression in Sleeper::pop_worker(); the second additionally prevented stealing the only task from a local queue. Both passed their RED/GREEN unit tests, but focused HTTPS proxy benchmarks rejected them. Sleeper-only improved the HTTP-over-HTTPS-proxy 1000-request cell but regressed HTTPS-origin and proxy-mTLS cells; the stacked sleeper+single-steal candidate regressed the aggregate and HTTP cell. Both candidates were rolled back and are not S9D completion evidence.",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/sleeper.rs",
+      "summary": "Temporarily changed pop_worker(false) so searching workers did not suppress normal task wakeups; added ut_sleeper_pop_worker_wakes_idle_worker_for_normal_task_while_searching and ut_sleeper_pop_worker_keeps_search_handoff_suppressed_while_searching."
+    },
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/queue.rs",
+      "summary": "Temporarily prevented steal_into() from stealing a single available local task; added ut_inner_buffer_steal_into_keeps_single_task_local."
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_sleeper_red cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_sleeper_pop_worker_ --offline",
+      "result": "red",
+      "observed": "ut_sleeper_pop_worker_wakes_idle_worker_for_normal_task_while_searching failed with left None, right Some(1); search handoff suppression test passed."
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_sleeper_green cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_sleeper_pop_worker_ --offline",
+      "result": "pass",
+      "observed": "2 passed; 0 failed"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_sleeper_green_exec cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_executor_mng_info_ --offline",
+      "result": "pass",
+      "observed": "12 passed; 0 failed"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_sleeper_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --offline",
+      "result": "pass"
+    },
+    {
+      "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 1000 --repeats 3 --warmup 50 --concurrency 1 --bench-bin /tmp/ylong_http_target_s9d_sleeper_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-sleeper-candidate-focused --figure-dir docs/figures/ylong-runtime-sleeper-candidate-focused",
+      "result": "pass",
+      "observed": "Focused sleeper-only matrix completed with zero errors."
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_steal_red cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_inner_buffer_steal_into_keeps_single_task_local --offline",
+      "result": "red",
+      "observed": "assertion failed: !was_stolen"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_steal_green_all cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_inner_buffer_steal_into --offline",
+      "result": "pass",
+      "observed": "6 passed; 0 failed"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_steal_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --offline",
+      "result": "pass"
+    },
+    {
+      "command": "source ~/.cargo/env && python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model threaded --scenario all --requests 1000 --repeats 3 --warmup 50 --concurrency 1 --bench-bin /tmp/ylong_http_target_s9d_steal_release/release/https_proxy_bench --result-dir docs/benchmarks/results/ylong-runtime-sleeper-steal-candidate-focused --figure-dir docs/figures/ylong-runtime-sleeper-steal-candidate-focused",
+      "result": "pass",
+      "observed": "Focused sleeper+single-steal matrix completed with zero errors."
+    },
+    {
+      "command": "git diff -- ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/sleeper.rs ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/queue.rs",
+      "result": "pass",
+      "observed": "No diff after rollback."
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_post_reject_exec cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_executor_mng_info_ --offline",
+      "result": "pass",
+      "observed": "12 passed; 0 failed"
+    }
+  ],
+  "focused_sleeper_only": {
+    "result_dir": "docs/benchmarks/results/ylong-runtime-sleeper-candidate-focused",
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "concurrency": 1,
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.050425,
+      "throughput_min_ratio_ylong_over_libcurl": 0.839715,
+      "throughput_max_ratio_ylong_over_libcurl": 1.565919,
+      "p50_max_ratio_ylong_over_libcurl": 1.1875,
+      "p95_max_ratio_ylong_over_libcurl": 1.047337,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.8736,
+      "cpu_max_ratio_ylong_over_libcurl": 1.086842,
+      "rss_max_ratio_ylong_over_libcurl": 1.063063,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "scenario_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "throughput_rps_ratio": 1.565919,
+        "p50_us_ratio": 0.597633,
+        "p95_us_ratio": 0.985037,
+        "cpu_us_per_request_ratio": 0.684793,
+        "rss_peak_bytes_ratio": 1.063063
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "throughput_rps_ratio": 0.881443,
+        "p50_us_ratio": 0.931034,
+        "p95_us_ratio": 1.047337,
+        "cpu_us_per_request_ratio": 0.8958,
+        "rss_peak_bytes_ratio": 1.061009
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "throughput_rps_ratio": 0.839715,
+        "p50_us_ratio": 1.1875,
+        "p95_us_ratio": 1.020747,
+        "cpu_us_per_request_ratio": 1.086842,
+        "rss_peak_bytes_ratio": 1.060688
+      }
+    ]
+  },
+  "focused_sleeper_plus_single_steal": {
+    "result_dir": "docs/benchmarks/results/ylong-runtime-sleeper-steal-candidate-focused",
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "concurrency": 1,
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.881646,
+      "throughput_min_ratio_ylong_over_libcurl": 0.664199,
+      "throughput_max_ratio_ylong_over_libcurl": 1.025279,
+      "p50_max_ratio_ylong_over_libcurl": 1.410714,
+      "p95_max_ratio_ylong_over_libcurl": 1.265233,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.043443,
+      "cpu_max_ratio_ylong_over_libcurl": 1.311455,
+      "rss_max_ratio_ylong_over_libcurl": 1.0704,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "scenario_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "throughput_rps_ratio": 0.664199,
+        "p50_us_ratio": 1.410714,
+        "p95_us_ratio": 1.265233,
+        "cpu_us_per_request_ratio": 1.311455,
+        "rss_peak_bytes_ratio": 1.063592
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "throughput_rps_ratio": 1.025279,
+        "p50_us_ratio": 0.984026,
+        "p95_us_ratio": 1.058659,
+        "cpu_us_per_request_ratio": 0.919721,
+        "rss_peak_bytes_ratio": 1.0704
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "throughput_rps_ratio": 1.006335,
+        "p50_us_ratio": 0.995223,
+        "p95_us_ratio": 0.974834,
+        "cpu_us_per_request_ratio": 0.941884,
+        "rss_peak_bytes_ratio": 1.057304
+      }
+    ]
+  },
+  "hashes": {
+    "docs/benchmarks/results/ylong-runtime-sleeper-candidate-focused/https_proxy_bench_results.csv": "sha256:b0e916e0e9af1af50c215de93120060351275275dd13b8afa6635a8c57604d6c",
+    "docs/benchmarks/results/ylong-runtime-sleeper-candidate-focused/https_proxy_bench_summary.csv": "sha256:df36ba90cdca357dda017c82a8e3e047befa010e34a4527aa00656e33a36cc85",
+    "docs/benchmarks/results/ylong-runtime-sleeper-candidate-focused/https_proxy_bench_comparison.csv": "sha256:471153dbc6ac407c83d035b6c8f347485c50af95e0091afdaa5fe6ab4d395708",
+    "docs/benchmarks/results/ylong-runtime-sleeper-candidate-focused/https_proxy_bench_env.json": "sha256:c8fbbe3c8a121d54e805759b52c99e16a105bc7f13614ef2408b5b162a6c188c",
+    "docs/benchmarks/results/ylong-runtime-sleeper-steal-candidate-focused/https_proxy_bench_results.csv": "sha256:8cf8581db6d2d078842b7537539a181e76e77e95d07e6a9075ca562ff9a8dd19",
+    "docs/benchmarks/results/ylong-runtime-sleeper-steal-candidate-focused/https_proxy_bench_summary.csv": "sha256:6f5c9066ac574d76bcba148616d10c865e28e5946c002eb6e2cf47f975fde3f8",
+    "docs/benchmarks/results/ylong-runtime-sleeper-steal-candidate-focused/https_proxy_bench_comparison.csv": "sha256:e7dd63a6eeeadc0b969c96a7db9814dbafd9a40d5446292d29c6357426cde361",
+    "docs/benchmarks/results/ylong-runtime-sleeper-steal-candidate-focused/https_proxy_bench_env.json": "sha256:ab4b41f845b8c3e3694519561f283d4a632298dc43cecad7edff551d013e476e",
+    "/tmp/ylong_http_target_s9d_sleeper_release/release/https_proxy_bench": "sha256:6655724c9ed8d56dbfda36e4a02afc04d87da7d3416830edcd6e2135d5357194",
+    "/tmp/ylong_http_target_s9d_steal_release/release/https_proxy_bench": "sha256:295caf91263be0a57b6f0fb269ba17b2d0ea42f246ffddb2ed96abd94c37c722"
+  },
+  "decision": {
+    "candidate": "reject",
+    "source_changes": "rolled_back",
+    "reason": "Neither candidate reaches the focused threshold shape needed to justify a full S9D canonical run. Sleeper-only exposes a workload-specific HTTP fast path but still fails nested TLS/mTLS throughput and tail-latency gates; stacked single-task steal worsens aggregate throughput, HTTP latency, and CPU.",
+    "completion_effect": {
+      "S9D-runtime-canonical-matrix": "not complete",
+      "O-causal-performance-evidence": "not satisfied",
+      "S10-final-counterexample-gate": "not allowed",
+      "goal_achieved": false
+    }
+  }
+}

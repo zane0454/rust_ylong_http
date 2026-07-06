@@ -1,0 +1,130 @@
+{
+  "evidence_id": "a2-no-steal-sleep-candidate-rejected",
+  "runtime_generation": "gen-000",
+  "recorded_at": "2026-07-06T11:28:33+08:00",
+  "branch": "codex/a2-runtime-readiness-s9",
+  "required_step": "S9-causal-performance-evidence",
+  "candidate": {
+    "name": "a2-no-steal-sleep",
+    "classification": "runtime-scheduler-candidate",
+    "hypothesis": "The high clock_nanosleep count observed in ylong_base HTTPS proxy benchmarks may come from ylong_runtime::executor::MultiThreadScheduler::get_task_from_searching sleeping for 1 microsecond between failed steal attempts. Removing that fixed sleep could reduce scheduler/timer overhead without changing HTTP proxy, CONNECT, TLS, mTLS, or benchmark baseline semantics.",
+    "root_cause_signal": "strace-diagnostic shows ylong_http_client and libcurl have similar recvfrom/sendto counts, while ylong has much higher clock_nanosleep/futex/epoll_wait/sched_yield activity. Source review found thread::sleep(Duration::from_micros(1)) in the ylong_runtime steal-search path.",
+    "temporary_changes": [
+      "Vendored Cargo.lock-pinned commonlibrary_rust_ylong_runtime checkout under ylong_http_client/vendor/commonlibrary_rust_ylong_runtime.",
+      "Temporarily patched workspace Cargo.toml to resolve ylong_runtime, ylong_io, and ylong_runtime_macros from the vendored runtime path.",
+      "Temporarily removed thread::sleep(Duration::from_micros(1)) between get_task_from_searching steal attempts, leaving the same three steal attempts.",
+      "Applied the Rust 1.96 join_set.rs dangerous_implicit_autorefs compatibility fix required to compile the vendored runtime."
+    ],
+    "source_changes_retained": false,
+    "rollback": {
+      "status": "rolled_back",
+      "cargo_toml_diff_bytes_after_rollback": 0,
+      "cargo_lock_diff_bytes_after_rollback": 0,
+      "approved_control_diff_bytes_after_rollback": 0,
+      "vendor_path_removed": true
+    }
+  },
+  "commands": {
+    "cargo_tree_candidate": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-nostealsleep-target cargo tree -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench -i ylong_runtime",
+    "cargo_test_candidate": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-nostealsleep-target cargo test -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --bin https_proxy_bench -- --nocapture",
+    "cargo_build_release_candidate": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-a2-nostealsleep-target cargo build -p ylong_http_client --release --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+    "phase_timing_benchmark": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-a2-nostealsleep-target/release/https_proxy_bench --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --baseline libcurl --phase-timing --result-dir docs/benchmarks/results/a2-no-steal-sleep-candidate --figure-dir docs/benchmarks/results/a2-no-steal-sleep-candidate",
+    "nonphase_benchmark": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-a2-nostealsleep-target/release/https_proxy_bench --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --baseline libcurl --result-dir docs/benchmarks/results/a2-no-steal-sleep-nonphase --figure-dir docs/benchmarks/results/a2-no-steal-sleep-nonphase",
+    "postrollback_cargo_tree": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=/tmp/ylong-http-a2-nostealsleep-postrollback-target cargo tree --offline -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench -i ylong_runtime",
+    "postrollback_cargo_test": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=/tmp/ylong-http-a2-nostealsleep-postrollback-target cargo test --offline -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --bin https_proxy_bench -- --nocapture"
+  },
+  "command_results": {
+    "cargo_tree_candidate": {
+      "ok": true,
+      "ylong_runtime_source": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime"
+    },
+    "cargo_test_candidate": {
+      "ok": true,
+      "tests_passed": 7,
+      "tests_failed": 0
+    },
+    "cargo_build_release_candidate": {
+      "ok": true
+    },
+    "phase_timing_benchmark": {
+      "ok": true,
+      "artifact_dir": "docs/benchmarks/results/a2-no-steal-sleep-candidate"
+    },
+    "nonphase_benchmark": {
+      "ok": true,
+      "artifact_dir": "docs/benchmarks/results/a2-no-steal-sleep-nonphase"
+    },
+    "postrollback_cargo_tree": {
+      "ok": true,
+      "ylong_runtime_source": "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git#0538ca7b"
+    },
+    "postrollback_cargo_test": {
+      "ok": true,
+      "tests_passed": 7,
+      "tests_failed": 0
+    }
+  },
+  "metrics": {
+    "phase_timing": {
+      "throughput_geomean_ratio_vs_libcurl": 0.940901,
+      "throughput_min_ratio_vs_libcurl": 0.693566,
+      "p50_max_ratio_vs_libcurl": 1.474106,
+      "p95_max_ratio_vs_libcurl": 1.327233,
+      "cpu_us_per_request_geomean_ratio_vs_libcurl": 1.144755,
+      "cpu_us_per_request_max_ratio_vs_libcurl": 1.502771,
+      "rss_peak_bytes_max_ratio_vs_libcurl": 1.17936,
+      "rows": [
+        {
+          "requests": 200,
+          "throughput_ratio": 1.27644,
+          "p50_ratio": 0.873542,
+          "p95_ratio": 0.872232,
+          "cpu_ratio": 0.872032,
+          "rss_ratio": 1.169265
+        },
+        {
+          "requests": 1000,
+          "throughput_ratio": 0.693566,
+          "p50_ratio": 1.474106,
+          "p95_ratio": 1.327233,
+          "cpu_ratio": 1.502771,
+          "rss_ratio": 1.17936
+        }
+      ]
+    },
+    "nonphase": {
+      "throughput_geomean_ratio_vs_libcurl": 0.836509,
+      "throughput_min_ratio_vs_libcurl": 0.71073,
+      "p50_max_ratio_vs_libcurl": 1.432179,
+      "p95_max_ratio_vs_libcurl": 1.299942,
+      "cpu_us_per_request_geomean_ratio_vs_libcurl": 1.209575,
+      "cpu_us_per_request_max_ratio_vs_libcurl": 1.419334,
+      "rss_peak_bytes_max_ratio_vs_libcurl": 1.168758,
+      "rows": [
+        {
+          "requests": 200,
+          "throughput_ratio": 0.984547,
+          "p50_ratio": 1.003165,
+          "p95_ratio": 1.018986,
+          "cpu_ratio": 1.030816,
+          "rss_ratio": 1.168758
+        },
+        {
+          "requests": 1000,
+          "throughput_ratio": 0.71073,
+          "p50_ratio": 1.432179,
+          "p95_ratio": 1.299942,
+          "cpu_ratio": 1.419334,
+          "rss_ratio": 1.16774
+        }
+      ]
+    }
+  },
+  "decision": {
+    "verdict": "rejected",
+    "reason": "The candidate improves the small 200-request phase-timing row but fails S9/SOTA gates in both focused matrices. The 1000-request row has lower throughput than libcurl and worse p50, p95, CPU/request, and RSS. Removing the steal-search micro-sleep is therefore counterexample evidence only and must not be retained as a production or report claim.",
+    "goal_achieved": false,
+    "s9_complete": false,
+    "s10_allowed": false
+  }
+}

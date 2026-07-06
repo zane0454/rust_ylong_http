@@ -1,0 +1,105 @@
+{
+  "evidence_id": "evidence.runtime-periodic-candidate-rejected",
+  "runtime_generation": "gen-001",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "required_step": "S9D-runtime-canonical-matrix",
+  "status": "focused_candidate_rejected",
+  "verified_at": "2026-07-06T13:14:58+08:00",
+  "summary": "A ylong_runtime periodic driver-check candidate changed the worker periodic predicate from a bitmask expression to explicit 61-count modulo semantics and passed RED/GREEN unit tests plus executor manager tests. Focused HTTPS proxy benchmarks rejected the candidate: the non-phase 1000-request geomean throughput ratio was 0.899x with p95 max 1.602x and CPU geomean 1.043x; the phase diagnostic geomean throughput ratio was 0.787x with CPU geomean 1.132x. This candidate is not S9D evidence and was rolled back.",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/worker.rs",
+      "summary": "Temporarily extracted should_run_periodic_check() and changed worker periodic driver-check gating from bitmask to count % 61 == 0."
+    },
+    {
+      "file": "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/worker.rs",
+      "summary": "Added ut_worker_periodic_check_runs_only_on_interval_multiples; it failed before the candidate change and passed after it."
+    }
+  ],
+  "verification_commands": [
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_periodic_red cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_worker_periodic_check_runs_only_on_interval_multiples",
+      "result": "red",
+      "observed": "assertion failed: should_run_periodic_check(interval)"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_periodic_green cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_worker_periodic_check_runs_only_on_interval_multiples",
+      "result": "pass",
+      "observed": "1 passed; 0 failed"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_periodic_green cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/Cargo.toml -p ylong_runtime ut_executor_mng_info_",
+      "result": "pass",
+      "observed": "12 passed; 0 failed"
+    },
+    {
+      "command": "source ~/.cargo/env && CARGO_TARGET_DIR=/tmp/ylong_http_target_s9d_periodic_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --offline",
+      "result": "pass"
+    }
+  ],
+  "focused_non_phase": {
+    "result_dir": "docs/benchmarks/results/ylong-runtime-periodic-candidate-focused",
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "concurrency": 1,
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.8989611910804547,
+      "throughput_min_ratio_ylong_over_libcurl": 0.7196458426226604,
+      "throughput_max_ratio_ylong_over_libcurl": 1.234889782280195,
+      "p50_max_ratio_ylong_over_libcurl": 1.4418604651162792,
+      "p95_max_ratio_ylong_over_libcurl": 1.6020942408376964,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.0427686151104698,
+      "cpu_max_ratio_ylong_over_libcurl": 1.2153243950174681,
+      "rss_max_ratio_ylong_over_libcurl": 1.0631607481702359,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    }
+  },
+  "focused_phase": {
+    "result_dir": "docs/benchmarks/results/ylong-runtime-periodic-candidate-phase",
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "concurrency": 1,
+    "phase_timing": true,
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.7866125890084538,
+      "throughput_min_ratio_ylong_over_libcurl": 0.6990799806294244,
+      "p50_max_ratio_ylong_over_libcurl": 1.4751131221719456,
+      "p95_max_ratio_ylong_over_libcurl": 1.4204946996466432,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.1323932597026243,
+      "cpu_max_ratio_ylong_over_libcurl": 1.2258930249859012,
+      "rss_max_ratio_ylong_over_libcurl": 1.0646212326907412,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "response_read_us_per_request": {
+      "http-over-https-proxy": 60.507333333333335,
+      "https-over-https-proxy": 171.96333333333334,
+      "proxy-mtls-https-origin": 172.49833333333333
+    },
+    "response_read_polls_per_request": 2.0,
+    "response_read_pending_per_request": 1.0
+  },
+  "hashes": {
+    "docs/benchmarks/results/ylong-runtime-periodic-candidate-focused/https_proxy_bench_results.csv": "sha256:a4c7a2638c6c0e221602ef80273e7a9da0ae2724f5dad119445cfd33de441ddc",
+    "docs/benchmarks/results/ylong-runtime-periodic-candidate-focused/https_proxy_bench_summary.csv": "sha256:e0c9219d278e8ec1f0c57faef79f890cd8ab94e9792a69a79896471f26987045",
+    "docs/benchmarks/results/ylong-runtime-periodic-candidate-focused/https_proxy_bench_comparison.csv": "sha256:90fe24d35205eca93185af9081f3414d1b5a401385c64654e79a74e56d4c6e50",
+    "docs/benchmarks/results/ylong-runtime-periodic-candidate-phase/https_proxy_bench_results.csv": "sha256:2b56721051d37a8b0a7272261af36654cd598cdaabb26008051c87235a24aac3",
+    "docs/benchmarks/results/ylong-runtime-periodic-candidate-phase/https_proxy_bench_summary.csv": "sha256:973754d7daa125858621cd7b8399003ce84a8726b662e1809f974ccc03119ec2",
+    "docs/benchmarks/results/ylong-runtime-periodic-candidate-phase/https_proxy_bench_comparison.csv": "sha256:7d63dcdf8bfd06f1c5a08b1c2bd109803860cdae8a240cdf085b236decc931d1",
+    "/tmp/ylong_http_target_s9d_periodic_release/release/https_proxy_bench": "sha256:105fdefa190619afac89fb097ef0ff1c602dd786b9c4e1205b78ac2668ceaead"
+  },
+  "decision": {
+    "candidate": "reject",
+    "source_changes": "rolled_back",
+    "reason": "The candidate corrects a suspicious predicate according to the local comment, but it materially reduces HTTPS proxy benchmark performance under the fixed SOTA gate.",
+    "completion_effect": {
+      "S9D-runtime-canonical-matrix": "not complete",
+      "O-causal-performance-evidence": "not satisfied",
+      "S10-final-counterexample-gate": "not allowed",
+      "goal_achieved": false
+    }
+  }
+}

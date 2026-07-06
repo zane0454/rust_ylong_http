@@ -1,0 +1,202 @@
+{
+  "evidence_id": "evidence.runtime-frontier-candidate-io-affinity-rejected",
+  "runtime_generation": "gen-002",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "required_step": "S9F-runtime-frontier-candidate",
+  "status": "focused_candidate_rejected",
+  "recorded_at": "2026-07-06T15:24:30+08:00",
+  "candidate": {
+    "name": "ylong_runtime IO-readiness worker-affine enqueue",
+    "selected_surface": "ylong_runtime_io_wake_worker_affinity",
+    "basis": "S9E allowed only the IO readiness wake worker-locality surface. The S9F red diagnostic showed 89 complete IO-readiness wake/enqueue/next-poll chains and 22 locality mismatches in the HTTPS-over-HTTPS-proxy slow path.",
+    "hypothesis": "For task_wake_enqueue events caused by IO readiness, enqueueing the task back to the worker that last polled it may reduce wake-to-next-poll delay and avoid scheduler search/steal overhead without changing HTTP proxy, CONNECT, TLS, mTLS, libcurl baseline, or request/response semantics.",
+    "temporary_source_changes": [
+      "Added a Header last-worker atomic slot and recorded the current worker at task_poll_enter.",
+      "Added a same-runtime FIFO-only scheduler path for wake_origin=io_readiness that targeted the task's last-poll worker local queue when it had capacity.",
+      "Added runtime trace event scheduler_enqueue_io_affine and analyzer support for the new event."
+    ],
+    "source_changes_retained": false,
+    "rollback": {
+      "status": "rolled_back_after_focused_rejection",
+      "retained": [
+        "Opt-in runtime trace instrumentation from the red diagnostic.",
+        "Trace analyzer support for scheduler_enqueue_io_affine so saved candidate traces remain analyzable."
+      ],
+      "removed": [
+        "Header last-worker state.",
+        "task_poll_enter last-worker recording.",
+        "IO-readiness worker-affine production enqueue path.",
+        "Candidate-only runtime unit tests."
+      ]
+    },
+    "candidate_source_hashes_before_rollback": {
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/raw.rs": "sha256:b1084c2b62f64865649d213267789c030bb384bec77b25b7e11a04e2f4d7279d",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/task_handle.rs": "sha256:2fefc4230f151c785bbb764ed9fc75704ed3263759d44f87b13f7da4f4e6e1a8",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs": "sha256:bfa005b2ce67abd0b2b5fefcc0d4b05d54e90568a0deb9745921b2f043079e2f"
+    },
+    "post_rollback_source_hashes": {
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/raw.rs": "sha256:dd3261015be39ba8f26aa911a38099b9bdc6d03ff87f2b39c3d74b604b131ebe",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/task/task_handle.rs": "sha256:ecf923fa0aa82ad2dc973736725f46420113e02a9f2c5b3930f8c7985e69c790",
+      "ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/src/executor/async_pool.rs": "sha256:8498b376c00f4fa26dd55329dba3966b0b5561adce26cef533cd8dd1575e29d4"
+    }
+  },
+  "red_green_verification": [
+    {
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml task_header_tracks_last_poll_worker --features net,sync,fs,macros,time",
+      "red": "failed before implementation with missing Header::last_worker and Header::record_last_worker",
+      "green": "passed after adding the temporary Header last-worker state"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml ut_io_readiness_enqueue_prefers_last_poll_worker --features net,sync,fs,macros,time",
+      "red": "failed before implementation because the task was enqueued to worker 0 instead of its last-poll worker 1",
+      "green": "passed after adding the temporary IO-readiness worker-affine enqueue path"
+    },
+    {
+      "command": "python3 docs/benchmarks/test_runtime_frontier_trace.py",
+      "red": "failed before analyzer update because scheduler_enqueue_io_affine was ignored",
+      "green": "passed after analyzer recognized scheduler_enqueue_io_affine"
+    }
+  ],
+  "pre_benchmark_verification": [
+    {
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml ut_io_readiness_enqueue_prefers_last_poll_worker --features net,sync,fs,macros,time",
+      "result": "pass"
+    },
+    {
+      "command": "python3 docs/benchmarks/test_runtime_frontier_trace.py",
+      "result": "pass: 2 tests"
+    },
+    {
+      "command": "python3 docs/benchmarks/test_run_https_proxy_bench.py",
+      "result": "pass: 17 tests"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo check -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "result": "pass with existing warnings"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo build -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io --release",
+      "result": "pass",
+      "binary_sha256": "3b2793c03d60a3be6b970cd9075155fd9532b92c64a8ab06f54ee7e34169d81a"
+    }
+  ],
+  "smoke_trace": {
+    "command": "YLONG_RUNTIME_TRACE_FILE=$PWD/docs/benchmarks/results/s9f-io-affinity-smoke/runtime-frontier-trace.jsonl python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin target/release/https_proxy_bench --scenario https-over-https-proxy --baseline libcurl --requests 32 --warmup 8 --repeats 1 --concurrency 8 --ylong-concurrency-model single-client --phase-timing --result-dir docs/benchmarks/results/s9f-io-affinity-smoke",
+    "result_dir": "docs/benchmarks/results/s9f-io-affinity-smoke",
+    "trace": {
+      "line_count": 477,
+      "scheduler_enqueue_io_affine_events": 89,
+      "io_wake_enqueue_chains": 89,
+      "complete_chains": 89,
+      "incomplete_chains": 0,
+      "locality_mismatches": 22,
+      "mismatch_ratio": 0.24719101123595505
+    },
+    "single_repeat_metrics": {
+      "throughput_rps_ratio_ylong_over_libcurl": 1.4025327989786165,
+      "p50_us_ratio_ylong_over_libcurl": 0.653448275862069,
+      "p95_us_ratio_ylong_over_libcurl": 0.8477806181733675,
+      "cpu_us_per_request_ratio_ylong_over_libcurl": 0.7550639275966097,
+      "rss_peak_bytes_ratio_ylong_over_libcurl": 1.1367265469061876,
+      "errors_sum": 0
+    },
+    "hashes": {
+      "docs/benchmarks/results/s9f-io-affinity-smoke/runtime-frontier-trace.jsonl": "sha256:84be7611d2d1a74a603e5b7c976b1810a9a5533da2b9b3285f4f1517734730fe",
+      "docs/benchmarks/results/s9f-io-affinity-smoke/runtime-frontier-analysis.json": "sha256:9569cb2549583f89fb6f273ad0e92cf9eb1d53e99cbc9223011d55135ec8e5fd",
+      "docs/benchmarks/results/s9f-io-affinity-smoke/https_proxy_bench_comparison.csv": "sha256:d3340b522f2fa86809ab68aef692cbcda8b6ec23225058690851e99902af88df"
+    }
+  },
+  "focused_benchmark": {
+    "command": "python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin target/release/https_proxy_bench --scenario all --baseline libcurl --requests 1000 --warmup 50 --repeats 3 --concurrency 8 --ylong-concurrency-model single-client --result-dir docs/benchmarks/results/s9f-io-affinity-focused",
+    "result_dir": "docs/benchmarks/results/s9f-io-affinity-focused",
+    "requests": 1000,
+    "repeats": 3,
+    "warmup": 50,
+    "concurrency": 8,
+    "baseline": "libcurl",
+    "ylong_concurrency_model": "single-client",
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.8936493002087945,
+      "throughput_min_ratio_ylong_over_libcurl": 0.7178252937857689,
+      "throughput_max_ratio_ylong_over_libcurl": 1.3584605887197156,
+      "p50_max_ratio_ylong_over_libcurl": 1.4527588813303098,
+      "p95_max_ratio_ylong_over_libcurl": 1.2777020447906524,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.5334860361843325,
+      "cpu_max_ratio_ylong_over_libcurl": 1.5720000258911409,
+      "rss_max_ratio_ylong_over_libcurl": 1.1636316337148804,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "scenario_ratios": [
+      {
+        "scenario": "http-over-https-proxy",
+        "throughput_rps_ratio": 1.3584605887197156,
+        "p50_us_ratio": 0.5861818181818182,
+        "p95_us_ratio": 1.0937293729372939,
+        "cpu_us_per_request_ratio": 1.5720000258911409,
+        "rss_peak_bytes_ratio": 1.1636316337148804
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "throughput_rps_ratio": 0.7318727178387743,
+        "p50_us_ratio": 1.4080279232111694,
+        "p95_us_ratio": 1.2777020447906524,
+        "cpu_us_per_request_ratio": 1.491228869826279,
+        "rss_peak_bytes_ratio": 1.1518924302788844
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "throughput_rps_ratio": 0.7178252937857689,
+        "p50_us_ratio": 1.4527588813303098,
+        "p95_us_ratio": 1.2551697229808816,
+        "cpu_us_per_request_ratio": 1.5383056149647272,
+        "rss_peak_bytes_ratio": 1.1475450283740438
+      }
+    ],
+    "hashes": {
+      "docs/benchmarks/results/s9f-io-affinity-focused/https_proxy_bench_summary.csv": "sha256:940404b65531a0e9b0a9867035db6cf2ee6967c459f80d0b7de8b67a9933761a",
+      "docs/benchmarks/results/s9f-io-affinity-focused/https_proxy_bench_comparison.csv": "sha256:3a66a8398630c84f94d2fde445e931acf5bdae960c10b6cfc2e74cafbc263083",
+      "docs/benchmarks/results/s9f-io-affinity-focused/https_proxy_bench_results.csv": "sha256:674b1ddf01504f92dcd29f39da4a05dd6e29f9d53c91e543717c09be5e761574",
+      "docs/benchmarks/results/s9f-io-affinity-focused/https_proxy_bench_env.json": "sha256:aa1a92fb947687004fb5b3eeab0e14e86905b2b08ed70871fa1eb7ea88981888"
+    }
+  },
+  "post_reject_verification": [
+    {
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml ut_executor_mng_info_local_fifo_enqueue_does_not_wake_another_worker --features net,sync,fs,macros,time",
+      "result": "pass"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml ut_executor_mng_info_dequeue_runs_yield_woken_local_task_immediately --features net,sync,fs,macros,time",
+      "result": "pass"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml runtime_trace_event_includes_worker_task_and_origin --features net,sync,fs,macros,time",
+      "result": "pass"
+    },
+    {
+      "command": "python3 docs/benchmarks/test_runtime_frontier_trace.py",
+      "result": "pass: 2 tests"
+    },
+    {
+      "command": "python3 docs/benchmarks/test_run_https_proxy_bench.py",
+      "result": "pass: 17 tests"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo check -p ylong_http_client --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "result": "pass with existing warnings"
+    },
+    {
+      "command": "source ~/.cargo/env && cargo test --manifest-path ylong_http_client/vendor/commonlibrary_rust_ylong_runtime/ylong_runtime/Cargo.toml --lib --features net,sync,fs,macros,time",
+      "result": "abort after existing executor tests with fatal runtime error: IO Safety violation: owned file descriptor already closed",
+      "classification": "not used as pass evidence"
+    }
+  ],
+  "decision": {
+    "verdict": "rejected",
+    "reason": "The candidate proved the enqueue target can be changed, but focused all-scenario benchmarks rejected it. It regressed HTTPS-over-HTTPS-proxy and proxy-mTLS-HTTPS-origin throughput below libcurl, worsened p50/p95, CPU/request, and RSS, and failed the S9F focused pass bar before canonical SOTA evaluation.",
+    "s9f_complete": false,
+    "s10_allowed": false,
+    "goal_achieved": false,
+    "not_a_completion_claim": true
+  }
+}

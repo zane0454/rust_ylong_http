@@ -1,0 +1,20 @@
+You are an independent Counterexample Gate reviewer for a cybernetic control-json run. Work in /home/ender/Workspace/rust_ylong_http. Do not edit files. Review the proposed amendment A3-runtime-io-home-stickiness in docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota.
+
+Read these files at minimum:
+- /home/ender/.agents/skills/using-control-json/references/runtime-control-json-protocol.md
+- /home/ender/.agents/skills/references/transition-gate-protocol.md
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/run.control.json
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/gen-002/runtime.control.json
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/progress.jsonl tail around A3
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/amendments/gen-003-runtime-io-home-stickiness.patch.json
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/runtime-frontier-review.json
+- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/runtime-frontier-candidate-io-affinity-rejected.json
+
+Review questions:
+1. Does A3 preserve anchors: semantic_base, source requirements, required outcomes, fixed SOTA hard thresholds, final Counterexample Gate, authority, and real-client-path standard?
+2. Is A3 a legitimate strategy refinement from the S9F rejection evidence, rather than a forbidden rerun of rejected micro-scheduling knobs or a benchmark-only substitute?
+3. Is the proposed S9G/S9H structure strong enough to prevent premature S10/goal_achieved claims?
+4. Are there counterexamples where A3 could pass its own wording while still weakening the original SOTA target or relying on invalidated evidence?
+5. Should A3 be approved, rejected, or amended before compilation to gen-003?
+
+Return a concise but concrete verdict. Include reviewer id as your agent id if visible, checked files, pass/fail verdict, required fixes if any, and a JSON-ready summary object I can use to materialize an amendment review artifact if you approve. Do not modify files.

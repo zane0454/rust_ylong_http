@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "verdict": "approved",
+  "smallest_counterexample": "none_found",
+  "required_fixes": [],
+  "checked_transformations_for_A": [
+    "source.supersedes removed -> schema-compliant source object",
+    "supersede semantics -> SR-performance-threshold-20-percent-sota.completion_checks[0]",
+    "user_instruction:SOTA按照20%,别的批准 -> F-sota-20-percent-human-reapproval",
+    "F-sota-20-percent-human-reapproval -> requirements revision, not executor-invented weaker standard"
+  ],
+  "checked_transformations_for_B": [
+    "gen-005 remains current active execution generation",
+    "S1-S7 evidence -> imported only for same baseline outcomes",
+    "0.991x canonical matrix / 1.106x candidate / rolled-back S9H -> invalidated as 20_percent SOTA proof",
+    "S8 -> fair same-model libcurl-library 20_percent threshold matrix",
+    "S9 -> real-client-path and causal performance evidence",
+    "S10 -> final runtime Counterexample Gate after S8/S9 pass",
+    "verifier.required_outcomes -> all blocking outcomes covered",
+    "non-SOTA terminal/planned stop -> not introduced"
+  ],
+  "reason": "Current control_chain_guard.py and validate_control_chain.py pass. The schema cleanup did not weaken the control semantics: the supersede meaning remains explicit in completion_checks[0], the approved 20 percent threshold is still bound to S8, old performance evidence remains invalidated, fairness/real-client/causal evidence and final Counterexample Gate remain required before goal_achieved."
+}
