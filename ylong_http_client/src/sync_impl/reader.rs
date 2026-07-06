@@ -116,13 +116,33 @@ impl<T: BodyProcessor> BodyReader<T> {
         // Use buffers up to 16K in size to read body.
         const TEMP_BUF_SIZE: usize = 16 * 1024;
 
-        let mut last = Instant::now();
         let mut buf = [0u8; TEMP_BUF_SIZE];
+        self.read_all_with_buf(body, &mut buf)
+    }
+
+    /// Reads all body data using a caller-provided temporary buffer.
+    ///
+    /// This is useful when the caller drains many response bodies and wants to
+    /// reuse the same buffer instead of allocating or zeroing a new temporary
+    /// buffer for each response.
+    pub fn read_all_with_buf<B: Body>(
+        &mut self,
+        body: &mut B,
+        buf: &mut [u8],
+    ) -> Result<(), HttpClientError> {
+        if buf.is_empty() {
+            return Err(HttpClientError::from_str(
+                ErrorKind::BodyDecode,
+                "Body read buffer is empty",
+            ));
+        }
+
+        let mut last = Instant::now();
         let mut written = 0usize;
 
         loop {
             let read_len = body
-                .data(&mut buf)
+                .data(&mut *buf)
                 .map_err(|e| HttpClientError::from_error(ErrorKind::BodyDecode, e))?;
 
             if read_len == 0 {
@@ -222,8 +242,26 @@ impl Default for DefaultBodyProcessor {
 mod ut_syn_reader {
     use ylong_http::body::TextBody;
 
-    use crate::sync_impl::{BodyReader, DefaultBodyProcessor};
+    use crate::sync_impl::{BodyProcessError, BodyProcessor, BodyReader, DefaultBodyProcessor};
     use crate::util::Timeout;
+
+    #[derive(Default)]
+    struct RecordingProcessor {
+        data: Vec<u8>,
+        progress_calls: usize,
+    }
+
+    impl BodyProcessor for &mut RecordingProcessor {
+        fn write(&mut self, data: &[u8]) -> Result<(), BodyProcessError> {
+            self.data.extend_from_slice(data);
+            Ok(())
+        }
+
+        fn progress(&mut self, _filled: usize) -> Result<(), BodyProcessError> {
+            self.progress_calls += 1;
+            Ok(())
+        }
+    }
 
     /// UT test cases for `BodyReader::read_timeout`.
     ///
@@ -250,5 +288,19 @@ mod ut_syn_reader {
         let mut body = TextBody::from_bytes(b"HelloWorld");
         let res = BodyReader::default().read_all(&mut body);
         assert!(res.is_ok());
+    }
+
+    #[test]
+    fn ut_body_reader_read_all_with_buf_uses_caller_buffer() {
+        let mut body = TextBody::from_bytes(b"HelloWorld");
+        let mut processor = RecordingProcessor::default();
+        let mut reader = BodyReader::new(&mut processor);
+        let mut buf = [0u8; 4];
+
+        let res = reader.read_all_with_buf(&mut body, &mut buf);
+
+        assert!(res.is_ok());
+        assert_eq!(processor.data, b"HelloWorld");
+        assert_ne!(processor.progress_calls, 0);
     }
 }

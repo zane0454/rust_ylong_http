@@ -511,6 +511,7 @@ where
     let mut latencies = Vec::with_capacity(requests);
     let mut rss_peak = current_rss_bytes().unwrap_or(0);
     let mut body_stats = BodyStats::default();
+    let mut body_buf = [0u8; 16 * 1024];
     for _ in 0..requests {
         let request_start = Instant::now();
         let request = ylong_http_client::sync_impl::Request::get(url)
@@ -518,7 +519,7 @@ where
         let mut response = client.request(request)?;
         let mut discard = SyncDiscard::default();
         ylong_http_client::sync_impl::BodyReader::new(&mut discard)
-            .read_all(response.body_mut())?;
+            .read_all_with_buf(response.body_mut(), &mut body_buf)?;
         body_stats.add(discard.body_stats);
         latencies.push(request_start.elapsed());
         if let Some(rss) = current_rss_bytes() {

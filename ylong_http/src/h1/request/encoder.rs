@@ -63,7 +63,7 @@
 use std::io::Read;
 
 use crate::error::{ErrorKind, HttpError};
-use crate::headers::{HeaderName, Headers, HeadersIntoIter, HeadersIter};
+use crate::headers::{HeaderName, HeaderValueIter, Headers, HeadersIntoIter, HeadersIter};
 use crate::request::method::Method;
 use crate::request::uri::Uri;
 use crate::request::RequestPart;
@@ -862,9 +862,14 @@ struct EncodeHeaderRef<'a> {
     status: Option<HeaderStatus>,
     name: Option<&'a HeaderName>,
     value: Vec<u8>,
+    value_iter: Option<HeaderValueIter<'a>>,
+    value_part: Option<&'a [u8]>,
     name_idx: usize,
     colon_idx: usize,
     value_idx: usize,
+    value_separator_idx: usize,
+    value_parts_written: usize,
+    value_needs_separator: bool,
 }
 
 impl<'a> EncodeHeaderRef<'a> {
@@ -875,10 +880,15 @@ impl<'a> EncodeHeaderRef<'a> {
                 inner: header_iter,
                 status: Some(HeaderStatus::Name),
                 name: Some(header_name),
-                value: header_value.to_vec(),
+                value: Vec::new(),
+                value_iter: Some(header_value.iter()),
+                value_part: None,
                 name_idx: 0,
                 colon_idx: 0,
                 value_idx: 0,
+                value_separator_idx: 0,
+                value_parts_written: 0,
+                value_needs_separator: false,
             }
         } else {
             Self {
@@ -886,9 +896,14 @@ impl<'a> EncodeHeaderRef<'a> {
                 status: Some(HeaderStatus::EmptyHeader),
                 name: None,
                 value: vec![],
+                value_iter: None,
+                value_part: None,
                 name_idx: 0,
                 colon_idx: 0,
                 value_idx: 0,
+                value_separator_idx: 0,
+                value_parts_written: 0,
+                value_needs_separator: false,
             }
         }
     }
@@ -934,17 +949,52 @@ impl<'a> EncodeHeaderRef<'a> {
     }
 
     fn encode_value(&mut self, buf: &mut [u8]) -> TokenResult<usize> {
-        let value = self.value.as_slice();
-        let mut task = WriteData::new(value, &mut self.value_idx, buf);
-        match task.write()? {
-            TokenStatus::Complete(size) => {
-                let crlf = EncodeCrlf::new();
-                self.status = Some(HeaderStatus::Crlf(crlf));
-                Ok(TokenStatus::Partial(size))
+        let mut written = 0usize;
+        loop {
+            if self.value_part.is_none() {
+                if let Some(part) = self.value_iter.as_mut().and_then(|iter| iter.next()) {
+                    self.value_part = Some(part.as_slice());
+                    self.value_idx = 0;
+                    self.value_separator_idx = 0;
+                    self.value_needs_separator = self.value_parts_written != 0;
+                } else {
+                    let crlf = EncodeCrlf::new();
+                    self.status = Some(HeaderStatus::Crlf(crlf));
+                    return Ok(TokenStatus::Partial(written));
+                }
             }
-            TokenStatus::Partial(size) => {
-                self.status = Some(HeaderStatus::Value);
-                Ok(TokenStatus::Partial(size))
+
+            if self.value_needs_separator {
+                let mut task =
+                    WriteData::new(b", ", &mut self.value_separator_idx, &mut buf[written..]);
+                match task.write()? {
+                    TokenStatus::Complete(size) => {
+                        written += size;
+                        self.value_needs_separator = false;
+                        self.value_separator_idx = 0;
+                    }
+                    TokenStatus::Partial(size) => {
+                        written += size;
+                        self.status = Some(HeaderStatus::Value);
+                        return Ok(TokenStatus::Partial(written));
+                    }
+                }
+            }
+
+            let value = self.value_part.unwrap();
+            let mut task = WriteData::new(value, &mut self.value_idx, &mut buf[written..]);
+            match task.write()? {
+                TokenStatus::Complete(size) => {
+                    written += size;
+                    self.value_part = None;
+                    self.value_idx = 0;
+                    self.value_parts_written += 1;
+                }
+                TokenStatus::Partial(size) => {
+                    written += size;
+                    self.status = Some(HeaderStatus::Value);
+                    return Ok(TokenStatus::Partial(written));
+                }
             }
         }
     }
@@ -955,10 +1005,15 @@ impl<'a> EncodeHeaderRef<'a> {
                 if let Some((header_name, header_value)) = self.inner.next() {
                     self.status = Some(HeaderStatus::Name);
                     self.name = Some(header_name);
-                    self.value = header_value.to_vec();
+                    self.value.clear();
+                    self.value_iter = Some(header_value.iter());
+                    self.value_part = None;
                     self.name_idx = 0;
                     self.colon_idx = 0;
                     self.value_idx = 0;
+                    self.value_separator_idx = 0;
+                    self.value_parts_written = 0;
+                    self.value_needs_separator = false;
                     Ok(TokenStatus::Partial(size))
                 } else {
                     Ok(TokenStatus::Complete(size))
@@ -1035,7 +1090,7 @@ impl Default for RequestEncoder {
 
 #[cfg(test)]
 mod ut_request_encoder {
-    use super::{RequestEncoder, RequestRefEncoder};
+    use super::{EncodeHeaderRef, RequestEncoder, RequestRefEncoder};
     use crate::request::{Request, RequestBuilder};
 
     fn encode_to_vec<E>(mut encode: E) -> Vec<u8>
@@ -1220,5 +1275,21 @@ mod ut_request_encoder {
         assert!(std::str::from_utf8(&borrowed_absolute)
             .unwrap()
             .contains("accept:text/html, application/json\r\n"));
+    }
+
+    #[test]
+    fn ut_request_ref_header_encoder_does_not_prebuffer_header_value() {
+        let request = RequestBuilder::new()
+            .method("GET")
+            .url("http://www.example.com/path")
+            .version("HTTP/1.1")
+            .header("accept", "text/html")
+            .body(())
+            .unwrap();
+        let (part, _) = request.into_parts();
+
+        let encoder = EncodeHeaderRef::new(&part.headers);
+
+        assert!(encoder.value.is_empty());
     }
 }
