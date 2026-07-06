@@ -1808,6 +1808,8 @@ def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
         .sort_values(["requests", "client"])
     )
     requests = sorted(df["requests"].unique())
+    request_labels = [str(item) for item in requests]
+    request_positions = {request: index for index, request in enumerate(requests)}
     baseline = "libcurl" if "libcurl" in set(df["client"]) else "curl_cli"
     ylong_candidate = (
         "ylong_http_client"
@@ -1831,10 +1833,11 @@ def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
         if item in set(df["client"])
     ]:
         part = summary[summary["client"] == client]
+        x = part["requests"].map(request_positions)
         axes[0].errorbar(
-            part["requests"],
-            part["latency_mean"],
-            yerr=part["latency_std"].fillna(0),
+            x,
+            part["latency_mean"] * 1000.0,
+            yerr=part["latency_std"].fillna(0) * 1000.0,
             color=colors[client],
             marker=markers[client],
             linewidth=1.8,
@@ -1843,9 +1846,9 @@ def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
             label=labels[client],
         )
         axes[1].errorbar(
-            part["requests"],
-            part["throughput_mean"],
-            yerr=part["throughput_std"].fillna(0),
+            x,
+            part["throughput_mean"] / 1000.0,
+            yerr=part["throughput_std"].fillna(0) / 1000.0,
             color=colors[client],
             marker=markers[client],
             linewidth=1.8,
@@ -1854,20 +1857,15 @@ def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
             label=labels[client],
         )
 
-    axes[0].set_xscale("log")
-    axes[0].set_yscale("log")
-    axes[0].set_xticks(requests)
-    axes[0].get_xaxis().set_major_formatter(plt.ScalarFormatter())
+    axes[0].set_xticks(range(len(requests)), request_labels)
     axes[0].set_xlabel("Requests")
-    axes[0].set_ylabel("Latency / request (ms)")
+    axes[0].set_ylabel("Latency / request (us)")
     axes[0].grid(True, which="major", axis="both", color="#d9d9d9", linewidth=0.7)
     axes[0].legend(frameon=False, loc="best")
 
-    axes[1].set_xscale("log")
-    axes[1].set_xticks(requests)
-    axes[1].get_xaxis().set_major_formatter(plt.ScalarFormatter())
+    axes[1].set_xticks(range(len(requests)), request_labels)
     axes[1].set_xlabel("Requests")
-    axes[1].set_ylabel("Throughput (req/s)")
+    axes[1].set_ylabel("Throughput (kreq/s)")
     axes[1].grid(True, which="major", axis="both", color="#d9d9d9", linewidth=0.7)
 
     x = np.arange(len(improvement))
