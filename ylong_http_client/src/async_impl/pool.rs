@@ -42,7 +42,7 @@ use crate::util::progress::SpeedConfig;
 #[cfg(feature = "http3")]
 use crate::util::request::RequestArc;
 use crate::util::ConnInfo;
-#[cfg(feature = "http2")]
+#[cfg(any(feature = "http2", feature = "http3"))]
 use crate::ConnDetail;
 use crate::TimeGroup;
 
@@ -435,17 +435,17 @@ impl<S: AsyncRead + AsyncWrite + ConnInfo + Unpin + Send + Sync + 'static> Conns
     fn exist_h1_conn(&self, permit: WrappedSemPermit) -> H1ConnOption<Conn<S>> {
         let mut list = self.list.lock().unwrap();
         let mut conn = None;
-        let curr = take(&mut *list);
-        // TODO Distinguish between http2 connections and http1 connections.
-        for dispatcher in curr.into_iter() {
+        let mut idx = 0;
+        while idx < list.len() {
             // Discard invalid dispatchers.
-            if dispatcher.is_shutdown() {
+            if list[idx].is_shutdown() {
+                list.remove(idx);
                 continue;
             }
             if conn.is_none() {
-                conn = dispatcher.dispatch();
+                conn = list[idx].dispatch();
             }
-            list.push(dispatcher);
+            idx += 1;
         }
         match conn {
             Some(Conn::Http1(mut h1)) => {
@@ -455,6 +455,11 @@ impl<S: AsyncRead + AsyncWrite + ConnInfo + Unpin + Send + Sync + 'static> Conns
             }
             _ => H1ConnOption::None(permit),
         }
+    }
+
+    #[cfg(all(test, feature = "http1_1", feature = "ylong_base"))]
+    fn h1_list_capacity_for_test(&self) -> usize {
+        self.list.lock().unwrap().capacity()
     }
 
     #[cfg(feature = "http2")]
@@ -498,5 +503,105 @@ impl<S: AsyncRead + AsyncWrite + ConnInfo + Unpin + Send + Sync + 'static> Conns
             lock.push(dispatcher);
         }
         None
+    }
+}
+
+#[cfg(all(test, feature = "http1_1", feature = "ylong_base"))]
+mod tests {
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+    use std::pin::Pin;
+    use std::task::{Context, Poll};
+
+    use crate::runtime::{AsyncRead, AsyncWrite, ReadBuf};
+    use crate::util::dispatcher::http1::WrappedSemPermit;
+    use crate::util::dispatcher::Conn;
+    use crate::util::{ConnData, ConnInfo};
+    use crate::ConnProtocol;
+
+    use super::{Conns, H1ConnOption};
+
+    #[derive(Clone)]
+    struct TestStream {
+        conn_data: ConnData,
+    }
+
+    impl Default for TestStream {
+        fn default() -> Self {
+            let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 0);
+            let detail = crate::ConnDetail {
+                protocol: ConnProtocol::Tcp,
+                local: addr,
+                peer: addr,
+                addr: "127.0.0.1".to_string(),
+            };
+            Self {
+                conn_data: ConnData::builder().build(detail),
+            }
+        }
+    }
+
+    impl AsyncRead for TestStream {
+        fn poll_read(
+            self: Pin<&mut Self>,
+            _cx: &mut Context<'_>,
+            _buf: &mut ReadBuf<'_>,
+        ) -> Poll<std::io::Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+    }
+
+    impl AsyncWrite for TestStream {
+        fn poll_write(
+            self: Pin<&mut Self>,
+            _cx: &mut Context<'_>,
+            buf: &[u8],
+        ) -> Poll<std::io::Result<usize>> {
+            Poll::Ready(Ok(buf.len()))
+        }
+
+        fn poll_flush(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+
+        fn poll_shutdown(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+    }
+
+    impl ConnInfo for TestStream {
+        fn is_proxy(&self) -> bool {
+            self.conn_data.is_proxy()
+        }
+
+        fn conn_data(&self) -> ConnData {
+            self.conn_data.clone()
+        }
+    }
+
+    fn h1_permit(conns: &Conns<TestStream>) -> WrappedSemPermit {
+        ylong_runtime::block_on(conns.usable.acquire())
+    }
+
+    #[test]
+    fn ut_exist_h1_conn_preserves_list_capacity() {
+        let conns = Conns::<TestStream>::new(1, crate::util::progress::SpeedConfig::none());
+        let dispatcher = crate::util::dispatcher::ConnDispatcher::http1(TestStream::default());
+        let first = conns.dispatch_h1_conn(dispatcher, h1_permit(&conns));
+        drop(first);
+        {
+            let mut list = conns.list.lock().unwrap();
+            list.reserve(64);
+        }
+        let capacity = conns.h1_list_capacity_for_test();
+        assert!(capacity >= 64);
+
+        for _ in 0..8 {
+            let conn = match conns.exist_h1_conn(h1_permit(&conns)) {
+                H1ConnOption::Some(Conn::Http1(conn)) => conn,
+                _ => panic!("expected reusable HTTP/1 connection"),
+            };
+            drop(conn);
+            assert_eq!(conns.h1_list_capacity_for_test(), capacity);
+        }
     }
 }

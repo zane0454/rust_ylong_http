@@ -1,0 +1,41 @@
+{
+  "artifact_type": "information_sufficiency.counterexample_review.evidence",
+  "independent_review": true,
+  "status": "pass",
+  "verdict": "approved",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "requirements-information-sufficiency-counterexample-reviewer"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "id": "requirements-information-sufficiency-counterexample-reviewer",
+    "agent_id": "019f32ec-23b5-7633-894b-187053a4a21e",
+    "transcript_ref": "evidence/information_sufficiency_review_transcript.txt",
+    "transcript_hash": "sha256:304a8173cf22b9bc2227aba16f782f02ae73e49828a3d30ca854606e9d7eaa9b"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/information_sufficiency_review_prompt.txt",
+    "prompt_hash": "sha256:5d643e0d0e5ce2059fd96d60363cb5a6a7a4a64addd2cda5195c15795bbd9f1e",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json": "sha256:e059b9dd07017542df134d06034932892af8bf959b3afc504156ffc90f5d98b2"
+    }
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json": "sha256:e059b9dd07017542df134d06034932892af8bf959b3afc504156ffc90f5d98b2"
+  },
+  "checked_facts": [
+    "F-repo-current-proxy-shape",
+    "F-connect-parser-200-only",
+    "F-proxy-mtls-evidence-gap",
+    "F-benchmark-labeling-gap"
+  ],
+  "checked_transformations": [
+    "source_requirements->information_sufficiency_facts",
+    "required_outcomes->information_sufficiency_facts",
+    "information_sufficiency_facts->design_plan_entry"
+  ],
+  "findings": [],
+  "smallest_counterexample": null,
+  "review_summary": "No missing pre-design fact was found that would invalidate design or force orchestration to invent the SOTA evidence model. External contest/libcurl evidence remains a later evidence limitation, but the requirements explicitly downgrade unsupported external ranking or libcurl-library claims."
+}

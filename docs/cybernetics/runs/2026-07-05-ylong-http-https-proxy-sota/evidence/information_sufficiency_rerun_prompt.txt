@@ -1,0 +1,43 @@
+Run an independent requirements information sufficiency counterexample review for:
+docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json
+
+Reviewed artifact hash:
+- canonical requirements hash, command equivalent to `json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'))` then sha256:
+  sha256:bd110b6fc3f49f974bb7c7ff60358fb339df3265dbbc407ad7d8a9878d5a8e98
+
+Try to find missing facts that would make later design or plan invalid.
+Do not ask the user for permission to run this review; it is an internal requirements-analysis gate.
+
+Facts to challenge:
+- F-benchmark-labeling-gap: Current benchmark code uses a curl executable/config baseline while README text says curl/libcurl and presents very large local improvement percentages.
+  why needed: The benchmark/report work must correct baseline labeling and evidence scope before claiming SOTA performance.
+- F-causal-performance-evidence-gap: Current benchmark/report assets do not collect the causal performance evidence required for SOTA verified, including profiling/tracing/ablation data, p50/p95, CPU/request, RSS, confidence intervals, and proof that benchmark traffic cannot bypass the real client path.
+  why needed: Design and orchestration must allocate real-client-path and causal performance evidence instead of treating elapsed-time tables as enough for SOTA verified.
+- F-connect-parser-200-only: Current parse_tunnel_response accepts only status code 200 as tunnel success and treats other 2xx statuses as unsuccessful.
+  why needed: The first implementation work package must include a protocol fix and tests rather than treating CONNECT parsing as already complete.
+- F-libcurl-library-baseline-gap: Current benchmark assets use a curl executable/process baseline and do not implement a same-process libcurl-library baseline.
+  why needed: Design and orchestration must allocate libcurl-library baseline work or explicitly classify SOTA verified as unavailable; curl CLI evidence cannot satisfy the numeric SOTA hard thresholds.
+- F-proxy-mtls-evidence-gap: Current files expose proxy TLS/mTLS configuration paths and benchmark environment variables, but the inspected test surface does not yet provide hard proxy mTLS endpoint success/failure evidence.
+  why needed: Design and orchestration must allocate endpoint tests for proxy mTLS instead of accepting configuration APIs as sufficient evidence.
+- F-repo-current-proxy-shape: The current repository already contains HTTPS proxy support paths in util::proxy, async/sync connectors, README claims, and benchmark assets.
+  why needed: Design and orchestration must preserve existing implementation scope and target actual files instead of creating an abstract feature.
+
+Required transformations to check:
+- source_requirements->information_sufficiency_facts
+- required_outcomes->information_sufficiency_facts
+- information_sufficiency_facts->design_plan_entry
+
+Reject if:
+- A missing pre-design fact would change the approved target, make design invalid, or let orchestration invent the SOTA evidence model.
+- New SOTA hard-metric, libcurl-library, or causal-performance requirements lack pre-design facts needed before orchestration.
+- A fact currently marked satisfied lacks enough source-observation support for entering design.
+- The requirements can enter orchestration while still confusing curl CLI with libcurl library, correctness with SOTA, or elapsed-time tables with causal SOTA evidence.
+
+Return a concise JSON object with:
+- status: pass | fail
+- verdict: approved | needs_revision
+- checked_facts: array
+- checked_transformations: array
+- findings: array of objects with severity, claim, counterexample, affected_paths, suggested_repair
+- smallest_counterexample: string or null
+- summary: one paragraph

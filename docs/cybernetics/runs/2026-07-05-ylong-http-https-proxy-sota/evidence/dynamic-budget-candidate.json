@@ -1,0 +1,120 @@
+{
+  "evidence_id": "evidence.dynamic-budget-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "counterexample_fairness_correction_retained",
+  "verified_at": "2026-07-06T08:06:46+08:00",
+  "intent": "Match the single-public-Client ylong benchmark concurrency model more closely to libcurl multi by issuing a new request to a worker only after that worker completes its previous request, and fix global bench_tls_io aggregation for single-client concurrency.",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Adds SharedRequestBudget so single-client async benchmark workers dynamically claim one request at a time instead of receiving fixed split_work partitions."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Moves bench_tls_io collection for single-client async concurrency to the outer worker coordinator so global TLS counters are sampled once instead of once per worker and summed."
+    }
+  ],
+  "tests": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_dynamic_budget_red cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_shared_request_budget_issues_one_request_at_a_time_until_empty",
+      "observed": "red before implementation with E0433: could not find SharedRequestBudget"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_dynamic_budget_green cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_shared_request_budget_issues_one_request_at_a_time_until_empty",
+      "observed": "passed after SharedRequestBudget implementation"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_dynamic_budget_tests cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed 7 benchmark binary unit tests"
+    }
+  ],
+  "performance_matrix": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_dynamic_release/release/https_proxy_bench --result-dir docs/benchmarks/results/dynamic-budget-candidate --figure-dir docs/benchmarks/results/dynamic-budget-candidate",
+    "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_dynamic_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+    "result_dir": "docs/benchmarks/results/dynamic-budget-candidate",
+    "hashes": {
+      "/tmp/ylong_http_target_dynamic_release/release/https_proxy_bench": "3cf9cb45532f1e0276013b5596810c18bff77eb3cf0c45f929b9e333747fb651",
+      "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_results.csv": "61885803fac475acafa2808fe18b8e60cf4c6383707a229ad278e8494ea787e5",
+      "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_summary.csv": "7401592bda68447eab69284f474440cdd32da4b1af60700c12598f6eab2706be",
+      "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_comparison.csv": "3e6c43a34c7be95ae1df0a493898c04fd93ff65e3b332b6cae27046eaa602eba",
+      "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_env.json": "2a1a326d1031c22d56677fce8231dd45c91eba5b785d177639562577f1bdf2aa",
+      "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_raw.txt": "8c69dee0987b8d3b82525c3bf5f458d111aae5294c68949507e7010ac9832e2d",
+      "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_performance.png": "4617cf5f2855dc1b196c195207dc65bd1d699d979d46b0985e69e3ff61b5df00",
+      "docs/benchmarks/results/dynamic-budget-candidate/https_proxy_bench_performance.pdf": "088aa0be674bc9aa2a2b5543c7736af73af2aa579357c9a07c6aa1650d5bb65c"
+    },
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9883403969375312,
+      "throughput_min_ratio_ylong_over_libcurl": 0.6572881581262932,
+      "throughput_max_ratio_ylong_over_libcurl": 1.375472475985197,
+      "p50_max_ratio_ylong_over_libcurl": 1.5655905190028607,
+      "p95_max_ratio_ylong_over_libcurl": 1.3710357063650476,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.3758457391072858,
+      "cpu_max_ratio_ylong_over_libcurl": 1.856205764501754,
+      "rss_max_ratio_ylong_over_libcurl": 1.2089475045254718,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "worst_cells": [
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.6572881581262932,
+        "p50_ratio_ylong_over_libcurl": 1.5655905190028607,
+        "p95_ratio_ylong_over_libcurl": 1.3710357063650476,
+        "cpu_ratio_ylong_over_libcurl": 1.6324488603156047,
+        "rss_ratio_ylong_over_libcurl": 1.183490800596718
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.8278253597355583,
+        "p50_ratio_ylong_over_libcurl": 1.271192942079018,
+        "p95_ratio_ylong_over_libcurl": 1.0911883278940298,
+        "cpu_ratio_ylong_over_libcurl": 1.3734114830304256,
+        "rss_ratio_ylong_over_libcurl": 1.163080684596577
+      }
+    ]
+  },
+  "corrected_tlsio_matrix": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --phase-timing --bench-bin /tmp/ylong_http_target_dynamic_tlsio_release/release/https_proxy_bench --result-dir docs/benchmarks/results/dynamic-budget-tlsio-candidate --figure-dir docs/benchmarks/results/dynamic-budget-tlsio-candidate",
+    "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_dynamic_tlsio_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+    "result_dir": "docs/benchmarks/results/dynamic-budget-tlsio-candidate",
+    "hashes": {
+      "/tmp/ylong_http_target_dynamic_tlsio_release/release/https_proxy_bench": "f5768b42814b107ca9d6cf621d7d869dcd62be45ccc5a8a0173284dc5a3f40eb",
+      "docs/benchmarks/results/dynamic-budget-tlsio-candidate/https_proxy_bench_results.csv": "f07e2691b0d3a99e3facbd2c01b4aef9cb32d5b7f82c08304078597ba4ab1f86",
+      "docs/benchmarks/results/dynamic-budget-tlsio-candidate/https_proxy_bench_summary.csv": "a01ebba2d66b75b98de629dab4be3a5dfb887ce7f6c7f22b2b6e24caa92d32e1",
+      "docs/benchmarks/results/dynamic-budget-tlsio-candidate/https_proxy_bench_comparison.csv": "0f84f86be707c2304fb992a9a7a31062ac9e31198dbc18aabfc011c204ea15cb",
+      "docs/benchmarks/results/dynamic-budget-tlsio-candidate/https_proxy_bench_env.json": "0771c6ace95cb54d82a7e1781912b72d55998852d77e8af6baa35e1745399582",
+      "docs/benchmarks/results/dynamic-budget-tlsio-candidate/https_proxy_bench_raw.txt": "84f27e4b220175291dd80b4dfd4eb58e186befa551c4f441045688b7561b30d5",
+      "docs/benchmarks/results/dynamic-budget-tlsio-candidate/https_proxy_bench_performance.png": "5e7d4841ac402601467a770ff28940e60028a304384025530670224daa4643ad",
+      "docs/benchmarks/results/dynamic-budget-tlsio-candidate/https_proxy_bench_performance.pdf": "c9e3fdfde26eb614ea3f858bc3e999c1441559a8538698ae50c15e29340f8539"
+    },
+    "corrected_tls_io_per_request": {
+      "http-over-https-proxy-1000": {
+        "ssl_read_calls": 2.0,
+        "ssl_read_pending": 1.0,
+        "underlying_read_calls": 3.0,
+        "underlying_read_pending": 1.0
+      },
+      "https-over-https-proxy-1000": {
+        "ssl_read_calls": 5.0,
+        "ssl_read_pending": 2.0,
+        "underlying_read_calls": 6.0,
+        "underlying_read_pending": 2.0
+      },
+      "proxy-mtls-https-origin-1000": {
+        "ssl_read_calls": 5.0,
+        "ssl_read_pending": 2.0,
+        "underlying_read_calls": 6.0,
+        "underlying_read_pending": 2.0
+      }
+    },
+    "finding": "Corrected global TLS counter aggregation refutes the earlier inflated 38/15 nested TLS interpretation. Nested HTTPS-origin proxy scenarios still cost about 4-5x more response_read time than HTTP-over-HTTPS-proxy, but not because of repeated top-level response polls or a TLS call-count explosion."
+  },
+  "finding": "Dynamic request budgeting is a fairness correction for the benchmark harness and fixes a real bench_tls_io aggregation bug, but it is not a SOTA performance candidate. The no-diagnostic performance matrix still fails the fixed SOTA target with 0.988x throughput geomean, 0.657x worst throughput, p50/p95 regressions, 1.376x CPU/request geomean, and 1.209x max RSS.",
+  "retained_in_benchmark_harness": true,
+  "retained_in_production_client": false,
+  "sota_verified": false
+}

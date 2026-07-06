@@ -28,9 +28,9 @@ use crate::util::c_openssl::error::ErrorStack;
 #[cfg(feature = "__c_openssl")]
 use crate::util::c_openssl::ffi::ssl::SSL_CTX_ctrl;
 use crate::util::c_openssl::ffi::ssl::{
-    SSL_CTX_load_verify_locations, SSL_CTX_new, SSL_CTX_set_alpn_protos, SSL_CTX_set_cert_store,
-    SSL_CTX_set_cert_verify_callback, SSL_CTX_set_cipher_list, SSL_CTX_up_ref,
-    SSL_CTX_check_private_key, SSL_CTX_use_PrivateKey_file, SSL_CTX_use_certificate_chain_file,
+    SSL_CTX_check_private_key, SSL_CTX_load_verify_locations, SSL_CTX_new, SSL_CTX_set_alpn_protos,
+    SSL_CTX_set_cert_store, SSL_CTX_set_cert_verify_callback, SSL_CTX_set_cipher_list,
+    SSL_CTX_up_ref, SSL_CTX_use_PrivateKey_file, SSL_CTX_use_certificate_chain_file,
     SSL_CTX_use_certificate_file, SSL_CTX,
 };
 #[cfg(feature = "c_boringssl")]

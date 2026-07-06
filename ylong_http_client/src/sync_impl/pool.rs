@@ -13,7 +13,6 @@
 
 use std::error::Error;
 use std::io::{Read, Write};
-use std::mem::take;
 use std::sync::{Arc, Mutex};
 
 use ylong_http::request::uri::Uri;
@@ -77,16 +76,17 @@ impl<S: Read + Write + 'static> Conns<S> {
     {
         let mut list = self.list.lock().unwrap();
         let mut conn = None;
-        let curr = take(&mut *list);
-        for dispatcher in curr.into_iter() {
+        let mut idx = 0;
+        while idx < list.len() {
             // Discard invalid dispatchers.
-            if dispatcher.is_shutdown() {
+            if list[idx].is_shutdown() {
+                list.remove(idx);
                 continue;
             }
             if conn.is_none() {
-                conn = dispatcher.dispatch();
+                conn = list[idx].dispatch();
             }
-            list.push(dispatcher);
+            idx += 1;
         }
 
         if let Some(conn) = conn {
@@ -99,6 +99,43 @@ impl<S: Read + Write + 'static> Conns<S> {
             let conn = dispatcher.dispatch().unwrap();
             list.push(dispatcher);
             Ok(conn)
+        }
+    }
+
+    #[cfg(all(test, feature = "http1_1"))]
+    fn h1_list_capacity_for_test(&self) -> usize {
+        self.list.lock().unwrap().capacity()
+    }
+}
+
+#[cfg(all(test, feature = "http1_1"))]
+mod tests {
+    use std::io::Cursor;
+
+    use crate::util::dispatcher::ConnDispatcher;
+    use crate::util::progress::SpeedConfig;
+
+    use super::Conns;
+
+    #[test]
+    fn ut_conn_preserves_list_capacity() {
+        let conns = Conns::<Cursor<Vec<u8>>>::new(1, SpeedConfig::none());
+        {
+            let mut list = conns.list.lock().unwrap();
+            list.push(ConnDispatcher::http1(Cursor::new(Vec::new())));
+            list.reserve(64);
+        }
+        let capacity = conns.h1_list_capacity_for_test();
+        assert!(capacity >= 64);
+
+        for _ in 0..8 {
+            let conn = conns
+                .conn(|| -> Result<Cursor<Vec<u8>>, std::io::Error> {
+                    panic!("expected reusable HTTP/1 connection")
+                })
+                .expect("connection reuse failed");
+            drop(conn);
+            assert_eq!(conns.h1_list_capacity_for_test(), capacity);
         }
     }
 }

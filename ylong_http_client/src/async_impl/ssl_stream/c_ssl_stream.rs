@@ -16,6 +16,8 @@ use core::task::{Context, Poll};
 use core::{future, ptr, slice};
 use std::io::{self, Read, Write};
 
+#[cfg(feature = "bench_tls_io")]
+use crate::async_impl::ssl_stream::bench_tls_stats;
 use crate::async_impl::ssl_stream::{check_io_to_poll, Wrapper};
 use crate::c_openssl::verify::PinsVerifyInfo;
 use crate::runtime::{AsyncRead, AsyncWrite, ReadBuf};
@@ -103,7 +105,14 @@ where
                 let buf = buf.unfilled_mut();
                 slice::from_raw_parts_mut(buf.as_mut_ptr().cast::<u8>(), buf.len())
             };
-            match check_io_to_poll(s.read(slice))? {
+            #[cfg(feature = "bench_tls_io")]
+            bench_tls_stats::record_ssl_read_call();
+            let read_result = s.read(slice);
+            #[cfg(feature = "bench_tls_io")]
+            if matches!(&read_result, Err(e) if e.kind() == io::ErrorKind::WouldBlock) {
+                bench_tls_stats::record_ssl_read_pending();
+            }
+            match check_io_to_poll(read_result)? {
                 Poll::Ready(len) => {
                     #[cfg(feature = "tokio_base")]
                     unsafe {
@@ -126,7 +135,16 @@ where
     S: AsyncRead + AsyncWrite,
 {
     fn poll_write(self: Pin<&mut Self>, ctx: &mut Context, buf: &[u8]) -> Poll<io::Result<usize>> {
-        self.with_context(ctx, |s| check_io_to_poll(s.write(buf)))
+        self.with_context(ctx, |s| {
+            #[cfg(feature = "bench_tls_io")]
+            bench_tls_stats::record_ssl_write_call();
+            let write_result = s.write(buf);
+            #[cfg(feature = "bench_tls_io")]
+            if matches!(&write_result, Err(e) if e.kind() == io::ErrorKind::WouldBlock) {
+                bench_tls_stats::record_ssl_write_pending();
+            }
+            check_io_to_poll(write_result)
+        })
     }
 
     fn poll_flush(self: Pin<&mut Self>, ctx: &mut Context) -> Poll<io::Result<()>> {
@@ -169,5 +187,48 @@ fn check_result_to_poll<T>(r: Result<T, ssl::SslError>) -> Poll<Result<T, ssl::S
             SslErrorCode::WANT_READ | SslErrorCode::WANT_WRITE => Poll::Pending,
             _ => Poll::Ready(Err(e)),
         },
+    }
+}
+
+#[cfg(all(test, feature = "bench_tls_io"))]
+mod ut_tls_bench_stats {
+    use crate::tls_bench_stats_snapshot;
+
+    #[test]
+    fn ut_tls_bench_stats_delta_tracks_ssl_and_underlying_pending() {
+        let before = tls_bench_stats_snapshot();
+
+        crate::async_impl::ssl_stream::bench_tls_stats::set_enabled(true);
+        crate::async_impl::ssl_stream::bench_tls_stats::record_ssl_read_call();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_ssl_read_pending();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_underlying_read_call();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_underlying_read_pending();
+        crate::async_impl::ssl_stream::bench_tls_stats::set_enabled(false);
+
+        let after = tls_bench_stats_snapshot();
+        let delta = after.saturating_sub(before);
+
+        assert_eq!(delta.ssl_read_calls, 1);
+        assert_eq!(delta.ssl_read_pending, 1);
+        assert_eq!(delta.underlying_read_calls, 1);
+        assert_eq!(delta.underlying_read_pending, 1);
+    }
+
+    #[test]
+    fn ut_tls_bench_stats_disabled_by_default() {
+        crate::async_impl::ssl_stream::bench_tls_stats::set_enabled(false);
+        let before = tls_bench_stats_snapshot();
+
+        crate::async_impl::ssl_stream::bench_tls_stats::record_ssl_read_call();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_ssl_read_pending();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_ssl_write_call();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_ssl_write_pending();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_underlying_read_call();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_underlying_read_pending();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_underlying_write_call();
+        crate::async_impl::ssl_stream::bench_tls_stats::record_underlying_write_pending();
+
+        let after = tls_bench_stats_snapshot();
+        assert_eq!(after.saturating_sub(before), Default::default());
     }
 }

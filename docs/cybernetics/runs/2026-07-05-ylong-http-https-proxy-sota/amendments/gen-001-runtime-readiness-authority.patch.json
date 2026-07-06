@@ -1,0 +1,123 @@
+{
+  "amendment_id": "A1-runtime-readiness-s9",
+  "runtime_generation": "gen-000",
+  "parent_generation": "gen-000",
+  "proposed_generation": "gen-001",
+  "status": "proposed",
+  "reason": "S9 evidence has ruled out currently reviewed ylong_http_client-internal production levers as SOTA-scale causes. The strongest remaining causal pointer is ylong_runtime readiness/parking behavior around nested TLS I/O, which is outside gen-000 writable source authority.",
+  "target_anchor_changes": {
+    "semantic_base_change": false,
+    "required_outcomes_changed": false,
+    "numeric_hard_threshold_policy_changed": false,
+    "sota_fixed_target_changed": false
+  },
+  "authority": {
+    "authority_expanded": true,
+    "requires_human_reapproval": true,
+    "current_writable_source_scope": [
+      "ylong_http_client/",
+      "benches/",
+      "README.md",
+      "docs/"
+    ],
+    "requested_writable_source_scope": [
+      "ylong_http_client/",
+      "benches/",
+      "README.md",
+      "docs/",
+      "local pinned ylong_runtime source or an equivalent reviewed dependency patch"
+    ],
+    "rationale": "A production-grade fix for the remaining measured gap appears to require runtime scheduler/I/O readiness changes, not another HTTP client micro-optimization."
+  },
+  "affected_source_requirements": [
+    "SR-sota-fixed-target",
+    "SR-sota-hard-metrics",
+    "SR-sota-definition",
+    "SR-performance-threshold-above-contest-floor",
+    "SR-implementation-level-convergence"
+  ],
+  "affected_required_outcomes": [
+    "O-causal-performance-evidence",
+    "O-final-counterexample-gate"
+  ],
+  "affected_required_result_paths": [
+    "RP-real-client-causal-performance",
+    "RP-sota-threshold-verdict",
+    "RP-final-counterexample-to-sota-claim"
+  ],
+  "evidence_basis": [
+    "evidence/ylong-client-production-lever-hard-negative.json",
+    "evidence/s9-ylong-runtime-current-thread-candidate-rejected.json",
+    "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_comparison.csv"
+  ],
+  "proposed_runtime_changes": {
+    "strategy_kind": "amendment",
+    "imports_from_gen_000": [
+      "S1-current-audit",
+      "S2-protocol-correctness",
+      "S3-proxy-tls-mtls",
+      "S4-sync-async-proxy-semantics",
+      "S5-test-matrix",
+      "S6-benchmark-fairness",
+      "S7-report-evidence-chain",
+      "S8-sota-threshold-matrix",
+      "all rejected S9 candidate evidence as counterexamples"
+    ],
+    "new_or_refined_steps": [
+      {
+        "step_id": "S9A-runtime-source-pin",
+        "transition": "Pin and review the exact ylong_runtime source used by the ylong_base benchmark build without changing SOTA target semantics.",
+        "evidence": [
+          "evidence.runtime-source-pin"
+        ]
+      },
+      {
+        "step_id": "S9B-runtime-readiness-profile",
+        "transition": "Instrument or trace runtime readiness/parking around nested HTTPS-over-HTTPS-proxy I/O and show a causal gap relative to libcurl/tokio observations.",
+        "evidence": [
+          "evidence.runtime-readiness-profile"
+        ]
+      },
+      {
+        "step_id": "S9C-runtime-readiness-candidate",
+        "transition": "Implement a behavior-preserving runtime readiness/parking candidate and prove it does not change HTTP/TLS/proxy semantics.",
+        "evidence": [
+          "evidence.runtime-readiness-candidate"
+        ]
+      },
+      {
+        "step_id": "S9D-runtime-canonical-matrix",
+        "transition": "Rebuild and rerun the approved HTTPS proxy benchmark matrix with the runtime candidate, showing hard SOTA metrics and no p95/CPU/RSS regression.",
+        "evidence": [
+          "evidence.performance-causality",
+          "evidence.sota-threshold-matrix",
+          "evidence.real-client-path"
+        ]
+      },
+      {
+        "step_id": "S10-final-counterexample-gate",
+        "transition": "Run final counterexample review only after S9D passes the fixed SOTA thresholds.",
+        "evidence": [
+          "evidence.final-counterexample-review"
+        ]
+      }
+    ],
+    "required_result_artifacts": [
+      "evidence/runtime-source-pin.json",
+      "evidence/runtime-readiness-profile.json",
+      "evidence/runtime-readiness-candidate.json",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/ylong-runtime-readiness-candidate/https_proxy_bench_comparison.csv"
+    ],
+    "forbidden_substitutes": [
+      "Do not treat current-thread benchmark mode as a production optimization.",
+      "Do not treat ylong_http_client-internal hard-negative evidence as S9 pass evidence.",
+      "Do not run S10 before S9D passes the fixed thresholds."
+    ]
+  },
+  "review_required": {
+    "kind": "human",
+    "reason": "The proposal expands source authority beyond gen-000 writable paths and may require a local dependency patch or upstream runtime change."
+  }
+}

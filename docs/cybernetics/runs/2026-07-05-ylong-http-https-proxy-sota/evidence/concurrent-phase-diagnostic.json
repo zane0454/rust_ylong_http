@@ -1,0 +1,107 @@
+{
+  "evidence_id": "evidence.concurrent-phase-diagnostic",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "diagnostic_counterexample",
+  "verified_at": "2026-07-06T07:44:00+08:00",
+  "summary": "Concurrent phase timing was enabled for the fair single-client max-H1 model at concurrency=8. The run completed with zero errors and confirms the remaining SOTA failure is dominated by nested TLS response-read time in HTTPS-origin over HTTPS-proxy and proxy-mTLS HTTPS-origin cells, not by pool checkout or body drain.",
+  "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --phase-timing --bench-bin /tmp/ylong_http_target_concurrent_phase_release/release/https_proxy_bench --result-dir docs/benchmarks/results/concurrent-phase-diagnostic --figure-dir docs/benchmarks/results/concurrent-phase-diagnostic",
+  "benchmark_dataset": {
+    "result_files": [
+      "docs/benchmarks/results/concurrent-phase-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/concurrent-phase-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/concurrent-phase-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/concurrent-phase-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/concurrent-phase-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "binary": "/tmp/ylong_http_target_concurrent_phase_release/release/https_proxy_bench",
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "warmup_requests": 50,
+    "concurrency": 8,
+    "ylong_concurrency_model": "single-client",
+    "baseline": "same-process libcurl multi baseline",
+    "phase_timing": true,
+    "errors_sum": 0,
+    "hashes": {
+      "binary": "sha256:e9dc72779281a59b400333cee3610124b0280aceaf64ae2ec90f86cb90db4c79",
+      "results": "sha256:6e261b6768814f1d5f39cac34abac22a5046c3e9097ffab77fd1500ff5ac3d56",
+      "summary": "sha256:ae442c0d6e630fadd7b6f83f6cf6d95ade00a18de14c5cea157aae2ac972d27b",
+      "comparison": "sha256:6b15a4d6a36fb5b54e4dcbdbb4e80fb840b4d8bb6457860e5e706433b68d8600",
+      "env": "sha256:d2b1fbffc7aa7a86bfbd8ea0b4de730edf0f61d4fb04d7998ffed3c8381cd5ad",
+      "raw": "sha256:3d3963949e1078849c1491ceca44dbd243c59d0513b96f5889fd25b1f33c6d15"
+    }
+  },
+  "threshold_metrics": {
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.9603678539887224,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.6698230734413737,
+    "best_throughput_ratio_ylong_over_libcurl": 1.3390914053943366,
+    "p50_max_ratio_ylong_over_libcurl": 1.513285533530156,
+    "p95_max_ratio_ylong_over_libcurl": 1.3529672276350755,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.3883441396582206,
+    "cpu_max_ratio_ylong_over_libcurl": 1.6518652079131269,
+    "rss_max_ratio_ylong_over_libcurl": 1.195134575569358
+  },
+  "worst_cells": [
+    {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 1000,
+      "throughput_ratio_ylong_over_libcurl": 0.6698230734413737,
+      "p50_ratio_ylong_over_libcurl": 1.513285533530156,
+      "p95_ratio_ylong_over_libcurl": 1.3529672276350755,
+      "cpu_ratio_ylong_over_libcurl": 1.6518652079131269,
+      "rss_ratio_ylong_over_libcurl": 1.155511811023622
+    },
+    {
+      "scenario": "https-over-https-proxy",
+      "requests": 1000,
+      "throughput_ratio_ylong_over_libcurl": 0.6776442742728576,
+      "p50_ratio_ylong_over_libcurl": 1.4933333333333334,
+      "p95_ratio_ylong_over_libcurl": 1.3046991282160323,
+      "cpu_ratio_ylong_over_libcurl": 1.5791963631411359,
+      "rss_ratio_ylong_over_libcurl": 1.1638937174074995
+    }
+  ],
+  "phase_findings": [
+    {
+      "scenario": "https-over-https-proxy",
+      "requests": 1000,
+      "request_execute_us_per_request": 1276.8746666666668,
+      "response_read_us_per_request": 1214.2326666666668,
+      "response_head_us_per_request": 1220.4546666666668,
+      "pool_checkout_us_per_request": 3.1996666666666664,
+      "body_drain_us_per_request": 1.523,
+      "pre_read_bytes_per_request": 4096.0
+    },
+    {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 1000,
+      "request_execute_us_per_request": 1238.7616666666668,
+      "response_read_us_per_request": 1175.744,
+      "response_head_us_per_request": 1181.8993333333333,
+      "pool_checkout_us_per_request": 3.1666666666666665,
+      "body_drain_us_per_request": 1.524,
+      "pre_read_bytes_per_request": 4096.0
+    },
+    {
+      "scenario": "http-over-https-proxy",
+      "requests": 1000,
+      "request_execute_us_per_request": 257.9146666666667,
+      "response_read_us_per_request": 225.18866666666665,
+      "response_head_us_per_request": 228.60566666666665,
+      "pool_checkout_us_per_request": 1.707,
+      "body_drain_us_per_request": 0.813,
+      "pre_read_bytes_per_request": 4096.0
+    }
+  ],
+  "causal_conclusion": [
+    "At concurrency=8, response_read accounts for about 95 percent of ylong request_execute time in the HTTPS-origin proxy cells.",
+    "pool_checkout remains about 3us/request in the failing HTTPS-origin cells, so the remaining bottleneck is not connection-pool checkout.",
+    "body_drain is about 1.5us/request and each response is fully pre-read, so the remaining bottleneck is before body drain.",
+    "The next implementation candidate should target the nested TLS response-read path or runtime scheduling around it, not CONNECT parsing, request formatting, pool checkout, or body-drain storage."
+  ]
+}

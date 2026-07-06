@@ -12,10 +12,17 @@
 // limitations under the License.
 
 use std::io::{Read, Write};
+use std::net::{TcpStream, ToSocketAddrs};
 
 use ylong_http::request::uri::Uri;
 
 use crate::util::config::ConnectorConfig;
+
+fn connect_tcp<A: ToSocketAddrs>(addr: A) -> std::io::Result<TcpStream> {
+    let stream = TcpStream::connect(addr)?;
+    stream.set_nodelay(true)?;
+    Ok(stream)
+}
 
 /// `Connector` trait used by `Client`. `Connector` provides synchronous
 /// connection establishment interfaces.
@@ -75,7 +82,7 @@ pub mod no_tls {
             } else {
                 uri.authority().unwrap().to_string()
             };
-            TcpStream::connect(addr)
+            super::connect_tcp(addr)
         }
     }
 }
@@ -87,6 +94,7 @@ pub mod tls_conn {
 
     use ylong_http::request::uri::{Scheme, Uri};
 
+    use super::connect_tcp;
     use crate::sync_impl::ssl_stream::ProxyStream;
     use crate::sync_impl::{Connector, MixStream};
     use crate::util::proxy::{
@@ -120,7 +128,7 @@ pub mod tls_conn {
 
             match *uri.scheme().unwrap() {
                 Scheme::HTTP => {
-                    let tcp_stream = TcpStream::connect(addr)
+                    let tcp_stream = connect_tcp(addr)
                         .map_err(|e| HttpClientError::from_error(ErrorKind::Connect, e))?;
                     if let Some(proxy_info) = proxy_info {
                         Ok(MixStream::Proxy(proxy_connect_stream(
@@ -132,7 +140,7 @@ pub mod tls_conn {
                     }
                 }
                 Scheme::HTTPS => {
-                    let tcp_stream = TcpStream::connect(addr)
+                    let tcp_stream = connect_tcp(addr)
                         .map_err(|e| HttpClientError::from_error(ErrorKind::Connect, e))?;
 
                     if let Some(proxy_info) = proxy_info {
@@ -231,6 +239,28 @@ pub mod tls_conn {
                     tunnel_io_error(crate::util::proxy::CreateTunnelErr::ProxyHeadersTooLong),
                 ));
             }
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use std::net::TcpListener;
+        use std::thread;
+
+        use super::connect_tcp;
+
+        #[test]
+        fn ut_connect_tcp_enables_nodelay() {
+            let listener = TcpListener::bind("127.0.0.1:0").expect("bind listener failed");
+            let addr = listener.local_addr().expect("local addr failed");
+            let accept = thread::spawn(move || {
+                let _ = listener.accept().expect("accept failed");
+            });
+
+            let stream = connect_tcp(addr.to_string()).expect("connect failed");
+            assert!(stream.nodelay().expect("read nodelay failed"));
+            drop(stream);
+            accept.join().expect("accept thread panicked");
         }
     }
 }

@@ -1,0 +1,115 @@
+{
+  "evidence_id": "evidence.nested-tls-variant-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "created_at": "2026-07-06T07:15:18+08:00",
+  "status": "counterexample_rejected_candidate",
+  "hypothesis": "The HTTPS-origin-over-HTTPS-proxy regression might be caused by outer origin TLS using AsyncSslStream<ProxyStream> where secure proxy streams dispatch through ProxyStream::Tls on every BIO read/write. A dedicated AsyncSslStream<AsyncSslStream<TcpStream>> path might reduce enum dispatch and improve nested TLS performance.",
+  "source_changes_tested": [
+    {
+      "file": "ylong_http_client/src/async_impl/mix.rs",
+      "summary": "Candidate added MixStream::HttpsOverTlsProxy(AsyncSslStream<AsyncSslStream<TcpStream>>) plus AsyncRead/AsyncWrite dispatch arms."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/connector/mod.rs",
+      "summary": "Candidate routed HTTPS origin over secure HTTPS proxy through HttpsStream::TlsProxied after CONNECT, and generalized tunnel over AsyncRead+AsyncWrite."
+    }
+  ],
+  "candidate_retained": false,
+  "rejection_reason": "The candidate is a performance counterexample. It worsened the fair single-client max-H1 ylong_base matrix versus previous candidates and remains far below fixed SOTA gates.",
+  "tdd": {
+    "red": [
+      {
+        "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_nested_variant_red cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_mix_stream_exposes_nested_tls_proxy_specialization -- --nocapture",
+        "observed": "failed before implementation because MixStream::HttpsOverTlsProxy did not exist"
+      },
+      {
+        "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_nested_connector_red cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_https_stream_exposes_nested_tls_proxy_specialization -- --nocapture",
+        "observed": "failed before implementation because HttpsStream::TlsProxied did not exist"
+      }
+    ],
+    "green": [
+      {
+        "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_nested_variant_green cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_mix_stream_exposes_nested_tls_proxy_specialization -- --nocapture",
+        "observed": "passed after adding the candidate MixStream variant"
+      },
+      {
+        "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_nested_connector_green cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_https_stream_exposes_nested_tls_proxy_specialization -- --nocapture",
+        "observed": "passed after adding the candidate HttpsStream variant"
+      }
+    ]
+  },
+  "verification_commands": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all",
+      "result": "pass",
+      "observed": "passed; stable rustfmt reported existing warnings for nightly-only rustfmt.toml options"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_nested_variant_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass",
+      "observed": "passed with existing repository warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_nested_variant_tokio_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass",
+      "observed": "passed with existing repository warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_nested_variant_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass",
+      "observed": "release benchmark binary built successfully with existing repository warnings"
+    }
+  ],
+  "benchmark": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_nested_variant_release/release/https_proxy_bench --result-dir docs/benchmarks/results/nested-tls-variant-candidate --figure-dir docs/benchmarks/results/nested-tls-variant-candidate",
+    "result_files": [
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_env.json",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_performance.pdf"
+    ],
+    "hashes": {
+      "bench_binary_sha256": "8129f0fa13ebc1a102ee5bbfd5e9f9e82f5fdd2163c0c1210891c43fd6c716fd",
+      "results_csv_sha256": "77b0bf8d8ee2acecbb28c53697d9dbdde5aeab88a715b2c67e2be80928dc3354",
+      "summary_csv_sha256": "9fa254b9731d7747b26aab5a5841bfcf6cdebb0a8810e60368cc85f9bba5e699",
+      "comparison_csv_sha256": "11452552222e389345311d540f7bf6a4888adda912b79b31a9ee5af24f716a4f",
+      "env_json_sha256": "d0874bcd2251cbb12ba41e4b65b8c128a5c119b20bd1d71bd7847e0afb6a22f5",
+      "raw_txt_sha256": "55c7d2ec78e88bde1c188ace65c75bac7590f32f484f77c941d0256b7497ed04"
+    },
+    "baseline": "same-process libcurl multi API",
+    "ylong_client": "ylong_http_client",
+    "ylong_concurrency_model": "single-client",
+    "client_runtime": "ylong_base",
+    "concurrency": 8,
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "warmup_requests": 50,
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.912976,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.650132,
+    "best_throughput_ratio_ylong_over_libcurl": 1.168906,
+    "p50_max_ratio_ylong_over_libcurl": 1.498596,
+    "p95_max_ratio_ylong_over_libcurl": 1.441032,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.427967,
+    "cpu_max_ratio_ylong_over_libcurl": 1.73183,
+    "rss_max_ratio_ylong_over_libcurl": 1.192587,
+    "errors_sum_total": 0,
+    "worst_cell": {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 1000,
+      "throughput_ratio_ylong_over_libcurl": 0.650132,
+      "p50_ratio_ylong_over_libcurl": 1.495157,
+      "p95_ratio_ylong_over_libcurl": 1.441032,
+      "cpu_ratio_ylong_over_libcurl": 1.616375,
+      "rss_ratio_ylong_over_libcurl": 1.158282
+    }
+  },
+  "diagnostic_conclusion": "The dedicated nested TLS variant does not solve the SOTA gap and appears to worsen CPU and tail latency. This refutes enum dispatch through ProxyStream as a sufficient root cause. The candidate should not remain in the production code path."
+}

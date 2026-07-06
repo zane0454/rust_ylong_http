@@ -1,0 +1,103 @@
+{
+  "evidence_id": "evidence.response-poll-diagnostic",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "created_at": "2026-07-06T06:01:51+08:00",
+  "status": "diagnostic_counterexample",
+  "hypothesis": "The remaining sequential HTTP/1 response-head wait is caused by excess ylong polling or wakeup churn in the response read loop.",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/src/util/monitor/time_group.rs",
+      "summary": "Adds libcurl_bench-only response_read_poll_count and response_read_pending_count aggregation, with a unit test proving counter accumulation."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/conn/http1.rs",
+      "summary": "Records response-head read poll and pending counts inside the real HTTP/1 response read poll_fn when phase timing is enabled."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Prints response_read_polls and response_read_pending in opt-in phase timing output."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Parses and summarizes response_read_polls and response_read_pending into benchmark CSVs."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Extends harness tests to cover response read poll and pending fields."
+    }
+  ],
+  "verification": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_resp_poll_red cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_response_read_poll_counts_accumulate -- --nocapture",
+      "observed": "failed before implementation because TimeGroup did not expose response read poll-count methods"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_resp_poll_green cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_response_read_poll_counts_accumulate -- --nocapture",
+      "observed": "passed"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "observed": "12 tests passed"
+    },
+    {
+      "command": "python3 -m py_compile docs/benchmarks/run_https_proxy_bench.py docs/benchmarks/test_run_https_proxy_bench.py",
+      "observed": "passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_resp_poll_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_resp_poll_canonical_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_resp_poll_tokio_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    }
+  ],
+  "diagnostic_run": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200 --repeats 3 --warmup 20 --phase-timing --bench-bin /tmp/ylong_http_target_resp_poll_release/release/https_proxy_bench --result-dir docs/benchmarks/results/response-poll-diagnostic --figure-dir docs/benchmarks/results/response-poll-diagnostic",
+    "result_files": [
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "request_count": 200,
+    "repetitions": 3,
+    "zero_errors": true,
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.046338,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.747110,
+    "per_request_response_read": [
+      {
+        "scenario": "http-over-https-proxy",
+        "response_read_us_per_request": 61.797,
+        "response_read_polls_per_request": 2.0,
+        "response_read_pending_per_request": 1.0,
+        "tls_ssl_read_calls_per_request": 2.0,
+        "tls_ssl_read_pending_per_request": 1.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "response_read_us_per_request": 183.512,
+        "response_read_polls_per_request": 2.0,
+        "response_read_pending_per_request": 1.0,
+        "tls_ssl_read_calls_per_request": 5.0,
+        "tls_ssl_read_pending_per_request": 2.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "response_read_us_per_request": 144.513,
+        "response_read_polls_per_request": 2.0,
+        "response_read_pending_per_request": 1.0,
+        "tls_ssl_read_calls_per_request": 5.0,
+        "tls_ssl_read_pending_per_request": 2.0
+      }
+    ]
+  },
+  "verdict": "The diagnostic refutes an excess response-poll/wakeup-churn hypothesis. Every scenario averages exactly two response-head read polls and one pending per request; HTTPS-origin scenarios show two TLS-read pendings per request because proxy TLS and origin TLS are both active. The remaining gap is therefore the unavoidable sequential request-response wait boundary or deeper runtime I/O scheduling cost, not a repeated-poll loop that can be eliminated locally."
+}

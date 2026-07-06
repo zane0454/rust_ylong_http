@@ -1,0 +1,50 @@
+Run a second independent SOTA-definition counterexample review after repair for:
+docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json
+
+Reviewed canonical artifact hash:
+requirements.control.json = sha256:c1d982cb60df8b67b0cbc25efe17066e9834e87115e043e5fbb1b27283f1829d
+
+Previous gate result:
+- status: fail
+- smallest_counterexample: "All listed evidence/subgoals can be true while SOTA verified remains false."
+- cause: numeric SOTA hard thresholds existed in the definition but were not represented as a required outcome, result path, completion logic requirement, or counterexample-contract transform.
+
+Repair to check:
+- O-sota-threshold-matrix was added as a required outcome.
+- RP-sota-threshold-verdict was added as a required result path.
+- completion_logic.all_required includes O-sota-threshold-matrix.
+- completion_logic.sota_verified_requires includes all required outcomes, result paths, every numeric hard threshold passing, and no unresolved counterexample.
+- completion_logic.no_offset blocks numeric SOTA threshold verdicts from being offset by correctness, TLS, test, benchmark fairness, or report evidence.
+- counterexample_gate_contract now checks benchmark_result->numeric_SOTA_threshold_verdict and numeric_SOTA_threshold_verdict->final_SOTA_status.
+- counterexample_gate_contract rejects SOTA verified without a complete passing hard-threshold matrix, treats 20% as only contest-floor evidence, and blocks offsetting failed/unavailable numeric thresholds.
+
+Try to disprove that the repaired requirements are ready for user approval before orchestration.
+
+Required checked transformations:
+- user_feedback->source_requirements
+- source_requirements->sota_definition
+- source_requirements->required_outcomes
+- source_requirements->required_result_paths
+- performance_thresholds->benchmark_methodology
+- benchmark_methodology->numeric_SOTA_threshold_verdict
+- numeric_SOTA_threshold_verdict->final_SOTA_status
+- completion_logic->SOTA_verified_claim
+- counterexample_gate_contract->final_counterexample_review
+
+Reject if any of these are true:
+- Correctness/security/test coverage can still be mistaken for SOTA verified.
+- 20%+ contest-floor performance can still be mistaken for SOTA verified.
+- SOTA verified can be claimed without satisfying every numeric hard threshold.
+- The previous smallest counterexample remains possible.
+- The benchmark matrix omits a contest-critical HTTPS proxy path needed to judge SOTA.
+- The thresholds can be gamed by mismatched TLS verification, mTLS omission, curl CLI startup overhead, connection reuse differences, response validation differences, confidence-bound omission, or benchmark-only code paths.
+- The thresholds are so arbitrary or infeasible that the controlled run cannot proceed without explicit user review beyond the existing SOTA-metric approval request.
+- The definition requires evidence that cannot plausibly be generated or classified in this local repo without an explicit external/live gate.
+
+Return a concise JSON object with:
+- status: pass | fail
+- verdict: approved | needs_revision
+- findings: array of objects with severity, claim, counterexample, affected_paths, suggested_repair
+- smallest_counterexample: string or null, using the form "All listed evidence/subgoals can be true while <required claim or result path> remains false."
+- approval_readiness: ready_for_user_approval | needs_requirements_revision
+- summary: one paragraph

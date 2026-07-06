@@ -1,0 +1,138 @@
+{
+  "evidence_id": "evidence.tokio-runtime-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "candidate_runtime_counterexample_to_sota",
+  "verified_at": "2026-07-06T04:44:03+08:00",
+  "summary": "The benchmark binary now supports building the same public ylong_http_client benchmark path with tokio_base as well as ylong_base. A full same-process libcurl fair matrix for tokio_base improves the best observed point estimate to 1.065x throughput geomean and 0.862x worst cell, with CPU/request geomean 0.846x. This is better than the ylong_base canonical run but still fails the fixed SOTA thresholds.",
+  "result_files": [
+    "docs/benchmarks/results/tokio-full/https_proxy_bench_results.csv",
+    "docs/benchmarks/results/tokio-full/https_proxy_bench_summary.csv",
+    "docs/benchmarks/results/tokio-full/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/tokio-full/https_proxy_bench_env.json",
+    "docs/benchmarks/results/tokio-full/https_proxy_bench_raw.txt"
+  ],
+  "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_tokio_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tokio-full --figure-dir docs/benchmarks/results/tokio-full",
+  "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tokio_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0,libcurl_bench",
+  "runtime": "tokio_base",
+  "baseline": "same-process libcurl with one reused Easy handle across warmup and measured requests",
+  "request_counts": [
+    200,
+    1000,
+    3000
+  ],
+  "repetitions": 5,
+  "warmup_requests": 50,
+  "request_body_bytes": 0,
+  "response_body_bytes": 4096,
+  "phase_timing": false,
+  "threshold_eval": {
+    "throughput_geomean_ratio": 1.0650884103493619,
+    "throughput_min_ratio": 0.8619621952060578,
+    "throughput_max_ratio": 1.429714005342895,
+    "p50_max_ratio": 1.1078320090805902,
+    "p95_max_ratio": 1.0769230769230769,
+    "cpu_geomean_ratio": 0.8462072827563497,
+    "cpu_max_ratio": 1.0341587997625568,
+    "rss_max_ratio": 1.0686835650040882,
+    "errors_sum_total": 0
+  },
+  "scenario_ratios": [
+    {
+      "scenario": "http-over-https-proxy",
+      "requests": 200,
+      "throughput_ratio": 1.1195362734345409,
+      "elapsed_ratio": 0.8945738076404289,
+      "p50_ratio": 0.8559463986599665,
+      "p95_ratio": 0.9503759398496241,
+      "cpu_ratio": 0.8073214543802779,
+      "rss_ratio": 1.0627888013047024
+    },
+    {
+      "scenario": "http-over-https-proxy",
+      "requests": 1000,
+      "throughput_ratio": 1.429714005342895,
+      "elapsed_ratio": 0.7444267663672126,
+      "p50_ratio": 0.7755102040816326,
+      "p95_ratio": 0.7523659305993692,
+      "cpu_ratio": 0.6708825087642172,
+      "rss_ratio": 1.0686835650040882
+    },
+    {
+      "scenario": "http-over-https-proxy",
+      "requests": 3000,
+      "throughput_ratio": 1.0402747031729906,
+      "elapsed_ratio": 0.9496113744297459,
+      "p50_ratio": 0.9728601252609604,
+      "p95_ratio": 0.8894389438943894,
+      "cpu_ratio": 0.8611639987874152,
+      "rss_ratio": 1.0600706713780919
+    },
+    {
+      "scenario": "https-over-https-proxy",
+      "requests": 200,
+      "throughput_ratio": 1.01205224513074,
+      "elapsed_ratio": 0.9882858314276466,
+      "p50_ratio": 0.9692307692307692,
+      "p95_ratio": 1.0128885519332826,
+      "cpu_ratio": 0.8693551221226495,
+      "rss_ratio": 1.0658536585365854
+    },
+    {
+      "scenario": "https-over-https-proxy",
+      "requests": 1000,
+      "throughput_ratio": 0.8619621952060578,
+      "elapsed_ratio": 1.1174615950153937,
+      "p50_ratio": 1.1078320090805902,
+      "p95_ratio": 0.9882253994953742,
+      "cpu_ratio": 1.0341587997625568,
+      "rss_ratio": 1.0669921345267155
+    },
+    {
+      "scenario": "https-over-https-proxy",
+      "requests": 3000,
+      "throughput_ratio": 0.9889804675520432,
+      "elapsed_ratio": 1.002089802615584,
+      "p50_ratio": 1.0535117056856187,
+      "p95_ratio": 0.9325744308231173,
+      "cpu_ratio": 0.8974728431430941,
+      "rss_ratio": 1.066017316017316
+    },
+    {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 200,
+      "throughput_ratio": 1.0038604168690513,
+      "elapsed_ratio": 0.994875928298135,
+      "p50_ratio": 0.9580152671755726,
+      "p95_ratio": 1.0769230769230769,
+      "cpu_ratio": 0.8784037651525638,
+      "rss_ratio": 1.0584731997834327
+    },
+    {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 1000,
+      "throughput_ratio": 1.0668987722903223,
+      "elapsed_ratio": 0.9377113064136342,
+      "p50_ratio": 0.9478859390363815,
+      "p95_ratio": 0.8736176935229067,
+      "cpu_ratio": 0.8458755195353284,
+      "rss_ratio": 1.065440778799351
+    },
+    {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 3000,
+      "throughput_ratio": 1.1464632590166575,
+      "elapsed_ratio": 0.8829498698200198,
+      "p50_ratio": 0.9193391642371234,
+      "p95_ratio": 0.8730923694779117,
+      "cpu_ratio": 0.7956198129766557,
+      "rss_ratio": 1.0561252023745278
+    }
+  ],
+  "verdict": {
+    "sota_verified": false,
+    "reason": "The tokio_base candidate still fails fixed SOTA gates: throughput geomean 1.065x is below 2.00x, worst cell 0.862x is below 1.50x, p50/p95 ratios exceed the 0.60/0.70 limits, CPU geomean 0.846x is above the <=0.80x target, and no flagship cell reaches 3.00x throughput or 0.50x p95 latency."
+  },
+  "completion_effect": "This candidate narrows the plausible performance direction to runtime/TLS/socket scheduling and records the best observed full-matrix point estimate, but it cannot complete S9 or enable S10."
+}

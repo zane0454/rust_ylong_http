@@ -1,0 +1,54 @@
+{
+  "evidence_id": "evidence.connect-2xx-tests",
+  "required_step": "S2-protocol-correctness",
+  "work_package_id": "WP1-audit-protocol-semantics",
+  "status": "pass",
+  "verified_at": "2026-07-06T02:29:24+08:00",
+  "code_changes": [
+    {
+      "file": "ylong_http_client/src/util/proxy.rs",
+      "summary": "CONNECT tunnel parser now accepts any complete three-digit 2xx response as success instead of accepting only 200."
+    },
+    {
+      "file": "ylong_http_client/src/util/proxy.rs",
+      "summary": "Unit test now covers complete 200, 201, and 204 success responses while preserving malformed, incomplete, 407, and 500 failure expectations."
+    }
+  ],
+  "red_green": [
+    {
+      "phase": "red",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/openharmony/commonlibrary_rust_ylong_runtime.git.insteadOf' GIT_CONFIG_VALUE_0='https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git' cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,tokio_base ut_tunnel_request_and_response -- --nocapture",
+      "result": "failed before parser patch with assertion failure for HTTP/1.1 201 Created expected Complete",
+      "notes": [
+        "Default-feature test run compiled no util tests because ylong_http_client default features are empty.",
+        "sync,http1_1 and sync,http1_1,tokio_base are not valid minimal compile combinations in this workspace; async,http1_1,tokio_base was used to compile the shared util::proxy tests."
+      ]
+    },
+    {
+      "phase": "green",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/openharmony/commonlibrary_rust_ylong_runtime.git.insteadOf' GIT_CONFIG_VALUE_0='https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git' cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,tokio_base ut_tunnel_request_and_response -- --nocapture",
+      "result": "passed: 1 passed, 0 failed, 43 filtered out"
+    },
+    {
+      "phase": "regression",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/openharmony/commonlibrary_rust_ylong_runtime.git.insteadOf' GIT_CONFIG_VALUE_0='https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git' cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,tokio_base tunnel -- --nocapture",
+      "result": "passed: 1 passed, 0 failed, 43 filtered out"
+    }
+  ],
+  "environment_notes": [
+    "The interactive PATH did not include $HOME/.cargo/bin, so verification commands explicitly prepend it.",
+    "Direct cargo/libgit2 fetch from gitee timed out. The local command uses CARGO_NET_GIT_FETCH_WITH_CLI and a per-command Git URL rewrite to the reachable GitHub mirror; no repository or global git config was changed."
+  ],
+  "preserved_fail_closed_cases": [
+    "HTTP/1.1 2000 is still rejected as malformed status syntax.",
+    "HTTP/1.1 200 without a separating space is still rejected.",
+    "HTTP/1.1 20A is still rejected.",
+    "Complete 407 still maps to ProxyAuthenticationRequired.",
+    "Complete 500 still maps to Unsuccessful.",
+    "2xx success is still incomplete until the full header terminator is present."
+  ],
+  "remaining_related_work": [
+    "Endpoint-level HTTPS proxy tests still need to prove the parser behavior through actual CONNECT tunnel setup.",
+    "TLS/mTLS positive and negative proxy endpoint tests are tracked by S3 and S5."
+  ]
+}

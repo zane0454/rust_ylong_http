@@ -44,6 +44,8 @@ __c_openssl = ["__tls", "libc"]         # Not open to user, only mark to use tls
 c_openssl_1_1 = ["__c_openssl"]         # Uses TLS by FFI of C-openssl 1.1.
 c_openssl_3_0 = ["__c_openssl"]         # Uses TLS by FFI of C-openssl 3.0.
 c_boringssl = ["__tls", "libc"]
+libcurl_bench = ["libc"]                # Enables the same-process libcurl benchmark baseline.
+bench_tls_io = []                       # Enables benchmark-only TLS I/O diagnostic counters.
 
 [[example]]
 name = "async_certs_adapter"
@@ -78,7 +80,7 @@ required-features = ["async", "http1_1", "__tls", "tokio_base"]
 [[bin]]
 name = "https_proxy_bench"
 path = "src/bin/https_proxy_bench.rs"
-required-features = ["async", "http1_1", "ylong_base", "__c_openssl"]
+required-features = ["async", "http1_1", "__c_openssl"]
 
 [[example]]
 name = "sync_https_outside"

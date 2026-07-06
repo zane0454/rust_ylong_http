@@ -1,0 +1,83 @@
+{
+  "artifact_type": "pregoal.compilation.current_handoff.evidence",
+  "created_at": "2026-07-06T09:36:18+08:00",
+  "runtime_generation": "gen-000",
+  "run_directory": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+  "status": "compiled_and_handoff_ready",
+  "pre_goal_compilation_verdict": "complete_for_runtime_handoff",
+  "goal_achieved_permitted": false,
+  "sota_verified": false,
+  "runtime_control": "gen-000/runtime.control.json",
+  "compiled_goal_adapter": "/goal Execute the runtime control JSON at docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/gen-000/runtime.control.json using .agents/skills/using-control-json. Approved control JSON remains read-only. Continue from S9-causal-performance-evidence. Do not claim goal_achieved, blocked, S10 completion, final-report success, or SOTA verified until verify_runtime_progress.py permits the final claim.",
+  "fresh_verification": [
+    {
+      "command": "python3 /home/ender/.agents/skills/compiling-cybernetic-runtime-goals/scripts/control_chain_guard.py --run-dir docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 0,
+      "result": "PASS; NEXT: CompileRuntimeGoal"
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 0,
+      "result": "ok true; errors empty"
+    },
+    {
+      "command": "git diff -- docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/run.control.json docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/review.control.json docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/gen-000/runtime.control.json | wc -c",
+      "exit_code": 0,
+      "result": "0"
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 1,
+      "result": "goal_achieved_permitted false; expected for runtime terminal gate because S9, S10, final-report.json, and runtime counterexample.review.completed are not complete"
+    }
+  ],
+  "approved_control_hashes": {
+    "requirements.control.json": "sha256:23f4efbd5b966cce5b45997ae45df8d44e83aac11e51617f3333e974eccf5b2a",
+    "run.control.json": "sha256:ddb038c59ea5872f10d8e14cf6c4e2d39acbe23951c76fb93ac575e4376ca6ec",
+    "review.control.json": "sha256:9032633115e352bc8b31977d29204f9682917c050dcb2c854315d1914b1f258b",
+    "gen-000/runtime.control.json": "sha256:1202e724cb4929020bf4d22a09eb7962412b951c4d47e15cf31d790704462246"
+  },
+  "supporting_pregoal_evidence": [
+    {
+      "path": "evidence/pregoal_counterexample_gate.json",
+      "sha256": "35bbe1071d6dd5023fd731d62b10b0d811e4109f9d2a09bb806725161fd58ee4",
+      "summary": "independent pre-goal counterexample gate approved the fixed SOTA target and completion gates"
+    },
+    {
+      "path": "evidence/pregoal_compilation_current_recompile.json",
+      "sha256": "0109b27d9d5ea31123b221de7a1aacb44707123e524efd9aa8ff44a54806dac5",
+      "summary": "latest earlier recompile evidence found the runtime executable from S9 with no blocking pre-goal counterexample"
+    }
+  ],
+  "current_progress_state": {
+    "completed_mainline_steps": [
+      "S1-current-audit",
+      "S2-protocol-correctness",
+      "S3-proxy-tls-mtls",
+      "S4-sync-async-proxy-semantics",
+      "S5-test-matrix",
+      "S6-benchmark-fairness",
+      "S7-report-evidence-chain",
+      "S8-sota-threshold-matrix"
+    ],
+    "active_step": "S9-causal-performance-evidence",
+    "pending_steps": [
+      "S9-causal-performance-evidence",
+      "S10-final-counterexample-gate"
+    ]
+  },
+  "completion_forbidden_now": [
+    "goal_achieved true",
+    "blocked terminal state",
+    "S10-final-counterexample-gate completion",
+    "final-report.json success claim",
+    "SOTA verified claim",
+    "treating rejected S9 diagnostics or candidates as completion evidence"
+  ],
+  "allowed_next_action": [
+    "Continue executing gen-000/runtime.control.json at S9-causal-performance-evidence.",
+    "Use progress.jsonl only through append_progress_event.py.",
+    "Keep approved control JSON read-only.",
+    "Run S10 only after S9 has mainline pass evidence and the verifier no longer rejects S9."
+  ]
+}

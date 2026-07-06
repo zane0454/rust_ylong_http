@@ -1,0 +1,59 @@
+{
+  "artifact_type": "sota_definition.counterexample_review.evidence",
+  "independent_review": true,
+  "status": "fail",
+  "verdict": "needs_revision",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "sota-definition-counterexample-rerun-reviewer"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "agent_id": "019f3300-88f7-7742-999d-ab5d25ad1364",
+    "transcript_ref": "evidence/sota_definition_counterexample_rerun_transcript.txt"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/sota_definition_counterexample_rerun_prompt.txt",
+    "prompt_hash": "sha256:ab1a51190de2910644f73ae404192c6eb4ea43800ff9f05fe255ad9e68f33d43",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json": "sha256:c1d982cb60df8b67b0cbc25efe17066e9834e87115e043e5fbb1b27283f1829d"
+    }
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json": "sha256:c1d982cb60df8b67b0cbc25efe17066e9834e87115e043e5fbb1b27283f1829d"
+  },
+  "checked_transformations": [
+    "user_feedback->source_requirements",
+    "source_requirements->sota_definition",
+    "source_requirements->required_outcomes",
+    "source_requirements->required_result_paths",
+    "performance_thresholds->benchmark_methodology",
+    "benchmark_methodology->numeric_SOTA_threshold_verdict",
+    "numeric_SOTA_threshold_verdict->final_SOTA_status",
+    "completion_logic->SOTA_verified_claim",
+    "counterexample_gate_contract->final_counterexample_review"
+  ],
+  "findings": [
+    {
+      "severity": "blocking",
+      "claim": "SOTA verified is blocked unless numeric dominance is causally tied to the real client implementation and cannot come from benchmark-only paths or curl startup/pooling artifacts.",
+      "counterexample": "All current required outcomes and result paths can pass, including O-sota-threshold-matrix, while SOTA-F2/SOTA-F4 remain false because no required outcome/result path demands profiling, ablation, or proof that the benchmark exercises the real production client path instead of a benchmark-only fast path.",
+      "affected_paths": [
+        "approved_control.required_outcomes",
+        "approved_control.required_result_paths",
+        "approved_control.completion_logic.sota_verified_requires",
+        "approved_control.counterexample_gate_contract.required_checked_transformations",
+        "approved_control.counterexample_gate_contract.reject_if"
+      ],
+      "suggested_repair": "Add a required outcome/result path for causal performance and no-benchmark-only-path evidence, require profiling or ablation plus proof that benchmark traffic uses the real client path and same pooling semantics, add it to all_required and sota_verified_requires, and add counterexample checks for benchmark-only paths and unexplained startup/pooling artifacts."
+    }
+  ],
+  "smallest_counterexample": "All listed evidence/subgoals can be true while the required causal/no-benchmark-only SOTA frontier gate remains false.",
+  "approval_readiness": "needs_requirements_revision",
+  "repair_applied": {
+    "status": "applied",
+    "new_requirements_hash": "sha256:5fa57f719bff641b053c559535ab00f3bdce0deaf63ed74d3b574348f5a10beb",
+    "summary": "Added O-causal-performance-evidence, RP-real-client-causal-performance, completion logic requirements, no-offset rules, and counterexample checks for real-client-path and causal profiling/tracing/ablation evidence."
+  },
+  "review_summary": "The second SOTA-definition counterexample gate failed. The numeric threshold repair closed the prior gap, but SOTA-F2/SOTA-F4 were still not executable. The repair adds causal performance and real-client-path evidence as required completion objects."
+}

@@ -1,0 +1,45 @@
+{
+  "artifact_type": "sota_definition.counterexample_review.evidence",
+  "independent_review": true,
+  "status": "pass",
+  "verdict": "approved",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "sota-no-terminal-counterexample-reviewer"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "id": "sota-no-terminal-counterexample-reviewer",
+    "agent_id": "019f335a-957f-7910-a4ef-42c72cf9278b",
+    "transcript_ref": "evidence/sota_no_terminal_counterexample_transcript.txt",
+    "transcript_hash": "sha256:0dbfe27a110a3f2fbf46d03623299488b34ccd29cf3f07c33eed1b86318103c4"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/sota_no_terminal_counterexample_prompt.txt",
+    "prompt_hash": "sha256:6ebd6c7fbe94ecce5070db48d7f6f9f08c947966c5eb96041bb464b38688443d",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json.raw": "sha256:23f4efbd5b966cce5b45997ae45df8d44e83aac11e51617f3333e974eccf5b2a",
+      "requirements.control.json.compact_canonical": "sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc"
+    }
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json.raw": "sha256:23f4efbd5b966cce5b45997ae45df8d44e83aac11e51617f3333e974eccf5b2a",
+    "requirements.control.json.compact_canonical": "sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc"
+  },
+  "checked_transformations": [
+    "user_feedback->source_requirements",
+    "source_requirements->sota_definition.status_policy",
+    "source_requirements->completion_logic",
+    "source_requirements->required_outcomes",
+    "source_requirements->required_result_paths",
+    "completion_logic->final_answer",
+    "remaining_required_work->next_required_action",
+    "forbidden_terminal_statuses->final_answer",
+    "counterexample_gate_contract->final_counterexample_review",
+    "artifact_hash_binding->reviewed_requirements_identity"
+  ],
+  "findings": [],
+  "smallest_counterexample": null,
+  "approval_readiness": "ready_for_user_approval",
+  "review_summary": "The raw and compact canonical requirements hashes match the prompt bindings. The current requirements preserve the fixed SOTA target, hard numeric thresholds, libcurl-library same-model baseline requirement, real-client-path and causal performance evidence requirements, and final counterexample gate. All required outcomes are blocking and included in completion_logic.all_required, and the artifact rejects weaker terminal labels, planned stops, missing-evidence completion, and offsetting failed SOTA evidence with correctness, TLS, benchmark fairness, or report work."
+}

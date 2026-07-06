@@ -63,6 +63,10 @@ impl Response {
     pub(crate) fn set_time_group(&mut self, time_group: TimeGroup) {
         self.time_group = time_group
     }
+
+    pub(crate) fn time_group_mut(&mut self) -> &mut TimeGroup {
+        &mut self.time_group
+    }
 }
 
 impl Deref for Response {

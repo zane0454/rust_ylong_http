@@ -1,0 +1,41 @@
+Run an independent SOTA-definition counterexample review for:
+docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json
+
+Reviewed canonical artifact hash:
+requirements.control.json = sha256:34c15f088fc292b79d493f567524ce7d9956e9860d4f8a6d0d5bc371f8a30453
+
+Context:
+- The user rejected an earlier definition because it treated correctness as SOTA.
+- The user then clarified that 20% improvement is only the contest floor, not an award/SOTA threshold.
+- The user then rejected soft phrases such as "geomean significantly ahead" as not hard metrics.
+- The current requirements.control.json now defines baseline correctness gates, first-tier gates, SOTA frontier gates, predeclared core benchmark matrix, numeric SOTA thresholds, run quality thresholds, and source requirements for these corrections.
+
+Try to disprove that the updated SOTA definition is reasonable and ready for user approval before orchestration.
+
+Required checked transformations:
+- user_feedback->source_requirements
+- source_requirements->sota_definition
+- source_requirements->claim_levels
+- source_requirements->counterexample_gate_contract
+- performance_thresholds->benchmark_methodology
+- benchmark_methodology->final_sota_claim
+- required_outcomes/result_paths/completion_logic->new SOTA definition
+
+Reject if any of these are true:
+- Correctness/security/test coverage can still be mistaken for SOTA verified.
+- 20%+ contest-floor performance can still be mistaken for SOTA verified.
+- SOTA verified can be claimed without satisfying every numeric hard threshold.
+- The numeric thresholds are too soft to represent award/SOTA ambition.
+- The numeric thresholds are so arbitrary or infeasible that they would make the controlled run unreasonable without explicit user review.
+- The benchmark matrix omits a contest-critical HTTPS proxy path needed to judge SOTA.
+- The thresholds can be gamed by mismatched TLS verification, mTLS omission, curl CLI startup overhead, connection reuse differences, response validation differences, or benchmark-only code paths.
+- The global counterexample_gate_contract, required outcomes, result paths, or completion logic still use the old weaker SOTA definition.
+- The definition requires evidence that cannot plausibly be generated or classified in this local repo without an explicit external/live gate.
+
+Return a concise JSON object with:
+- status: pass | fail
+- verdict: approved | needs_revision
+- findings: array of objects with severity, claim, counterexample, affected_paths, suggested_repair
+- smallest_counterexample: string or null, using the form "All listed evidence/subgoals can be true while <required claim or result path> remains false."
+- approval_readiness: ready_for_user_approval | needs_requirements_revision
+- summary: one paragraph

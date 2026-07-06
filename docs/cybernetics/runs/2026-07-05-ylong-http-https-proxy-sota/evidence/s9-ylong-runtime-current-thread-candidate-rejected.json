@@ -1,0 +1,97 @@
+{
+  "evidence_id": "s9_ylong_runtime_current_thread_candidate_rejected",
+  "runtime_generation": "gen-000",
+  "work_package_id": "WP-S9",
+  "required_step": "S9-causal-performance-evidence",
+  "status": "candidate_rejected",
+  "classification": "performance_counterexample",
+  "hypothesis": {
+    "summary": "Run the ylong_base benchmark entry on ylong_runtime current-thread mode to test whether readiness/parking overhead in the global runtime explains nested HTTPS proxy latency.",
+    "scope": "diagnostic benchmark substrate only; not a production ylong_http_client protocol or API change"
+  },
+  "temporary_candidate_changes": [
+    "Added a YLONG_BENCH_YLONG_RUNTIME=global|current-thread benchmark entry switch.",
+    "Enabled ylong_runtime current_thread_runtime dependency feature for the benchmark build.",
+    "Added a Python harness ylong_runtime result dimension.",
+    "Removed these candidate changes after measurement because they did not satisfy S9/SOTA thresholds and would otherwise leave a non-winning diagnostic knob in the deliverable."
+  ],
+  "verification_commands": [
+    {
+      "command": "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py -q",
+      "result": "pass",
+      "output_summary": "17 passed after candidate rollback"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-sota-target cargo test -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench --bin https_proxy_bench -- --nocapture",
+      "result": "pass",
+      "output_summary": "7 bench-bin unit tests passed after candidate rollback; existing warnings only"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-sota-target cargo build -p ylong_http_client --release --bin https_proxy_bench --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass",
+      "output_summary": "release benchmark binary built successfully"
+    },
+    {
+      "command": "python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-sota-target/release/https_proxy_bench --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --ylong-runtime current-thread --baseline libcurl --phase-timing --result-dir docs/benchmarks/results/ylong-current-thread-candidate --figure-dir docs/benchmarks/results/ylong-current-thread-candidate",
+      "result": "pass",
+      "output_summary": "temporary diagnostic run completed before rollback"
+    },
+    {
+      "command": "python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-sota-target/release/https_proxy_bench --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --ylong-runtime global --baseline libcurl --phase-timing --result-dir docs/benchmarks/results/ylong-global-runtime-control --figure-dir docs/benchmarks/results/ylong-global-runtime-control",
+      "result": "pass",
+      "output_summary": "temporary same-parameter global-runtime control completed before rollback"
+    }
+  ],
+  "result_artifacts": [
+    "docs/benchmarks/results/ylong-current-thread-candidate/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/ylong-current-thread-candidate/https_proxy_bench_summary.csv",
+    "docs/benchmarks/results/ylong-global-runtime-control/https_proxy_bench_comparison.csv",
+    "docs/benchmarks/results/ylong-global-runtime-control/https_proxy_bench_summary.csv"
+  ],
+  "current_thread_vs_libcurl": {
+    "https_over_https_proxy_concurrency_8_single_client": {
+      "requests_200": {
+        "throughput_rps_ratio": 1.140969352422817,
+        "p50_us_ratio": 0.9141398021066072,
+        "p95_us_ratio": 1.0737976782752903,
+        "cpu_us_per_request_ratio": 0.9616023848467261,
+        "rss_peak_bytes_ratio": 1.1803482587064678
+      },
+      "requests_1000": {
+        "throughput_rps_ratio": 0.7604103608252657,
+        "p50_us_ratio": 1.3270676691729322,
+        "p95_us_ratio": 1.2538011695906432,
+        "cpu_us_per_request_ratio": 1.4360813066285172,
+        "rss_peak_bytes_ratio": 1.1869554393826238
+      },
+      "geomean": {
+        "throughput_rps_ratio": 0.931453,
+        "p50_us_ratio": 1.10142,
+        "p95_us_ratio": 1.160314,
+        "cpu_us_per_request_ratio": 1.175134,
+        "rss_peak_bytes_ratio": 1.183647
+      }
+    }
+  },
+  "global_control_vs_libcurl": {
+    "https_over_https_proxy_concurrency_8_single_client": {
+      "geomean": {
+        "throughput_rps_ratio": 0.8879,
+        "p50_us_ratio": 1.139425,
+        "p95_us_ratio": 1.081482,
+        "cpu_us_per_request_ratio": 1.23524,
+        "rss_peak_bytes_ratio": 1.172862
+      }
+    }
+  },
+  "counterexample_gate_observation": {
+    "summary": "The 200-request row has local throughput improvement, but the 1000-request row regresses throughput, median latency, tail latency, CPU, and RSS versus libcurl. A single short-run win is therefore insufficient SOTA evidence.",
+    "sota_effect": "fails: geomean throughput remains below libcurl and resource/tail metrics regress",
+    "s9_effect": "does not provide causal production performance evidence for a winning ylong_http_client change"
+  },
+  "decision": {
+    "candidate": "reject",
+    "source_changes": "rolled back",
+    "next_action": "S9 remains open; any further candidate must show causal, production-grade improvement with geomean throughput leadership and no p95/CPU/RSS regression across the approved HTTPS proxy matrix."
+  }
+}

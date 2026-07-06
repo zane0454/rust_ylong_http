@@ -1,0 +1,18 @@
+Run an independent requirements information sufficiency counterexample review for:
+docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json
+
+Try to disprove that the recorded pre-design facts are enough to enter design/orchestration for the fixed target:
+in the ylong_http HTTPS proxy contest context, reach first-tier/SOTA quality through implementation-level convergence.
+
+Facts to challenge:
+- F-repo-current-proxy-shape
+- F-connect-parser-200-only
+- F-proxy-mtls-evidence-gap
+- F-benchmark-labeling-gap
+
+Required transformations to check:
+- source_requirements->information_sufficiency_facts
+- required_outcomes->information_sufficiency_facts
+- information_sufficiency_facts->design_plan_entry
+
+Reject if a missing pre-design fact would change the approved target, make design invalid, or allow orchestration to invent the SOTA evidence model.

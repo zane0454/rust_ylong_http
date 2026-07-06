@@ -1,0 +1,153 @@
+{
+  "evidence_id": "evidence.strace-diagnostic",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "diagnostic_counterexample_scheduler_syscall_shape",
+  "verified_at": "2026-07-06T08:50:19+08:00",
+  "intent": "Collect a syscall-shape diagnostic for the failing nested TLS scenario without editing production code, to distinguish network/TLS syscall count from runtime scheduling/timer overhead.",
+  "scenario": {
+    "name": "https-over-https-proxy",
+    "requests": 200,
+    "repeats": 1,
+    "warmup": 50,
+    "concurrency": 8,
+    "ylong_concurrency_model": "single-client",
+    "baseline": "libcurl",
+    "phase_timing": false,
+    "note": "The benchmark binary was wrapped with strace -f -c. These timings are distorted by tracing overhead and are diagnostic only, not SOTA threshold evidence."
+  },
+  "commands": [
+    {
+      "command": "apply_patch /tmp/ylong_strace_wrapper.sh to exec strace -f -qq -c -o /tmp/ylong-strace-${client}-${scenario}-$$.summary /tmp/ylong_http_target_dynamic_release/release/https_proxy_bench",
+      "observed": "temporary wrapper created outside the repository"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario https-over-https-proxy --requests 200 --repeats 1 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_strace_wrapper.sh --result-dir docs/benchmarks/results/strace-diagnostic-f --figure-dir docs/benchmarks/results/strace-diagnostic-f",
+      "observed": "completed with ylong_http_client and libcurl both ok"
+    }
+  ],
+  "hashes": {
+    "/tmp/ylong_strace_wrapper.sh": "b39e523071ada8ed507dc29ae94f136116c4cce0e92a6ff2d220dd3c829ddbee",
+    "/tmp/ylong-strace-ylong_http_client-https___127.0.0.1_42255_bench-2637666.summary": "cbf8a458b8f1307006c52b5983f7bb8291344e68f3aa8d85764017bf61b6a67c",
+    "/tmp/ylong-strace-libcurl-https___127.0.0.1_42255_bench-2637712.summary": "0a9c1f85de5712ec25ab2d0876f4e156643e9b6592e093adfbe0345935118a55",
+    "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_results.csv": "3e27276a80f5b699d9729be6b607e1ae6ff7572987828d0a645d4641beaa7710",
+    "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_comparison.csv": "02591d4f152733052d31784cf6453e3508864bca008132924299296db76330ec",
+    "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_summary.csv": "884741cd631bb2cb94b1c8f37a7e1e90593af4c47449c4282aa4918ef8ec837a",
+    "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_env.json": "b99c61b2e7720a06ec8f12ed19848a63bf89a8af122322469fb80188ed499724"
+  },
+  "benchmark_result_under_strace": {
+    "ylong_http_client": {
+      "elapsed_ms": 33.415326,
+      "throughput_rps": 5985.27753402735,
+      "p50_us": 992,
+      "p95_us": 1758,
+      "cpu_us_per_request": 282.815,
+      "rss_peak_bytes": 19406848,
+      "errors": 0
+    },
+    "libcurl": {
+      "elapsed_ms": 80.185833,
+      "throughput_rps": 2494.2061772931884,
+      "p50_us": 2628,
+      "p95_us": 4595,
+      "cpu_us_per_request": 175.08,
+      "rss_peak_bytes": 16531456,
+      "errors": 0
+    },
+    "ratios_ylong_over_libcurl": {
+      "throughput": 2.3996723240108446,
+      "p50": 0.3774733637747336,
+      "p95": 0.3825897714907508,
+      "cpu_us_per_request": 1.615347269819511,
+      "rss_peak_bytes": 1.1739345887016848
+    },
+    "interpretation_boundary": "strace overhead changes timings and even reverses the point estimate for this small run; use only syscall shape, not threshold ratios, as causal evidence."
+  },
+  "syscall_summary": {
+    "ylong_http_client": {
+      "total_calls": 6369,
+      "total_seconds": 0.416725,
+      "top_calls": {
+        "recvfrom": {
+          "calls": 966,
+          "errors": 276,
+          "seconds": 0.017583
+        },
+        "sendto": {
+          "calls": 290,
+          "errors": 0,
+          "seconds": 0.011074
+        },
+        "read": {
+          "calls": 694,
+          "errors": 0,
+          "seconds": 0.010268
+        },
+        "futex": {
+          "calls": 489,
+          "errors": 34,
+          "seconds": 0.273185
+        },
+        "clock_nanosleep": {
+          "calls": 624,
+          "errors": 0,
+          "seconds": 0.038542
+        },
+        "epoll_wait": {
+          "calls": 338,
+          "errors": 0,
+          "seconds": 0.017926
+        },
+        "sched_yield": {
+          "calls": 930,
+          "errors": 0,
+          "seconds": 0.01475
+        }
+      }
+    },
+    "libcurl": {
+      "total_calls": 4786,
+      "total_seconds": 0.026135,
+      "top_calls": {
+        "recvfrom": {
+          "calls": 1006,
+          "errors": 318,
+          "seconds": 0.003042
+        },
+        "sendto": {
+          "calls": 300,
+          "errors": 0,
+          "seconds": 0.002427
+        },
+        "read": {
+          "calls": 602,
+          "errors": 0,
+          "seconds": 0.002023
+        },
+        "futex": {
+          "calls": 25,
+          "errors": 0,
+          "seconds": 0.000085
+        },
+        "clock_nanosleep": {
+          "calls": 38,
+          "errors": 0,
+          "seconds": 0.003188
+        },
+        "epoll_wait": {
+          "calls": 3,
+          "errors": 0,
+          "seconds": 0.00013
+        },
+        "sched_yield": {
+          "calls": 60,
+          "errors": 0,
+          "seconds": 0.000957
+        }
+      }
+    }
+  },
+  "finding": "The syscall diagnostic refutes a simple network syscall-count explanation for the remaining nested TLS gap. ylong_http_client does not issue materially more recvfrom/sendto calls than libcurl in this traced HTTPS-over-HTTPS-proxy run. The dominant traced difference is runtime scheduling/timer shape: ylong records far more futex, clock_nanosleep, epoll_wait, and sched_yield activity. Because strace distorts timings, this is a narrowing signal only; the next implementation-level hypothesis should focus on ylong_base runtime/timer/speed-controller interaction around response reads rather than CONNECT parsing, TLS cipher choice, or raw network syscall count.",
+  "sota_verified": false
+}

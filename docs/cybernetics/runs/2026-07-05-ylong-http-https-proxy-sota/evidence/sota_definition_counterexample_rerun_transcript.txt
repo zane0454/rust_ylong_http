@@ -1,0 +1,35 @@
+{
+  "status": "fail",
+  "verdict": "needs_revision",
+  "findings": [
+    {
+      "severity": "blocking",
+      "claim": "SOTA verified is blocked unless numeric dominance is causally tied to the real client implementation and cannot come from benchmark-only paths or curl startup/pooling artifacts.",
+      "counterexample": "All current required outcomes and result paths can pass, including O-sota-threshold-matrix, while SOTA-F2/SOTA-F4 remain false because no required outcome/result path demands profiling, ablation, or proof that the benchmark exercises the real production client path instead of a benchmark-only fast path.",
+      "affected_paths": [
+        "approved_control.source_requirements[1].completion_checks[1]",
+        "approved_control.sota_definition.sota_frontier_gates[1]",
+        "approved_control.sota_definition.sota_frontier_gates[3]",
+        "approved_control.required_outcomes",
+        "approved_control.required_result_paths",
+        "approved_control.completion_logic.sota_verified_requires",
+        "approved_control.counterexample_gate_contract.required_checked_transformations",
+        "approved_control.counterexample_gate_contract.reject_if"
+      ],
+      "suggested_repair": "Add a required outcome/result path for causal performance and no-benchmark-only-path evidence, require profiling or ablation plus proof that benchmark traffic uses the real client path and same pooling semantics, add it to all_required and sota_verified_requires, and add counterexample checks for benchmark-only paths and unexplained startup/pooling artifacts."
+    },
+    {
+      "severity": "blocking",
+      "claim": "The rerun review is bound to the canonical artifact hash named by the prompt.",
+      "counterexample": "The prompt names sha256:c1d982cb60df8b67b0cbc25efe17066e9834e87115e043e5fbb1b27283f1829d, but the reviewer reported a different observed requirements.control.json hash.",
+      "affected_paths": [
+        "evidence/sota_definition_counterexample_rerun_prompt.txt",
+        "requirements.control.json"
+      ],
+      "suggested_repair": "Regenerate or update the rerun prompt/evidence binding after the final repaired requirements artifact is fixed so downstream approval reviews cite the actual artifact hash."
+    }
+  ],
+  "smallest_counterexample": "All listed evidence/subgoals can be true while the required causal/no-benchmark-only SOTA frontier gate remains false.",
+  "approval_readiness": "needs_requirements_revision",
+  "summary": "The previous numeric-threshold counterexample is largely closed by O-sota-threshold-matrix, RP-sota-threshold-verdict, no-offset logic, and numeric-threshold counterexample checks, so correctness/security/20% evidence can no longer directly substitute for SOTA verified. A smaller remaining counterexample still exists: SOTA verified can be reached through the current required outcomes without making causal performance evidence and no-benchmark-only-path proof executable, even though the SOTA definition requires them; the prompt hash binding must also be regenerated after repair."
+}

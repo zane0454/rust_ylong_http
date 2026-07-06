@@ -1,0 +1,115 @@
+{
+  "evidence_id": "evidence.flush-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "counterexample_candidate_rejected_not_retained",
+  "verified_at": "2026-07-06T08:26:16+08:00",
+  "intent": "Test whether explicitly flushing the async HTTP/1 request stream after headers/body and before response-read reduces nested TLS response-read wait time in HTTPS proxy scenarios.",
+  "candidate_changes": [
+    {
+      "file": "ylong_http_client/src/async_impl/conn/http1.rs",
+      "summary": "Candidate added a conn.raw_mut().flush().await after HTTP/1 request headers/body are written and before reading the response."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/conn/http1.rs",
+      "summary": "Candidate added a ylong_base unit test with a fake stream asserting response read does not occur before poll_flush."
+    }
+  ],
+  "tests": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_flush_red cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_request_flushes_before_response_read",
+      "observed": "red after test construction fix: panic \"HTTP/1 request path read the response before flushing the request\""
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_flush_green cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_request_flushes_before_response_read",
+      "observed": "passed after adding explicit flush; initial broad non---lib attempt was invalidated by /tmp no-space and then rerun narrowly after cleaning generated cargo targets"
+    }
+  ],
+  "performance_matrix": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_flush_release/release/https_proxy_bench --result-dir docs/benchmarks/results/flush-candidate --figure-dir docs/benchmarks/results/flush-candidate",
+    "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_flush_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+    "result_dir": "docs/benchmarks/results/flush-candidate",
+    "hashes": {
+      "docs/benchmarks/results/flush-candidate/https_proxy_bench_results.csv": "bc0e09449a2de53bd9592ddbdefdc2c64b95df1d6dced2078dfc5c49a13d6520",
+      "docs/benchmarks/results/flush-candidate/https_proxy_bench_summary.csv": "e8bf8b95a75e89e7e969502c5ec3fa1b3646cd0f15a64ccfa0c27a36e3d0ec59",
+      "docs/benchmarks/results/flush-candidate/https_proxy_bench_comparison.csv": "e2db0ff11fb4bace8e700822358cd2d842fa9e4881ab4100f3cf4d8580211b89",
+      "docs/benchmarks/results/flush-candidate/https_proxy_bench_env.json": "eeb0cc94652bda54a6ad53e150ed622fcff336c07fbc3f96250fdbee4c768d43",
+      "docs/benchmarks/results/flush-candidate/https_proxy_bench_raw.txt": "1a95c439e5dc8fb90e550eae097f2a91aa39753485adbfea8963032815d87def",
+      "docs/benchmarks/results/flush-candidate/https_proxy_bench_performance.png": "63e1ce442e10dde1f80a78e926527792955f578ff79ebc46935a59be831df74d",
+      "docs/benchmarks/results/flush-candidate/https_proxy_bench_performance.pdf": "90c131d37738e464ad7f2decbd48162e2f8799e83d2ebb64e0cf769651da1d22",
+      "/tmp/ylong_http_target_flush_release/release/https_proxy_bench": "82217747767aa1c132d110d38809e59e2b2f97331e84fee9ec8ae47c172089bc"
+    },
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9720500311903029,
+      "throughput_min_ratio_ylong_over_libcurl": 0.6956540890788073,
+      "throughput_max_ratio_ylong_over_libcurl": 1.4218438401565314,
+      "p50_max_ratio_ylong_over_libcurl": 1.4661383285302594,
+      "p95_max_ratio_ylong_over_libcurl": 1.3401025236593058,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.3303496874429535,
+      "cpu_max_ratio_ylong_over_libcurl": 1.56276339411517,
+      "rss_max_ratio_ylong_over_libcurl": 1.180383022774327,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "ylong_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.4218438401565314,
+        "p50_ratio_ylong_over_libcurl": 0.5600303951367781,
+        "p95_ratio_ylong_over_libcurl": 1.0,
+        "cpu_ratio_ylong_over_libcurl": 1.3167342888000233,
+        "rss_ratio_ylong_over_libcurl": 1.175609756097561
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.4120581759828654,
+        "p50_ratio_ylong_over_libcurl": 0.5650909090909091,
+        "p95_ratio_ylong_over_libcurl": 1.1074380165289257,
+        "cpu_ratio_ylong_over_libcurl": 1.3663062443485015,
+        "rss_ratio_ylong_over_libcurl": 1.180383022774327
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.8726916523666569,
+        "p50_ratio_ylong_over_libcurl": 1.1486033519553074,
+        "p95_ratio_ylong_over_libcurl": 1.1509759889445499,
+        "cpu_ratio_ylong_over_libcurl": 1.1920481899137942,
+        "rss_ratio_ylong_over_libcurl": 1.1679783571077227
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.6956540890788073,
+        "p50_ratio_ylong_over_libcurl": 1.4661383285302594,
+        "p95_ratio_ylong_over_libcurl": 1.3401025236593058,
+        "cpu_ratio_ylong_over_libcurl": 1.56276339411517,
+        "rss_ratio_ylong_over_libcurl": 1.156334897505557
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.9940977470736079,
+        "p50_ratio_ylong_over_libcurl": 1.0603598374927452,
+        "p95_ratio_ylong_over_libcurl": 0.8355106054221099,
+        "cpu_ratio_ylong_over_libcurl": 1.090372224106276,
+        "rss_ratio_ylong_over_libcurl": 1.1683509982745872
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.6962159475139788,
+        "p50_ratio_ylong_over_libcurl": 1.4656203288490284,
+        "p95_ratio_ylong_over_libcurl": 1.31211580408487,
+        "cpu_ratio_ylong_over_libcurl": 1.5170044367574074,
+        "rss_ratio_ylong_over_libcurl": 1.1629847815414827
+      }
+    ]
+  },
+  "finding": "Explicit HTTP/1 flush before response read is not a SOTA lever for this workload. It keeps all cells error-free and improves neither the nested TLS gap nor the fixed threshold matrix enough: throughput geomean is 0.972x, worst throughput is 0.696x, p50 max is 1.466x, p95 max is 1.340x, CPU/request geomean is 1.330x, and RSS max is 1.180x. Because it also lowers geomean versus the dynamic-budget candidate, the candidate is rejected and not retained in production code.",
+  "retained_in_production_client": false,
+  "sota_verified": false
+}

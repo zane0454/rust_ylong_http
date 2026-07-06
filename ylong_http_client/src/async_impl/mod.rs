@@ -35,7 +35,7 @@ mod timeout;
 mod uploader;
 
 #[cfg(feature = "__tls")]
-mod ssl_stream;
+pub(crate) mod ssl_stream;
 
 #[cfg(feature = "__tls")]
 pub(crate) mod mix;

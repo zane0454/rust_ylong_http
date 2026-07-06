@@ -16,17 +16,28 @@
 //! Needs export ``OPENSSL_LIB_DIR`` and ``OPENSSL_INCLUDE_DIR``.
 //! ``OPENSSL_LIB_DIR`` is the path for ``libssl.so`` and ``libcrypto.so``.
 //! ``OPENSSL_INCLUDE_DIR`` is the path for the Openssl header file.
+//!
+//! The optional `libcurl_bench` feature links libcurl for the benchmark-only
+//! same-process baseline. Set `LIBCURL_LIB_DIR` when the linker should search a
+//! non-default libcurl directory.
 
 use std::env;
 // todo: check if needed
 fn main() {
     println!("cargo:rerun-if-env-changed=OPENSSL_LIB_DIR");
     println!("cargo:rerun-if-env-changed=OPENSSL_INCLUDE_DIR");
+    println!("cargo:rerun-if-env-changed=LIBCURL_LIB_DIR");
+
+    if env::var_os("CARGO_FEATURE_LIBCURL_BENCH").is_some() {
+        if let Ok(lib_dir) = env::var("LIBCURL_LIB_DIR") {
+            println!("cargo:rustc-link-search=native={lib_dir}");
+        }
+        println!("cargo:rustc-link-lib=curl");
+    }
 
     if env::var_os("CARGO_FEATURE___C_OPENSSL").is_none() {
         return;
     }
-
     let lib_dir = env::var("OPENSSL_LIB_DIR");
     let include_dir = env::var("OPENSSL_INCLUDE_DIR");
 

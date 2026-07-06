@@ -1,0 +1,104 @@
+You are an independent pre-runtime counterexample reviewer for a JSON cybernetic control chain.
+
+Run directory:
+docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota
+
+Review these artifacts and treat the control canonical hashes as binding.
+Control canonical hash means JSON parsed, serialized with sorted keys and compact separators; for runtime.control.json only, omit top-level approved_control_hashes before hashing. Raw formatted file SHA-256 is listed only for artifact location sanity and must not be used to reject a binding.
+
+- requirements.control.json:
+  control_canonical_hash: sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc
+  file_sha256: sha256:23f4efbd5b966cce5b45997ae45df8d44e83aac11e51617f3333e974eccf5b2a
+- run.control.json:
+  control_canonical_hash: sha256:0416ee4a2f69c343ab244f8a8723e1b76e7e75e7428bbea7248f06837e183bce
+  file_sha256: sha256:ddb038c59ea5872f10d8e14cf6c4e2d39acbe23951c76fb93ac575e4376ca6ec
+- gen-000/runtime.control.json:
+  control_canonical_hash: sha256:de27499d29081e616c88d4df369ea30191b8eaf444b0dde24c92b60673d49048
+  file_sha256: sha256:1202e724cb4929020bf4d22a09eb7962412b951c4d47e15cf31d790704462246
+- review.control.json:
+  control_canonical_hash: sha256:41e1842dff4b335a46b50a86efc5dcc9837c05805bbe00e4ea1989cec99094ef
+  file_sha256: sha256:9032633115e352bc8b31977d29204f9682917c050dcb2c854315d1914b1f258b
+
+Question:
+Can all listed pre-runtime control artifacts be true while the runtime still does not preserve the approved fixed target: implementation-level SOTA convergence for ylong_http HTTPS proxy, with no successful terminal state except SOTA verified?
+
+Reject if any of these are true:
+- A required outcome is missing from runtime.required_steps or verifier.required_outcomes.
+- Any result path in requirements is not covered by the counterexample gate transformations.
+- The plan can complete by producing documentation, benchmark fairness, correctness, or TLS evidence while omitting numeric SOTA hard thresholds or causal performance evidence.
+- Missing mTLS endpoint tests, libcurl-library baseline, real-client-path evidence, causal evidence, or final counterexample review can become a successful terminal state.
+- The runtime can claim goal_achieved without verifier approval.
+- The JSON chain weakens approved requirements, source requirements, hard thresholds, no-offset logic, or human/live gate boundaries.
+
+Required checked_transformations:
+- CONNECT_RFC_semantics->parser_tests
+- all_outcomes->SOTA_claim
+- all_result_paths->SOTA_claim
+- benchmark_harness->real_client_path
+- benchmark_matrix->numeric_threshold_verdict
+- benchmark_result->numeric_SOTA_threshold_verdict
+- benchmark_result->performance_claim
+- blocked_or_goal_achieved
+- causal_explanation->final_SOTA_status
+- causal_performance_evidence->final_SOTA_status
+- completion_or_remaining_required_work
+- evidence->report_claims
+- forbidden_terminal_statuses->final_answer
+- libcurl_baseline->same_model_semantics
+- numeric_SOTA_threshold_verdict->causal_performance_evidence
+- numeric_SOTA_threshold_verdict->final_SOTA_status
+- numeric_threshold_result->causal_explanation
+- numeric_threshold_verdict->final_SOTA_status
+- numeric_threshold_verdict->goal_achieved_status
+- numeric_threshold_verdict->report_claims
+- pre_runtime_compile
+- proxy_tls_config->endpoint_evidence
+- real_client_path_evidence->numeric_threshold_verdict
+- remaining_required_work->next_required_action
+- report_claims->SOTA_claim
+- result_path:RP-current-audit-to-workplan->completion_gate
+- result_path:RP-current-audit-to-workplan->required_steps
+- required_outcome:O-benchmark-fairness->completion_gate
+- required_outcome:O-causal-performance-evidence->completion_gate
+- required_outcome:O-current-audit->completion_gate
+- required_outcome:O-final-counterexample-gate->completion_gate
+- required_outcome:O-protocol-correctness->completion_gate
+- required_outcome:O-proxy-tls-mtls->completion_gate
+- required_outcome:O-report-evidence-chain->completion_gate
+- required_outcome:O-sota-threshold-matrix->completion_gate
+- required_outcome:O-sync-async-proxy-semantics->completion_gate
+- required_outcome:O-test-matrix->completion_gate
+- required_outcomes->required_steps
+- required_result_paths->required_steps
+- required_steps->runtime_steps
+- required_steps->work_packages
+- result_path:RP-fair-benchmark-to-report->completion_gate
+- result_path:RP-fair-benchmark-to-report->required_steps
+- result_path:RP-final-counterexample-to-sota-claim->completion_gate
+- result_path:RP-final-counterexample-to-sota-claim->required_steps
+- result_path:RP-http-over-https-proxy->completion_gate
+- result_path:RP-http-over-https-proxy->required_steps
+- result_path:RP-https-over-https-proxy->completion_gate
+- result_path:RP-https-over-https-proxy->required_steps
+- result_path:RP-proxy-tls-fail-closed->completion_gate
+- result_path:RP-proxy-tls-fail-closed->required_steps
+- result_path:RP-real-client-causal-performance->completion_gate
+- result_path:RP-real-client-causal-performance->required_steps
+- result_path:RP-shared-proxy-semantics->completion_gate
+- result_path:RP-shared-proxy-semantics->required_steps
+- result_path:RP-sota-threshold-verdict->completion_gate
+- result_path:RP-sota-threshold-verdict->required_steps
+- source_audit->work_packages
+- source_requirements->required_outcomes
+- source_requirements->required_result_paths
+- source_requirements:SOTA_metrics->benchmark_matrix
+- test_matrix->SOTA_claim
+
+Return only JSON:
+{
+  "status": "pass" | "fail",
+  "verdict": "approved" | "needs_revision",
+  "findings": [string],
+  "smallest_counterexample": string | null,
+  "summary": string
+}

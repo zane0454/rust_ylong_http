@@ -1,0 +1,85 @@
+{
+  "artifact_type": "pregoal.compilation.current_review.evidence",
+  "created_at": "2026-07-06T02:54:50+08:00",
+  "runtime_generation": "gen-000",
+  "status": "pass_with_runtime_boundaries",
+  "pre_goal_compilation_verdict": "compiled_and_executable",
+  "goal_achieved_permitted": false,
+  "review_scope": [
+    "approved control JSON chain",
+    "generation consistency",
+    "pre-goal counterexample gate",
+    "runtime writable/read-only boundaries",
+    "current implementation and evidence readiness for SOTA execution"
+  ],
+  "fresh_verification": [
+    {
+      "command": "python3 /home/ender/.agents/skills/compiling-cybernetic-runtime-goals/scripts/control_chain_guard.py --run-dir docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 0,
+      "result": "PASS; NEXT: CompileRuntimeGoal"
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 0,
+      "result": "ok true"
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 1,
+      "result": "goal_achieved_permitted false; expected until S9, S10, final-report.json, and runtime counterexample review are complete"
+    }
+  ],
+  "independent_reviews": [
+    {
+      "reviewer": {
+        "kind": "subagent",
+        "id": "019f339b-b6cc-7dd3-a938-7d65dc6f1f38",
+        "nickname": "Parfit"
+      },
+      "verdict": "no_blocking_pregoal_counterexample",
+      "findings": [
+        "Approved review exists and includes the pre-goal counterexample gate.",
+        "current_generation is consistently gen-000.",
+        "Approved hashes validate under validate_control_chain.py.",
+        "runtime-status.json and verifier evidence do not incorrectly allow goal_achieved.",
+        "Writable scope is broad because docs/ is writable while approved control JSON also lives under docs/; using-control-json read-only rules override this ambiguity for runtime execution."
+      ]
+    },
+    {
+      "reviewer": {
+        "kind": "subagent",
+        "id": "019f339b-cf8f-7eb3-92c8-cb8be77a36bc",
+        "nickname": "Newton"
+      },
+      "verdict": "pregoal_supported_final_sota_not_supported",
+      "findings": [
+        "S8 pass means the hard-threshold matrix was evaluated, not that SOTA passed.",
+        "Current benchmark evidence is a local HTTP target over local HTTPS proxy smoke with insecure proxy TLS and no proxy mTLS.",
+        "Current numeric hard metrics fail p50 and variance gates; confidence bounds and full HTTPS origin/proxy mTLS scenarios are absent.",
+        "Causal performance evidence is still partial and lacks profiling, tracing, ablation, or reuse-parity proof.",
+        "Final counterexample review and final-report.json are still missing.",
+        "Proxy mTLS endpoint evidence is async-only; final claims must not state unqualified sync plus async mTLS endpoint coverage."
+      ]
+    }
+  ],
+  "compiled_runtime_boundary": {
+    "current_runtime": "gen-000/runtime.control.json",
+    "active_step": "S9-causal-performance-evidence",
+    "pending_steps": [
+      "S9-causal-performance-evidence",
+      "S10-final-counterexample-gate"
+    ],
+    "must_not_claim": [
+      "SOTA verified",
+      "goal achieved",
+      "final runtime completion",
+      "unqualified sync plus async proxy mTLS endpoint coverage"
+    ],
+    "next_required_work": [
+      "Complete causal performance evidence with real-client-path, same-model libcurl parity, profiling/tracing/ablation, and confidence-bound analysis.",
+      "Extend benchmark matrix beyond local insecure HTTP-origin smoke to HTTPS origin over HTTPS proxy and proxy mTLS parity scenarios.",
+      "Run final independent runtime counterexample review after S9 passes.",
+      "Write final-report.json only after the current verifier can permit the final claim."
+    ]
+  }
+}

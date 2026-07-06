@@ -1,0 +1,192 @@
+{
+  "evidence_id": "evidence.async-single-client-concurrency-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "created_at": "2026-07-06T06:32:23+08:00",
+  "status": "counterexample",
+  "hypothesis": "The previous same-concurrency diagnostic may have failed because ylong_http_client used one thread, runtime, and client per worker while libcurl used one multi handle. A single-runtime, single-public-Client ylong async concurrency model may be a fairer real-client-path comparison against libcurl multi.",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Adds YLONG_BENCH_YLONG_CONCURRENCY_MODEL=threaded|single-client. Default threaded preserves existing canonical and diagnostic behavior; single-client explicitly uses one async public Client shared across in-flight ylong request workers when concurrency > 1."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Adds --ylong-concurrency-model, forwards it to the benchmark binary, records it in raw output and env JSON, and keeps it as a summary/comparison grouping dimension."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Covers explicit single-client environment wiring and verifies that comparison rows are grouped by ylong_concurrency_model so threaded and single-client results cannot be merged accidentally."
+    }
+  ],
+  "tdd": {
+    "red": [
+      {
+        "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_client_red cargo test -p ylong_http_client --bin https_proxy_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 -- --exact",
+        "observed": "failed before implementation because YlongConcurrencyModel did not exist"
+      },
+      {
+        "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_ylong_concurrency_model_is_explicit_result_dimension",
+        "observed": "failed before implementation because build_benchmark_env did not accept ylong_concurrency_model"
+      }
+    ],
+    "green": [
+      {
+        "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_client_green cargo test -p ylong_http_client --bin https_proxy_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0",
+        "observed": "1 test passed; this rerun avoided the earlier --exact path mismatch that filtered all tests"
+      },
+      {
+        "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_ylong_concurrency_model_is_explicit_result_dimension",
+        "observed": "1 harness test passed"
+      }
+    ]
+  },
+  "verification_commands": [
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "result": "pass",
+      "observed": "14 harness tests passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_client_tests cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0",
+      "result": "pass",
+      "observed": "3 benchmark binary tests passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_client_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,sync,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass",
+      "observed": "passed with existing repository warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_client_tokio_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass",
+      "observed": "passed with existing repository warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all",
+      "result": "pass",
+      "observed": "passed; stable rustfmt reported existing warnings for nightly-only rustfmt.toml options"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_client_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass",
+      "observed": "release benchmark binary built successfully with existing repository warnings"
+    }
+  ],
+  "benchmark": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_single_client_release/release/https_proxy_bench --result-dir docs/benchmarks/results/async-single-client-concurrency-candidate --figure-dir docs/benchmarks/results/async-single-client-concurrency-candidate",
+    "result_files": [
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_env.json",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_performance.pdf"
+    ],
+    "hashes": {
+      "bench_binary_sha256": "0c4bc6ad50cc659688425bf93204b5dc5bc64f58fc1fd82d2ad1b03c14c056bb",
+      "results_csv_sha256": "957ea0edc3ac37f3ad56f6523bf575043e6fa1e1d182568cfd092dadef19be60",
+      "summary_csv_sha256": "fcb2fa7afe6332d053759fccc1516ca764906342774ff33f2a8bf65521885aaa",
+      "comparison_csv_sha256": "21a442fd1198a41ab7551d075beae52faddc709b52c227ae0bab7c307a8dd47d",
+      "env_json_sha256": "82b73d6b193a598fcfb5666b4ce6e2c9d78bf43dd9a5de3bf5996f4f04d8979c"
+    },
+    "baseline": "same-process libcurl multi API",
+    "ylong_client": "ylong_http_client",
+    "ylong_concurrency_model": "single-client",
+    "client_runtime": "ylong_base",
+    "scenario_count": 3,
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "warmup_requests": 50,
+    "concurrency": 8,
+    "phase_timing": false,
+    "request_body_bytes": 0,
+    "response_body_bytes": 4096,
+    "ylong_error_count": 0,
+    "baseline_error_count": 0,
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.894757,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.676473,
+    "best_throughput_ratio_ylong_over_libcurl": 1.313454,
+    "p50_max_ratio_ylong_over_libcurl": 1.561491,
+    "p95_max_ratio_ylong_over_libcurl": 1.258089,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.587595,
+    "cpu_max_ratio_ylong_over_libcurl": 2.265395,
+    "rss_max_ratio_ylong_over_libcurl": 1.175683,
+    "errors_sum_total": 0,
+    "per_cell": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 1.313454,
+        "p50_ratio_ylong_over_libcurl": 0.671584,
+        "p95_ratio_ylong_over_libcurl": 0.980328,
+        "cpu_ratio_ylong_over_libcurl": 1.650562,
+        "rss_ratio_ylong_over_libcurl": 1.175683
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 0.915913,
+        "p50_ratio_ylong_over_libcurl": 0.964389,
+        "p95_ratio_ylong_over_libcurl": 1.258089,
+        "cpu_ratio_ylong_over_libcurl": 2.265395,
+        "rss_ratio_ylong_over_libcurl": 1.17353
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 0.995243,
+        "p50_ratio_ylong_over_libcurl": 0.994128,
+        "p95_ratio_ylong_over_libcurl": 0.942608,
+        "cpu_ratio_ylong_over_libcurl": 1.143629,
+        "rss_ratio_ylong_over_libcurl": 1.124169
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 0.695172,
+        "p50_ratio_ylong_over_libcurl": 1.479738,
+        "p95_ratio_ylong_over_libcurl": 1.232211,
+        "cpu_ratio_ylong_over_libcurl": 1.688805,
+        "rss_ratio_ylong_over_libcurl": 1.135288
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 0.911361,
+        "p50_ratio_ylong_over_libcurl": 1.192124,
+        "p95_ratio_ylong_over_libcurl": 0.95259,
+        "cpu_ratio_ylong_over_libcurl": 1.282992,
+        "rss_ratio_ylong_over_libcurl": 1.129348
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 0.676473,
+        "p50_ratio_ylong_over_libcurl": 1.561491,
+        "p95_ratio_ylong_over_libcurl": 1.226698,
+        "cpu_ratio_ylong_over_libcurl": 1.728123,
+        "rss_ratio_ylong_over_libcurl": 1.131817
+      }
+    ]
+  },
+  "verdict": "The single-runtime, single-public-Client ylong async concurrency model is a SOTA counterexample, not a completion path. It refutes the narrower hypothesis that the previous concurrent failure was caused only by per-worker runtime/client construction. Even with one public ylong client, throughput geomean is 0.895x of libcurl, worst throughput is 0.676x, p50/p95 gates fail, CPU/request geomean is 1.588x, CPU max is 2.265x, and RSS max is 1.176x. S9 remains active and S10 must not run as a completion gate.",
+  "completion_effect": "Adds causal narrowing evidence for S9 but does not complete S9 and does not permit goal_achieved."
+}

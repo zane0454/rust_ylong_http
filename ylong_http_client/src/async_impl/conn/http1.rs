@@ -15,11 +15,11 @@ use std::mem::take;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use ylong_http::body::async_impl::Body;
 use ylong_http::body::{ChunkBody, TextBody};
-use ylong_http::h1::{RequestEncoder, ResponseDecoder};
+use ylong_http::h1::{RequestRefEncoder, ResponseDecoder};
 use ylong_http::request::uri::Scheme;
 use ylong_http::response::ResponsePart;
 use ylong_http::version::Version;
@@ -48,7 +48,7 @@ where
     message
         .interceptor
         .intercept_request(message.request.ref_mut())?;
-    let mut buf = vec![0u8; TEMP_BUF_SIZE];
+    let mut buf = [0u8; TEMP_BUF_SIZE];
 
     message
         .request
@@ -56,6 +56,8 @@ where
         .time_group_mut()
         .set_transfer_start(Instant::now());
     let mut guard = conn.cancel_guard();
+    let phase_enabled = crate::TimeGroup::bench_phase_enabled();
+    let write_start = phase_enabled.then(Instant::now);
     encode_request_part(
         message.request.ref_mut(),
         &message.interceptor,
@@ -64,11 +66,25 @@ where
     )
     .await?;
     encode_various_body(message.request.ref_mut(), &mut conn, &mut buf).await?;
+    if let Some(start) = write_start {
+        message
+            .request
+            .ref_mut()
+            .time_group_mut()
+            .add_http1_write_duration(start.elapsed());
+    }
     // Decodes response part.
     let (part, pre) = {
         let mut decoder = ResponseDecoder::new();
+        let response_head_start = phase_enabled.then(Instant::now);
         loop {
+            let response_read_start = phase_enabled.then(Instant::now);
+            let mut response_read_polls = 0;
+            let mut response_read_pending = 0;
             let size = poll_fn(|cx| {
+                if phase_enabled {
+                    response_read_polls += 1;
+                }
                 if conn.speed_controller.poll_recv_pending_timeout(cx) {
                     return Poll::Ready(Err(HttpClientError::from_str(
                         BodyTransfer,
@@ -81,15 +97,71 @@ where
                     conn.speed_controller.reset_recv_pending_timeout();
                     return Poll::Ready(Ok(filled));
                 }
+                if phase_enabled {
+                    response_read_pending += 1;
+                }
                 Poll::Pending
             })
             .await?;
+            if let Some(start) = response_read_start {
+                let time_group = message.request.ref_mut().time_group_mut();
+                time_group.add_response_read_duration(start.elapsed());
+                time_group
+                    .add_response_read_poll_counts(response_read_polls, response_read_pending);
+            }
 
+            let response_intercept_start = phase_enabled.then(Instant::now);
             message.interceptor.intercept_output(&buf[..size])?;
+            if let Some(start) = response_intercept_start {
+                message
+                    .request
+                    .ref_mut()
+                    .time_group_mut()
+                    .add_response_intercept_duration(start.elapsed());
+            }
+            let response_decode_start = phase_enabled.then(Instant::now);
             match decoder.decode(&buf[..size]) {
-                Ok(None) => {}
-                Ok(Some((part, rem))) => break (part, rem),
+                Ok(None) => {
+                    if let Some(start) = response_decode_start {
+                        message
+                            .request
+                            .ref_mut()
+                            .time_group_mut()
+                            .add_response_decode_duration(start.elapsed());
+                    }
+                }
+                Ok(Some((part, rem))) => {
+                    if let Some(start) = response_decode_start {
+                        message
+                            .request
+                            .ref_mut()
+                            .time_group_mut()
+                            .add_response_decode_duration(start.elapsed());
+                    }
+                    if phase_enabled {
+                        message
+                            .request
+                            .ref_mut()
+                            .time_group_mut()
+                            .add_response_pre_read(rem.len());
+                    }
+                    if let Some(start) = response_head_start {
+                        message
+                            .request
+                            .ref_mut()
+                            .time_group_mut()
+                            .add_response_head_duration(start.elapsed());
+                    }
+                    break (part, rem);
+                }
                 Err(e) => {
+                    if let Some(start) = response_decode_start {
+                        message
+                            .request
+                            .ref_mut()
+                            .time_group_mut()
+                            .add_response_decode_duration(start.elapsed());
+                    }
                     conn.shutdown();
                     return err_from_other!(Request, e);
                 }
@@ -146,6 +218,10 @@ async fn encode_various_body<S>(
 where
     S: AsyncRead + AsyncWrite + Sync + Send + Unpin + 'static,
 {
+    if request.body().is_empty() {
+        return Ok(());
+    }
+
     let content_length = request
         .part()
         .headers
@@ -182,7 +258,7 @@ where
 }
 
 async fn encode_request_part<S>(
-    request: &Request,
+    request: &mut Request,
     interceptor: &Arc<Interceptors>,
     conn: &mut Http1Conn<S>,
     buf: &mut [u8],
@@ -191,26 +267,53 @@ where
     S: AsyncRead + AsyncWrite + ConnInfo + Sync + Send + Unpin + 'static,
 {
     // Encodes and sends Request-line and Headers(non-body fields).
-    let mut part_encoder = RequestEncoder::new(request.part().clone());
-    if conn.raw_mut().is_proxy() && request.uri().scheme() == Some(&Scheme::HTTP) {
-        part_encoder.absolute_uri(true);
-    }
-    loop {
-        match part_encoder.encode(&mut buf[..]) {
-            Ok(0) => break,
-            Ok(written) => {
-                interceptor.intercept_input(&buf[..written])?;
-                // RequestEncoder writes `buf` as much as possible.
-                if let Err(e) = conn.raw_mut().write_all(&buf[..written]).await {
+    let phase_enabled = crate::TimeGroup::bench_phase_enabled();
+    let (http1_encode_duration, http1_write_io_duration) = {
+        let mut http1_encode_duration = Duration::ZERO;
+        let mut http1_write_io_duration = Duration::ZERO;
+        let mut part_encoder = RequestRefEncoder::new(request.part());
+        if conn.raw_mut().is_proxy() && request.uri().scheme() == Some(&Scheme::HTTP) {
+            part_encoder.absolute_uri(true);
+        }
+        loop {
+            let encode_start = phase_enabled.then(Instant::now);
+            match part_encoder.encode(&mut buf[..]) {
+                Ok(0) => {
+                    if let Some(start) = encode_start {
+                        http1_encode_duration =
+                            http1_encode_duration.saturating_add(start.elapsed());
+                    }
+                    break;
+                }
+                Ok(written) => {
+                    if let Some(start) = encode_start {
+                        http1_encode_duration =
+                            http1_encode_duration.saturating_add(start.elapsed());
+                    }
+                    interceptor.intercept_input(&buf[..written])?;
+                    // RequestEncoder writes `buf` as much as possible.
+                    let write_start = phase_enabled.then(Instant::now);
+                    if let Err(e) = conn.raw_mut().write_all(&buf[..written]).await {
+                        conn.shutdown();
+                        return err_from_io!(Request, e);
+                    }
+                    if let Some(start) = write_start {
+                        http1_write_io_duration =
+                            http1_write_io_duration.saturating_add(start.elapsed());
+                    }
+                }
+                Err(e) => {
                     conn.shutdown();
-                    return err_from_io!(Request, e);
+                    return err_from_other!(Request, e);
                 }
             }
-            Err(e) => {
-                conn.shutdown();
-                return err_from_other!(Request, e);
-            }
         }
+        (http1_encode_duration, http1_write_io_duration)
+    };
+    if phase_enabled {
+        let time_group = request.time_group_mut();
+        time_group.add_http1_encode_duration(http1_encode_duration);
+        time_group.add_http1_write_io_duration(http1_write_io_duration);
     }
     Ok(())
 }

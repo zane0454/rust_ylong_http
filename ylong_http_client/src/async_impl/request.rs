@@ -350,7 +350,6 @@ impl Body {
         Self { inner }
     }
 
-    #[cfg(feature = "http2")]
     pub(crate) fn is_empty(&self) -> bool {
         match self.inner {
             BodyKind::Empty => true,

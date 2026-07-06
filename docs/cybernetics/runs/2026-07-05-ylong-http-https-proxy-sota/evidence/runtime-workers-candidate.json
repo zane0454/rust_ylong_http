@@ -1,0 +1,126 @@
+{
+  "evidence_id": "evidence.runtime-workers-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "counterexample_candidate_rejected_not_retained",
+  "verified_at": "2026-07-06T08:35:33+08:00",
+  "intent": "Test whether configuring the ylong_base benchmark runtime with an explicit 8-worker global runtime closes the remaining concurrency=8 HTTPS proxy gap against the same-process libcurl baseline.",
+  "candidate_changes": [
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Candidate added YLONG_BENCH_YLONG_RUNTIME_WORKERS for the benchmark binary only, calling ylong_runtime RuntimeBuilder::new_multi_thread().worker_num(workers).build_global() before running async_main."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Candidate added a focused unit test for default, positive, zero, and invalid worker-count parsing."
+    }
+  ],
+  "tests": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_red cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_runtime_workers_defaults_and_requires_positive_count",
+      "observed": "red: E0425 missing ylong_runtime_workers_from_value before implementing the candidate parser"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_green cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_runtime_workers_defaults_and_requires_positive_count",
+      "observed": "passed after adding the benchmark-only runtime-worker parser and ylong_base global runtime setup"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "observed": "passed 17 tests after adding the candidate"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_tests cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed 8 tests after adding the candidate"
+    }
+  ],
+  "performance_matrix": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" YLONG_BENCH_YLONG_RUNTIME_WORKERS=8 python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_runtime_workers_release/release/https_proxy_bench --result-dir docs/benchmarks/results/runtime-workers-candidate --figure-dir docs/benchmarks/results/runtime-workers-candidate",
+    "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+    "result_dir": "docs/benchmarks/results/runtime-workers-candidate",
+    "hashes": {
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_results.csv": "9d3b8068e02e4fe86a6f529cddd4202ef46b6da9cdd3736aa205b81f8c4688fe",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_summary.csv": "4075532c4a267fa0328b4e7f2f30ae5ae3ba1949a2485aa76e5e42eb03173a9d",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_comparison.csv": "c5ba1586550b2f77f60b21a600aa002b43fb2399fcc56b720a8ea9f3bc65d152",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_env.json": "9008f4a4a405dba5b7216e8cd64a7512d73cd843ca05f059d6f4970e8f0a250b",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_raw.txt": "24004ff7685104fb66575fa7d467fb57c1239f766244b286dea0cce0d7b8ecab",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_performance.png": "c2dc79601c676b900f79a20e3eb520ee3e72bc29e4948e4902fd0d5f9cfbb349",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_performance.pdf": "af362c92bfdf39d6145915716ab766e756058fc573f5d5ce1c8b0bc265d81f4e",
+      "/tmp/ylong_http_target_runtime_workers_release/release/https_proxy_bench": "e95212165d9eb168e0a594216c8efe0630bfff986e8425984e4867a21dd4b485"
+    },
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.0065519096488307,
+      "throughput_min_ratio_ylong_over_libcurl": 0.686407049326516,
+      "throughput_max_ratio_ylong_over_libcurl": 1.526417637874424,
+      "p50_geomean_ratio_ylong_over_libcurl": 0.9570321673760123,
+      "p50_max_ratio_ylong_over_libcurl": 1.48594674556213,
+      "p95_geomean_ratio_ylong_over_libcurl": 1.0749995353453443,
+      "p95_max_ratio_ylong_over_libcurl": 1.3542682926829268,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.2686913679812568,
+      "cpu_max_ratio_ylong_over_libcurl": 1.5426935174945742,
+      "rss_geomean_ratio_ylong_over_libcurl": 1.144900841894378,
+      "rss_max_ratio_ylong_over_libcurl": 1.1646068892979227,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "ylong_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.526417637874424,
+        "p50_ratio_ylong_over_libcurl": 0.5215434083601286,
+        "p95_ratio_ylong_over_libcurl": 0.9336989032901297,
+        "cpu_ratio_ylong_over_libcurl": 1.203126168573779,
+        "rss_ratio_ylong_over_libcurl": 1.1646068892979227
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.390201680688582,
+        "p50_ratio_ylong_over_libcurl": 0.6637168141592921,
+        "p95_ratio_ylong_over_libcurl": 0.9603494623655914,
+        "cpu_ratio_ylong_over_libcurl": 1.346673581487758,
+        "rss_ratio_ylong_over_libcurl": 1.1528463737977646
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.0258085071130658,
+        "p50_ratio_ylong_over_libcurl": 0.9740364025695932,
+        "p95_ratio_ylong_over_libcurl": 0.9934924078091106,
+        "cpu_ratio_ylong_over_libcurl": 0.9740049367479174,
+        "rss_ratio_ylong_over_libcurl": 1.1420355088772194
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.686407049326516,
+        "p50_ratio_ylong_over_libcurl": 1.48594674556213,
+        "p95_ratio_ylong_over_libcurl": 1.3542682926829268,
+        "cpu_ratio_ylong_over_libcurl": 1.5426935174945742,
+        "rss_ratio_ylong_over_libcurl": 1.1412880678981527
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.9709046360135333,
+        "p50_ratio_ylong_over_libcurl": 1.0595533498759304,
+        "p95_ratio_ylong_over_libcurl": 0.9858982219497242,
+        "cpu_ratio_ylong_over_libcurl": 1.1231222488762607,
+        "rss_ratio_ylong_over_libcurl": 1.1349206349206349
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.7168714286300696,
+        "p50_ratio_ylong_over_libcurl": 1.4473870056497173,
+        "p95_ratio_ylong_over_libcurl": 1.2975143403441682,
+        "cpu_ratio_ylong_over_libcurl": 1.525086768556293,
+        "rss_ratio_ylong_over_libcurl": 1.1340078973346495
+      }
+    ]
+  },
+  "finding": "Explicit ylong_base runtime worker configuration is not a SOTA lever for this workload. It helps HTTP-over-HTTPS-proxy throughput, but the full fair matrix still fails fixed SOTA gates: throughput geomean is only 1.006x, worst throughput is 0.686x, p95 geomean regresses to 1.075x, CPU/request geomean regresses to 1.269x, and RSS max is 1.165x. The strongest counterexamples are the 1000-request HTTPS-origin proxy cells, where nested TLS p50/p95 and CPU regress heavily. Because the change is benchmark-harness-only and does not satisfy S9, it is rejected and not retained.",
+  "retained_in_production_client": false,
+  "sota_verified": false
+}

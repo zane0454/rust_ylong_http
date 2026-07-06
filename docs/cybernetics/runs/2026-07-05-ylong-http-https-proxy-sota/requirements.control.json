@@ -1,0 +1,1730 @@
+{
+  "artifact_type": "requirements.control",
+  "schema_version": "1.3.0",
+  "status": "approved",
+  "approved_control": {
+    "human_purpose": "Complete the ylong_http HTTPS proxy contest task at first-tier/SOTA quality in the contest context, with implementation-level convergence rather than a prose-only gap analysis.",
+    "primary_object": "ylong_http_client HTTPS proxy support in rust_ylong_http",
+    "requested_transformation": "Perform implementation-level SOTA convergence for the HTTPS proxy contest task: audit the existing implementation, repair protocol and safety issues, add hard tests, fair benchmark evidence, and report revisions.",
+    "non_goals": [
+      "No product-code changes during requirements analysis.",
+      "No final SOTA claim without implementation evidence and verification output.",
+      "No live external proxy or credential use without explicit gate approval.",
+      "No replacement of implementation work by report wording."
+    ],
+    "how_we_know_purpose_was_met": "Contest reviewer, repository maintainer, or technical evaluator can confirm the repository contains verified HTTPS proxy implementation evidence: passing proxy protocol/TLS/mTLS/sync-async tests, fair benchmark artifacts distinguishing curl CLI from libcurl library baselines, report text tied to exact code/tests/benchmark evidence, and a final counterexample review that permits only SOTA verified as completion.",
+    "where_result_must_show_up": [
+      "ylong_http_client source code",
+      "ylong_http_client unit and integration tests",
+      "benchmark binary/script/results documentation",
+      "README/report narrative and evidence chain",
+      "controlled-run progress/final evidence"
+    ],
+    "what_counts_as_done": "All required outcomes and result paths are directly evidenced; verification commands pass; final report claims are constrained to proven evidence; no required outcome is offset by another outcome; SOTA verified additionally requires the predeclared HTTPS proxy core matrix to pass all hard thresholds against a fair same-model libcurl-library baseline: throughput geomean ratio >= 2.00 using the lower bound of the 95% confidence interval; every scenario throughput ratio >= 1.50 using the lower bound; every scenario p50 latency ratio <= 0.60 using the upper bound; every scenario p95 latency ratio <= 0.70 using the upper bound; at least one flagship scenario reaches throughput ratio >= 3.00 or p95 latency ratio <= 0.50; CPU time per successful request <= 0.80x libcurl-library geometric mean and <= 1.00x in every scenario; peak RSS <= 1.10x in every scenario; both clients have zero protocol, TLS, proxy, and request errors; at least 5 measured repetitions after warmup; coefficient of variation <= 5% or confidence intervals still satisfy every hard threshold; both clients use the same proxy/origin topology, TLS verification, mTLS material, request payload, concurrency, connection reuse, timeout policy, and response validation.",
+    "final_answer_format": {
+      "medium": "chat summary plus run-local JSON/evidence artifacts",
+      "required_structure": [
+        "requirements control path",
+        "status",
+        "required decisions or approval request",
+        "default assumptions",
+        "required checks",
+        "What the User Approved status",
+        "response-only next action"
+      ]
+    },
+    "semantic_base": {
+      "id": "semantic-base:ylong-http-https-proxy-sota",
+      "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+    },
+    "source_requirements": [
+      {
+        "id": "SR-sota-definition",
+        "source": {
+          "kind": "user_message",
+          "quote": "我同意，但是你还没有定义什么是 SOTA？"
+        },
+        "required_action": "Define first-tier/SOTA as an explicit contest-context acceptance standard before orchestration.",
+        "requirement_type": "produce_empirical_measurement",
+        "required_evidence_strength": "benchmark_result",
+        "target_objects": [
+          "requirements.control.json",
+          "final SOTA completion claim"
+        ],
+        "completion_checks": [
+          "Control artifact contains an explicit layered SOTA definition separating baseline correctness, first-tier quality, and SOTA frontier gates.",
+          "Final answer claims completion only as SOTA verified; all other conditions are unfinished required work, not terminal status classes."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-sota-not-correctness-only",
+        "source": {
+          "kind": "user_message",
+          "quote": "你这个绝对不是 SOTA，你这只是正确而已，好不好？"
+        },
+        "required_action": "Do not equate protocol correctness, security, and test coverage with SOTA; treat them as baseline admission gates.",
+        "requirement_type": "produce_empirical_measurement",
+        "required_evidence_strength": "benchmark_result",
+        "target_objects": [
+          "requirements.control.json",
+          "final SOTA completion claim"
+        ],
+        "completion_checks": [
+          "Correctness/security/test coverage are recorded as baseline or first-tier gates, not sufficient SOTA evidence.",
+          "SOTA requires frontier evidence such as fair baseline dominance, no semantic regression, reproducibility, and causal performance support."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-performance-threshold-above-contest-floor",
+        "source": {
+          "kind": "user_message",
+          "quote": "20% 这个标准我觉得还是太低了。因为这只是比赛的一个门槛，而不是拿奖的门槛"
+        },
+        "required_action": "Treat 20% as only the qualifying contest floor and define a stricter award/SOTA performance target.",
+        "requirement_type": "produce_empirical_measurement",
+        "required_evidence_strength": "benchmark_result",
+        "target_objects": [
+          "benchmark methodology",
+          "benchmark results",
+          "final SOTA completion claim"
+        ],
+        "completion_checks": [
+          "A result around 20% improvement is not classified as SOTA verified.",
+          "SOTA/award-level performance requires substantially stronger cross-scenario evidence than the contest floor."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-sota-hard-metrics",
+        "source": {
+          "kind": "user_message",
+          "quote": "我觉得你这个说法太弱了，根本就不是硬指标"
+        },
+        "required_action": "Replace soft SOTA language with fixed numeric pass/fail metrics for award-level and SOTA performance.",
+        "requirement_type": "produce_empirical_measurement",
+        "required_evidence_strength": "benchmark_result",
+        "target_objects": [
+          "SOTA definition",
+          "benchmark methodology",
+          "final SOTA completion claim"
+        ],
+        "completion_checks": [
+          "SOTA performance thresholds use explicit numeric ratios, confidence-bound rules, repetition requirements, and failure conditions.",
+          "Terms such as significant, obvious, strong, or flagship are not used as standalone SOTA gates without numeric pass/fail thresholds.",
+          "A final SOTA verified claim is unavailable unless all numeric hard thresholds are met."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-no-intermediate-terminal-statuses",
+        "source": {
+          "kind": "user_message",
+          "quote": "不允许这些状态出现"
+        },
+        "required_action": "Remove every non-SOTA terminal label and premature completion as an allowed terminal outcome; treat every non-SOTA condition as unfinished required work.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "review_report",
+        "target_objects": [
+          "SOTA definition",
+          "completion logic",
+          "final answer status"
+        ],
+        "completion_checks": [
+          "Only SOTA verified is an allowed successful terminal claim.",
+          "Missing libcurl-library baseline, causal evidence, tests, or thresholds cannot produce an alternative terminal status.",
+          "Final response must not present any non-SOTA terminal label or premature completion as an acceptable completion state."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-no-planned-stop-exit",
+        "source": {
+          "kind": "user_message",
+          "quote": "我觉得存在这些block原因都是不合理的"
+        },
+        "required_action": "Do not design fallback reasons as acceptable outcomes or planned final states; convert every missing evidence path into required work that must be completed or into an explicit human/live resource request needed to continue.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "review_report",
+        "target_objects": [
+          "completion logic",
+          "final answer status",
+          "orchestration handoff"
+        ],
+        "completion_checks": [
+          "The run cannot end successfully unless SOTA verified is proven.",
+          "Missing libcurl, causal evidence, endpoint tests, external resources, or benchmark data are not accepted as completion explanations.",
+          "If a resource is missing, the next action is to obtain it or ask for that exact resource, not to close prematurely."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-sota-fixed-target",
+        "source": {
+          "kind": "user_message",
+          "quote": "以“在 ylong_http HTTPS proxy 赛题语境里达到第一梯队/SOTA”为固定完成目标"
+        },
+        "required_action": "Treat contest-context first-tier/SOTA as the fixed completion target.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "review_report",
+        "target_objects": [
+          "ylong_http_client HTTPS proxy contest outcome"
+        ],
+        "completion_checks": [
+          "Final status claims completion only when SOTA verified is proven.",
+          "If any required evidence is missing, the run remains unfinished required work rather than an alternative completion label."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-implementation-level-convergence",
+        "source": {
+          "kind": "user_message",
+          "quote": "生成实现级 controlled_run 需求...输出内容必须能直接进入后续 orchestrating/pregoal 和代码执行，而不是停留在缺口清单或抽象标准"
+        },
+        "required_action": "Drive implementation-level convergence, not prose-only analysis.",
+        "requirement_type": "implement_behavior",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "source code",
+          "tests",
+          "benchmark assets",
+          "report/README"
+        ],
+        "completion_checks": [
+          "Runtime produces executable patches and verification evidence, or requests the exact human/live resource required to continue.",
+          "Runtime records verification commands and results."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-code-audit",
+        "source": {
+          "kind": "user_message",
+          "quote": "审查现有 HTTPS proxy 实现"
+        },
+        "required_action": "Audit current HTTPS proxy implementation before patching.",
+        "requirement_type": "diagnose_root_cause",
+        "required_evidence_strength": "analysis_report",
+        "target_objects": [
+          "ylong_http_client proxy connector paths",
+          "util::proxy",
+          "tests",
+          "benchmark docs"
+        ],
+        "completion_checks": [
+          "Audit identifies current behavior, gaps, and preservation constraints."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-protocol-correctness",
+        "source": {
+          "kind": "user_message",
+          "quote": "识别并修复协议正确性...问题"
+        },
+        "required_action": "Fix protocol correctness issues including CONNECT tunnel response semantics.",
+        "requirement_type": "implement_behavior",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "CONNECT request/response handling",
+          "proxy tunnel establishment"
+        ],
+        "completion_checks": [
+          "Any 2xx CONNECT response is accepted only after complete header termination.",
+          "407, non-2xx, malformed, and oversized responses fail closed."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-proxy-tls-mtls",
+        "source": {
+          "kind": "user_message",
+          "quote": "TLS/mTLS 端到端验证"
+        },
+        "required_action": "Verify proxy TLS and proxy mutual TLS behavior end to end.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "proxy TLS configuration",
+          "proxy CA validation",
+          "proxy client certificate/private key",
+          "origin TLS separation"
+        ],
+        "completion_checks": [
+          "Proxy CA success/failure and hostname mismatch are tested.",
+          "Proxy mTLS without client cert fails and with client cert succeeds.",
+          "Proxy TLS configuration is not confused with origin TLS configuration."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-sync-async-proxy-semantics",
+        "source": {
+          "kind": "user_message",
+          "quote": "sync/async 代理语义"
+        },
+        "required_action": "Verify and accurately describe shared proxy semantics between sync and async paths.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "sync connector",
+          "async connector",
+          "util::proxy"
+        ],
+        "completion_checks": [
+          "Shared behavior is tested or explicitly scoped.",
+          "Report does not overclaim shared implementation where only shared semantics exist."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-test-matrix",
+        "source": {
+          "kind": "user_message",
+          "quote": "测试矩阵"
+        },
+        "required_action": "Create or update a targeted test matrix for contest-critical proxy behavior.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "test_result",
+        "target_objects": [
+          "unit tests",
+          "integration-style tests",
+          "feature-specific test commands"
+        ],
+        "completion_checks": [
+          "Matrix covers protocol, TLS/mTLS, sync/async, feature-off failure, and HTTP/3 over proxy rejection where applicable."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-benchmark-fairness",
+        "source": {
+          "kind": "user_message",
+          "quote": "benchmark 公平性"
+        },
+        "required_action": "Make benchmark methodology and claims fair, reproducible, and accurately labeled.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "command_result",
+        "target_objects": [
+          "https_proxy_bench",
+          "run_https_proxy_bench.py",
+          "benchmark docs/results"
+        ],
+        "completion_checks": [
+          "curl CLI and libcurl library baselines are distinguished.",
+          "Connection reuse, process model, TLS configuration, warmup, repeats, and local-vs-live topology are documented.",
+          "Performance claims are removed or rewritten to match direct evidence when evidence is not fair or reproducible; this rewrite does not satisfy benchmark or SOTA evidence."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-report-evidence-chain",
+        "source": {
+          "kind": "user_message",
+          "quote": "报告证据链"
+        },
+        "required_action": "Revise report/README narrative so claims are backed by exact implementation, tests, and benchmark evidence.",
+        "requirement_type": "write_documentation",
+        "required_evidence_strength": "analysis_report",
+        "target_objects": [
+          "README.md",
+          "contest report content if present or supplied",
+          "benchmark/result documentation"
+        ],
+        "completion_checks": [
+          "Core narrative emphasizes HTTPS proxy endpoint support, TLS separation, proxy module boundaries, fail-closed behavior, test matrix, and fair benchmark evidence.",
+          "Unsupported 95% or curl/libcurl claims are corrected or scoped."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      },
+      {
+        "id": "SR-counterexample-gate",
+        "source": {
+          "kind": "user_message",
+          "quote": "反例门"
+        },
+        "required_action": "Run a counterexample gate before any SOTA/goal_achieved completion claim.",
+        "requirement_type": "verify_or_review",
+        "required_evidence_strength": "review_report",
+        "target_objects": [
+          "completion claim",
+          "decomposition from requirements to outcomes/work packages",
+          "benchmark and report claims"
+        ],
+        "completion_checks": [
+          "Independent review tries to find a case where all listed evidence is true while SOTA remains false.",
+          "Any unresolved counterexample means completion has not been reached."
+        ],
+        "blocks_goal_achieved_if_missing": true
+      }
+    ],
+    "information_sufficiency_check": {
+      "status": "satisfied",
+      "facts": [
+        {
+          "fact_id": "F-repo-current-proxy-shape",
+          "statement": "The current repository already contains HTTPS proxy support paths in util::proxy, async/sync connectors, README claims, and benchmark assets.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-code-audit",
+              "SR-implementation-level-convergence"
+            ],
+            "required_outcomes": [
+              "O-current-audit"
+            ]
+          },
+          "why_needed": "Design and orchestration must preserve existing implementation scope and target actual files instead of creating an abstract feature.",
+          "acceptable_evidence": [
+            {
+              "kind": "source_code",
+              "description": "Read-only inspection of current source, tests, README, and benchmark files."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/source_observations.json#facts/F-repo-current-proxy-shape",
+          "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-connect-parser-200-only",
+          "statement": "Current parse_tunnel_response accepts only status code 200 as tunnel success and treats other 2xx statuses as unsuccessful.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-protocol-correctness"
+            ],
+            "required_outcomes": [
+              "O-protocol-correctness"
+            ]
+          },
+          "why_needed": "The first implementation work package must include a protocol fix and tests rather than treating CONNECT parsing as already complete.",
+          "acceptable_evidence": [
+            {
+              "kind": "source_code",
+              "description": "Inspection of ylong_http_client/src/util/proxy.rs parse_tunnel_response and current unit tests."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/source_observations.json#facts/F-connect-parser-200-only",
+          "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-proxy-mtls-evidence-gap",
+          "statement": "Current files expose proxy TLS/mTLS configuration paths and benchmark environment variables, but the inspected test surface does not yet provide hard proxy mTLS endpoint success/failure evidence.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-proxy-tls-mtls",
+              "SR-test-matrix"
+            ],
+            "required_outcomes": [
+              "O-proxy-tls-mtls",
+              "O-test-matrix"
+            ]
+          },
+          "why_needed": "Design and orchestration must allocate endpoint tests for proxy mTLS instead of accepting configuration APIs as sufficient evidence.",
+          "acceptable_evidence": [
+            {
+              "kind": "source_code",
+              "description": "Search results and source inspection of tests, proxy config, and benchmark env handling."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/source_observations.json#facts/F-proxy-mtls-evidence-gap",
+          "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-benchmark-labeling-gap",
+          "statement": "Current benchmark code uses a curl executable/config baseline while README text says curl/libcurl and presents very large local improvement percentages.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-benchmark-fairness",
+              "SR-report-evidence-chain"
+            ],
+            "required_outcomes": [
+              "O-benchmark-fairness",
+              "O-report-evidence-chain"
+            ]
+          },
+          "why_needed": "The benchmark/report work must correct baseline labeling and evidence scope before claiming SOTA performance.",
+          "acceptable_evidence": [
+            {
+              "kind": "source_code",
+              "description": "Inspection of README.md, https_proxy_bench.rs, and docs/benchmarks/run_https_proxy_bench.py."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/source_observations.json#facts/F-benchmark-labeling-gap",
+          "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-libcurl-library-baseline-gap",
+          "statement": "Current benchmark assets use a curl executable/process baseline and do not implement a same-process libcurl-library baseline.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-performance-threshold-above-contest-floor",
+              "SR-sota-hard-metrics",
+              "SR-benchmark-fairness"
+            ],
+            "required_outcomes": [
+              "O-benchmark-fairness",
+              "O-sota-threshold-matrix",
+              "O-causal-performance-evidence"
+            ]
+          },
+          "why_needed": "Design and orchestration must allocate libcurl-library baseline work and exact resource requests if required; curl CLI evidence cannot satisfy the numeric SOTA hard thresholds, and missing libcurl evidence cannot become a completion state.",
+          "acceptable_evidence": [
+            {
+              "kind": "source_code",
+              "description": "Inspection of benchmark binary/script and dependency manifests for libcurl-library benchmark support."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/source_observations.json#facts/F-libcurl-library-baseline-gap",
+          "blocks_design_or_plan_if_missing": true
+        },
+        {
+          "fact_id": "F-causal-performance-evidence-gap",
+          "statement": "Current benchmark/report assets do not collect the causal performance evidence required for SOTA verified, including profiling/tracing/ablation data, p50/p95, CPU/request, RSS, confidence intervals, and proof that benchmark traffic cannot bypass the real client path.",
+          "derived_from": {
+            "source_requirements": [
+              "SR-sota-definition",
+              "SR-sota-not-correctness-only",
+              "SR-sota-hard-metrics",
+              "SR-benchmark-fairness"
+            ],
+            "required_outcomes": [
+              "O-sota-threshold-matrix",
+              "O-causal-performance-evidence"
+            ]
+          },
+          "why_needed": "Design and orchestration must allocate real-client-path and causal performance evidence instead of treating elapsed-time tables as enough for SOTA verified.",
+          "acceptable_evidence": [
+            {
+              "kind": "source_code",
+              "description": "Inspection of benchmark code, result parser, metrics, and report assets for profiling, ablation, confidence interval, and real-client-path evidence."
+            }
+          ],
+          "current_status": "satisfied",
+          "evidence_ref": "evidence/source_observations.json#facts/F-causal-performance-evidence-gap",
+          "blocks_design_or_plan_if_missing": true
+        }
+      ],
+      "counterexample_review": {
+        "status": "pass",
+        "verdict": "approved",
+        "reviewer": {
+          "kind": "subagent",
+          "id": "requirements-information-sufficiency-counterexample-reviewer-v3",
+          "evidence_ref": "evidence/information_sufficiency_counterexample_no_terminal_rerun.json"
+        },
+        "checked_facts": [
+          "F-repo-current-proxy-shape",
+          "F-connect-parser-200-only",
+          "F-proxy-mtls-evidence-gap",
+          "F-benchmark-labeling-gap",
+          "F-libcurl-library-baseline-gap",
+          "F-causal-performance-evidence-gap"
+        ],
+        "checked_transformations": [
+          "source_requirements->information_sufficiency_facts",
+          "required_outcomes->information_sufficiency_facts",
+          "information_sufficiency_facts->design_plan_entry",
+          "no_non_sota_terminal_status->information_sufficiency",
+          "no_planned_stop_exit->information_sufficiency"
+        ],
+        "findings": []
+      }
+    },
+    "required_outcomes": [
+      {
+        "id": "O-current-audit",
+        "statement": "Current HTTPS proxy implementation is audited before patches are applied.",
+        "source_requirements": [
+          "SR-code-audit",
+          "SR-implementation-level-convergence"
+        ],
+        "completion_claim": "Completes the audit requirement by identifying current implementation, tests, benchmark assets, report claims, and preservation constraints.",
+        "completed_target_objects": [
+          "ylong_http_client proxy implementation",
+          "README/benchmark/test surface"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "local repository state before implementation"
+          ],
+          "forbidden_contexts": [
+            "generic proxy library advice without source inspection"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.current-audit",
+            "kind": "progress_event",
+            "description": "Audit notes with code references and current-state gaps.",
+            "evidence_strength": "analysis_report",
+            "satisfies_source_requirements": [
+              "SR-code-audit"
+            ],
+            "evidence_claim": "The existing implementation was inspected and gaps were identified against SOTA goals.",
+            "completed_target_objects": [
+              "ylong_http_client proxy connector paths",
+              "util::proxy",
+              "tests",
+              "benchmark docs",
+              "current proxy implementation"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "local repository state before implementation",
+                "pre-patch audit"
+              ],
+              "proves": "Current-state audit completed.",
+              "does_not_prove": [
+                "Any implementation issue is fixed."
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Assuming README claims are accurate without source inspection."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Audit is complete only when source, tests, benchmark, and report claims have been inspected and mapped to required SOTA outcomes.",
+          "required_checked_transformations": [
+            "required_outcome:O-current-audit->completion_gate",
+            "source_audit->work_packages"
+          ],
+          "required_evidence_ids": [
+            "evidence.current-audit"
+          ],
+          "reject_if": [
+            "Audit omits tests, benchmark, or report claims.",
+            "Audit findings are generic and not tied to files."
+          ]
+        }
+      },
+      {
+        "id": "O-protocol-correctness",
+        "statement": "HTTPS proxy CONNECT handling follows required protocol semantics and fails closed on invalid responses.",
+        "source_requirements": [
+          "SR-protocol-correctness"
+        ],
+        "completion_claim": "Completes protocol repair by accepting complete CONNECT 2xx responses and rejecting auth, malformed, non-2xx, and oversized responses.",
+        "completed_target_objects": [
+          "util::proxy CONNECT parsing",
+          "sync/async tunnel handling"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "HTTP/1.1 CONNECT tunnel response parsing",
+            "HTTPS proxy tunnel establishment"
+          ],
+          "forbidden_contexts": [
+            "ordinary non-CONNECT response body handling"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.connect-2xx-tests",
+            "kind": "command_result",
+            "description": "Targeted tests for 200, 201, 204, 407, 500, malformed status, incomplete headers, and oversized tunnel response.",
+            "evidence_strength": "test_result",
+            "satisfies_source_requirements": [
+              "SR-protocol-correctness"
+            ],
+            "evidence_claim": "CONNECT parsing implements the required tunnel success/failure behavior.",
+            "completed_target_objects": [
+              "CONNECT request/response handling",
+              "proxy tunnel establishment",
+              "parse_tunnel_response"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "HTTP/1.1 CONNECT tunnel response parsing",
+                "HTTPS proxy tunnel establishment",
+                "targeted tunnel parser tests are run after patch"
+              ],
+              "proves": "CONNECT response parser semantics for tested cases.",
+              "does_not_prove": [
+                "Full TLS/mTLS endpoint behavior"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "A code patch without tests.",
+          "Accepting only 200 as tunnel success."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Protocol correctness is complete only when parser and tunnel behavior accept any complete 2xx response and fail closed for invalid/auth/failure responses.",
+          "required_checked_transformations": [
+            "required_outcome:O-protocol-correctness->completion_gate",
+            "CONNECT_RFC_semantics->parser_tests"
+          ],
+          "required_evidence_ids": [
+            "evidence.connect-2xx-tests"
+          ],
+          "reject_if": [
+            "Any complete 2xx CONNECT response other than 200 is rejected.",
+            "Malformed or oversized tunnel responses can be accepted.",
+            "407 is not distinguishable as proxy authentication failure."
+          ]
+        }
+      },
+      {
+        "id": "O-proxy-tls-mtls",
+        "statement": "Proxy TLS and proxy mutual TLS are verified end to end and kept distinct from origin TLS.",
+        "source_requirements": [
+          "SR-proxy-tls-mtls"
+        ],
+        "completion_claim": "Completes proxy TLS/mTLS verification through local endpoint tests for CA, hostname, and client certificate behavior.",
+        "completed_target_objects": [
+          "proxy TLS hop",
+          "origin TLS hop",
+          "Proxy::tls_config"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "HTTP over HTTPS proxy",
+            "HTTPS over HTTPS proxy",
+            "proxy certificate validation",
+            "proxy mutual TLS"
+          ],
+          "forbidden_contexts": [
+            "origin TLS-only tests",
+            "builder-only unit tests"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.proxy-tls-mtls-tests",
+            "kind": "command_result",
+            "description": "Integration-style tests proving proxy CA success/failure, hostname mismatch, and proxy mTLS success/failure.",
+            "evidence_strength": "test_result",
+            "satisfies_source_requirements": [
+              "SR-proxy-tls-mtls"
+            ],
+            "evidence_claim": "Proxy TLS/mTLS behavior works end to end under local test conditions.",
+            "completed_target_objects": [
+              "proxy TLS configuration",
+              "proxy CA validation",
+              "proxy client certificate/private key",
+              "origin TLS separation",
+              "HTTPS proxy endpoint"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "HTTP over HTTPS proxy",
+                "HTTPS over HTTPS proxy",
+                "proxy certificate validation",
+                "proxy mutual TLS",
+                "local TLS proxy test server with controlled certificates"
+              ],
+              "proves": "Proxy TLS/mTLS configured on the proxy hop is enforced.",
+              "does_not_prove": [
+                "External production proxy interoperability"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Only setting fields on TlsConfigBuilder.",
+          "Only testing origin TLS."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Proxy TLS/mTLS is complete only when endpoint tests prove proxy-hop certificate and client-certificate behavior separately from origin TLS.",
+          "required_checked_transformations": [
+            "required_outcome:O-proxy-tls-mtls->completion_gate",
+            "proxy_tls_config->endpoint_evidence"
+          ],
+          "required_evidence_ids": [
+            "evidence.proxy-tls-mtls-tests"
+          ],
+          "reject_if": [
+            "mTLS claim is supported only by configuration APIs.",
+            "Proxy and origin TLS validation cannot be distinguished.",
+            "Negative certificate/hostname cases are missing."
+          ]
+        }
+      },
+      {
+        "id": "O-sync-async-proxy-semantics",
+        "statement": "Sync and async proxy semantics are verified and accurately represented.",
+        "source_requirements": [
+          "SR-sync-async-proxy-semantics"
+        ],
+        "completion_claim": "Completes sync/async semantics requirement by proving shared proxy matching/auth/CONNECT parsing behavior or explicitly scoping unsupported paths.",
+        "completed_target_objects": [
+          "sync connector",
+          "async connector",
+          "util::proxy"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "shared proxy configuration and parser semantics"
+          ],
+          "forbidden_contexts": [
+            "claiming identical sync/async connection implementations"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.sync-async-proxy-tests",
+            "kind": "command_result",
+            "description": "Tests or explicit report evidence for shared proxy semantics across sync and async paths.",
+            "evidence_strength": "test_result",
+            "satisfies_source_requirements": [
+              "SR-sync-async-proxy-semantics"
+            ],
+            "evidence_claim": "Sync/async proxy semantics are covered or correctly scoped.",
+            "completed_target_objects": [
+              "sync connector",
+              "async connector",
+              "util::proxy",
+              "proxy semantics"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "shared proxy configuration and parser semantics",
+                "feature combinations selected by design"
+              ],
+              "proves": "Shared semantics claim is accurate for tested paths.",
+              "does_not_prove": [
+                "Full sync HTTP/2 implementation"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Report wording that says shared implementation when only shared semantics exist."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Sync/async proxy semantics are complete only when tested or explicitly scoped without overclaiming.",
+          "required_checked_transformations": [
+            "required_outcome:O-sync-async-proxy-semantics->completion_gate"
+          ],
+          "required_evidence_ids": [
+            "evidence.sync-async-proxy-tests"
+          ],
+          "reject_if": [
+            "The report claims sync/async share all tunnel implementation when source shows separate connector logic.",
+            "A sync or async proxy path can diverge silently on core matching/auth/parsing semantics."
+          ]
+        }
+      },
+      {
+        "id": "O-test-matrix",
+        "statement": "A contest-critical HTTPS proxy test matrix is implemented and run.",
+        "source_requirements": [
+          "SR-test-matrix"
+        ],
+        "completion_claim": "Completes test-matrix requirement only by running and passing targeted tests for protocol, TLS/mTLS, sync/async, feature boundaries, and unsupported proxy cases.",
+        "completed_target_objects": [
+          "test suite",
+          "verification commands"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "local repository verification"
+          ],
+          "forbidden_contexts": [
+            "unrun test list"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.test-matrix-run",
+            "kind": "command_result",
+            "description": "Actual command outputs for the selected targeted test matrix.",
+            "evidence_strength": "test_result",
+            "satisfies_source_requirements": [
+              "SR-test-matrix",
+              "SR-implementation-level-convergence"
+            ],
+            "evidence_claim": "The test matrix ran and passed; missing environment requirements are remaining required work with exact next actions and do not satisfy this evidence.",
+            "completed_target_objects": [
+              "unit tests",
+              "integration-style tests",
+              "feature-specific test commands",
+              "source code",
+              "tests",
+              "benchmark assets",
+              "report/README",
+              "test matrix"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "local repository verification",
+                "local cargo/OpenHarmony-compatible environment"
+              ],
+              "proves": "Selected local tests pass.",
+              "does_not_prove": [
+                "Unselected external interoperability"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Listing tests without running them."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "The test matrix is complete only when commands are run and required tests pass; unavailable dependencies require exact next actions and leave this outcome incomplete.",
+          "required_checked_transformations": [
+            "required_outcome:O-test-matrix->completion_gate",
+            "test_matrix->SOTA_claim"
+          ],
+          "required_evidence_ids": [
+            "evidence.test-matrix-run"
+          ],
+          "reject_if": [
+            "A required feature path has no test or explicit remaining work item.",
+            "A failed test is ignored because unrelated tests pass."
+          ]
+        }
+      },
+      {
+        "id": "O-benchmark-fairness",
+        "statement": "Benchmark methodology and claims are fair, reproducible, and correctly labeled.",
+        "source_requirements": [
+          "SR-benchmark-fairness"
+        ],
+        "completion_claim": "Completes benchmark requirement only by producing fair, reproducible local benchmark evidence with accurately scoped claims; unavailable fair baselines remain required work with exact next actions.",
+        "completed_target_objects": [
+          "https_proxy_bench",
+          "benchmark driver",
+          "benchmark docs/results"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "local benchmark harness",
+            "curl CLI baseline",
+            "libcurl library baseline if implemented or available"
+          ],
+          "forbidden_contexts": [
+            "curl CLI result used as libcurl library proof"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.benchmark-fairness",
+            "kind": "command_result",
+            "description": "Benchmark commands/results and methodology notes distinguishing baseline types and topology.",
+            "evidence_strength": "command_result",
+            "satisfies_source_requirements": [
+              "SR-benchmark-fairness"
+            ],
+            "evidence_claim": "Benchmark results are reproducible and claims are correctly scoped.",
+            "completed_target_objects": [
+              "https_proxy_bench",
+              "run_https_proxy_bench.py",
+              "benchmark docs/results",
+              "benchmark evidence"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "local benchmark harness",
+                "curl CLI baseline",
+                "libcurl library baseline if implemented or available",
+                "local benchmark dependencies available"
+              ],
+              "proves": "Local benchmark result under documented methodology.",
+              "does_not_prove": [
+                "External contest SOTA ranking",
+                "libcurl library performance if only curl CLI was run"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "A percentage table without method clarity.",
+          "Calling a curl executable result a libcurl library result."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Benchmark fairness is complete only when benchmark evidence exists and baseline identity, topology, reuse model, TLS config, warmup, repeats, and limitations are explicit; documentation-only claim rewriting cannot satisfy this outcome.",
+          "required_checked_transformations": [
+            "required_outcome:O-benchmark-fairness->completion_gate",
+            "benchmark_result->performance_claim"
+          ],
+          "required_evidence_ids": [
+            "evidence.benchmark-fairness"
+          ],
+          "reject_if": [
+            "curl CLI and libcurl library are conflated.",
+            "A performance claim depends on process-model differences that are not disclosed.",
+            "The benchmark cannot be rerun from documented commands."
+          ]
+        }
+      },
+      {
+        "id": "O-report-evidence-chain",
+        "statement": "README/report narrative is revised to match verified implementation and benchmark evidence.",
+        "source_requirements": [
+          "SR-report-evidence-chain"
+        ],
+        "completion_claim": "Completes report requirement by making the narrative evidence-backed, conservative, and contest-relevant.",
+        "completed_target_objects": [
+          "README.md",
+          "contest report content if present",
+          "benchmark documentation"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "final deliverable narrative"
+          ],
+          "forbidden_contexts": [
+            "unsupported performance or SOTA claims"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.report-diff",
+            "kind": "command_result",
+            "description": "Diff or artifact showing report/README claims revised to match evidence.",
+            "evidence_strength": "analysis_report",
+            "satisfies_source_requirements": [
+              "SR-report-evidence-chain"
+            ],
+            "evidence_claim": "Narrative claims are backed by implementation/tests/benchmark evidence.",
+            "completed_target_objects": [
+              "README.md",
+              "contest report content if present or supplied",
+              "benchmark/result documentation",
+              "report evidence chain"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "final deliverable narrative",
+                "after implementation and benchmark/test evidence exists"
+              ],
+              "proves": "Report wording matches available evidence.",
+              "does_not_prove": [
+                "Implementation works if tests fail"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "Marketing phrasing with no direct evidence."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Report evidence chain is complete only when every strong claim is tied to code/test/benchmark evidence and limitations are explicit.",
+          "required_checked_transformations": [
+            "required_outcome:O-report-evidence-chain->completion_gate",
+            "evidence->report_claims"
+          ],
+          "required_evidence_ids": [
+            "evidence.report-diff"
+          ],
+          "reject_if": [
+            "The report still centers an unsupported 95% performance claim.",
+            "The report calls curl CLI evidence libcurl library evidence.",
+            "The report claims mTLS support without endpoint test evidence."
+          ]
+        }
+      },
+      {
+        "id": "O-sota-threshold-matrix",
+        "statement": "SOTA performance status is evaluated against the predeclared numeric hard-threshold matrix.",
+        "source_requirements": [
+          "SR-sota-definition",
+          "SR-sota-not-correctness-only",
+          "SR-performance-threshold-above-contest-floor",
+          "SR-sota-hard-metrics",
+          "SR-no-intermediate-terminal-statuses",
+          "SR-no-planned-stop-exit",
+          "SR-benchmark-fairness"
+        ],
+        "completion_claim": "Completes SOTA-threshold evaluation by measuring every predeclared core scenario, computing every numeric threshold, and allowing only a SOTA verified completion claim when all thresholds pass; any failed or unavailable evidence remains unfinished required work.",
+        "completed_target_objects": [
+          "predeclared HTTPS proxy benchmark matrix",
+          "libcurl-library baseline evidence",
+          "numeric SOTA threshold verdict"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "SOTA verified performance gate",
+            "remaining required work list when SOTA verified is not proven"
+          ],
+          "forbidden_contexts": [
+            "curl CLI-only benchmark",
+            "single-scenario benchmark",
+            "benchmark results without confidence-bound threshold evaluation"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.sota-threshold-matrix",
+            "kind": "command_result",
+            "description": "Per-scenario libcurl-library benchmark comparison with throughput, p50, p95, CPU/request, RSS, errors, repetitions, confidence intervals, and pass/fail for every numeric hard threshold.",
+            "evidence_strength": "benchmark_result",
+            "satisfies_source_requirements": [
+              "SR-sota-definition",
+              "SR-sota-not-correctness-only",
+              "SR-performance-threshold-above-contest-floor",
+              "SR-sota-hard-metrics"
+            ],
+            "evidence_claim": "The final SOTA performance status is classified by the approved numeric hard-threshold matrix.",
+            "completed_target_objects": [
+              "requirements.control.json",
+              "final SOTA completion claim",
+              "benchmark methodology",
+              "benchmark results",
+              "SOTA definition",
+              "numeric SOTA verdict"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "SOTA verified performance gate",
+                "remaining required work list when SOTA verified is not proven",
+                "after benchmark harness execution with required libcurl-library and topology resources available"
+              ],
+              "proves": "Whether local evidence satisfies every numeric SOTA hard threshold.",
+              "does_not_prove": [
+                "Protocol correctness if tests fail",
+                "TLS/mTLS security behavior if endpoint tests are missing",
+                "External contest ranking"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "A fair benchmark methodology without numeric pass/fail results.",
+          "A curl CLI-only result.",
+          "A result around the 20% contest floor.",
+          "A report that replaces SOTA verified with a weaker terminal label instead of evaluating the SOTA hard-threshold matrix."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "SOTA threshold evaluation is complete only when every predeclared core scenario and every numeric hard threshold has a measured pass/fail verdict; unavailable measurement resources require exact next actions and leave this outcome incomplete.",
+          "required_checked_transformations": [
+            "required_outcome:O-sota-threshold-matrix->completion_gate",
+            "source_requirements:SOTA_metrics->benchmark_matrix",
+            "benchmark_matrix->numeric_threshold_verdict",
+            "numeric_threshold_verdict->final_SOTA_status"
+          ],
+          "required_evidence_ids": [
+            "evidence.sota-threshold-matrix"
+          ],
+          "reject_if": [
+            "SOTA verified is claimed when any numeric hard threshold fails or is unavailable.",
+            "20%+ contest-floor evidence is treated as SOTA verified evidence.",
+            "Any predeclared core scenario is missing without keeping completion unclaimed.",
+            "Confidence-bound, repetition, CPU, RSS, or zero-error requirements are omitted from the verdict.",
+            "curl CLI evidence is used to satisfy libcurl-library hard thresholds."
+          ]
+        }
+      },
+      {
+        "id": "O-causal-performance-evidence",
+        "statement": "SOTA performance advantage is causally tied to the real ylong_http_client HTTPS proxy implementation and not to benchmark-only shortcuts or mismatched baseline mechanics.",
+        "source_requirements": [
+          "SR-sota-definition",
+          "SR-sota-not-correctness-only",
+          "SR-performance-threshold-above-contest-floor",
+          "SR-sota-hard-metrics",
+          "SR-no-intermediate-terminal-statuses",
+          "SR-no-planned-stop-exit",
+          "SR-benchmark-fairness"
+        ],
+        "completion_claim": "Completes causal SOTA performance validation by showing that benchmark traffic uses the production client path, that libcurl comparison uses the same model, and that the observed advantage is explained by profiling or ablation evidence rather than disabled semantics, startup overhead, or pooling mismatch.",
+        "completed_target_objects": [
+          "benchmark harness",
+          "ylong_http_client production proxy path",
+          "libcurl-library baseline path",
+          "profiling or ablation evidence"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "SOTA verified performance claim",
+            "numeric threshold result interpretation"
+          ],
+          "forbidden_contexts": [
+            "benchmark-only fast path",
+            "curl CLI startup-cost comparison",
+            "mismatched connection pooling or TLS verification",
+            "disabled mTLS or response validation"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.real-client-path",
+            "kind": "command_result",
+            "description": "Code and run evidence showing the benchmark exercises the same public ylong_http_client request path and connector/proxy/TLS behavior as ordinary client use, without benchmark-only transport shortcuts.",
+            "evidence_strength": "command_result",
+            "satisfies_source_requirements": [
+              "SR-benchmark-fairness"
+            ],
+            "evidence_claim": "Benchmark traffic uses the real client implementation path.",
+            "completed_target_objects": [
+              "https_proxy_bench",
+              "run_https_proxy_bench.py",
+              "benchmark docs/results",
+              "benchmark harness",
+              "client connector path"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "SOTA verified performance claim",
+                "numeric threshold result interpretation",
+                "after benchmark harness implementation"
+              ],
+              "proves": "The benchmark did not bypass the production HTTPS proxy client path.",
+              "does_not_prove": [
+                "Numeric SOTA thresholds pass",
+                "External contest ranking"
+              ]
+            }
+          },
+          {
+            "evidence_id": "evidence.performance-causality",
+            "kind": "command_result",
+            "description": "Profiling, tracing, or ablation evidence explaining the performance delta and ruling out curl CLI startup overhead, pooling mismatch, disabled verification, missing mTLS, response-validation mismatch, and benchmark-only fast paths.",
+            "evidence_strength": "benchmark_result",
+            "satisfies_source_requirements": [
+              "SR-sota-definition",
+              "SR-performance-threshold-above-contest-floor",
+              "SR-sota-hard-metrics"
+            ],
+            "evidence_claim": "The measured advantage is causally attributable to implementation choices under same-model semantics.",
+            "completed_target_objects": [
+              "requirements.control.json",
+              "final SOTA completion claim",
+              "benchmark methodology",
+              "benchmark results",
+              "SOTA definition",
+              "performance explanation",
+              "ablation/profile evidence"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "SOTA verified performance claim",
+                "numeric threshold result interpretation",
+                "after numeric threshold benchmark evidence exists"
+              ],
+              "proves": "Causal support for the SOTA performance claim.",
+              "does_not_prove": [
+                "Protocol correctness if CONNECT tests fail",
+                "SOTA verified if numeric thresholds fail"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "A passing numeric threshold table with no proof of real client path.",
+          "A benchmark that compares against curl CLI startup overhead.",
+          "A libcurl baseline with different pooling, TLS verification, mTLS, timeout, request, or response-validation semantics.",
+          "A performance explanation asserted only in prose without profiling, tracing, or ablation evidence."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Causal performance evidence is complete only when the real production client path and same-model baseline are shown, and profiling/tracing/ablation evidence rules out benchmark-only shortcuts and startup/pooling artifacts.",
+          "required_checked_transformations": [
+            "required_outcome:O-causal-performance-evidence->completion_gate",
+            "benchmark_harness->real_client_path",
+            "libcurl_baseline->same_model_semantics",
+            "numeric_threshold_result->causal_explanation",
+            "causal_explanation->final_SOTA_status"
+          ],
+          "required_evidence_ids": [
+            "evidence.real-client-path",
+            "evidence.performance-causality"
+          ],
+          "reject_if": [
+            "Benchmark code bypasses the public client/connector/proxy/TLS path.",
+            "The measured advantage can be explained by curl CLI startup cost, connection reuse mismatch, disabled TLS verification, missing mTLS, or response-validation mismatch.",
+            "No profiling, tracing, or ablation evidence supports the performance explanation.",
+            "SOTA verified is claimed when causality is unavailable or only asserted in prose."
+          ]
+        }
+      },
+      {
+        "id": "O-final-counterexample-gate",
+        "statement": "Final SOTA completion claim survives counterexample review.",
+        "source_requirements": [
+          "SR-counterexample-gate",
+          "SR-sota-fixed-target",
+          "SR-sota-definition",
+          "SR-sota-not-correctness-only",
+          "SR-performance-threshold-above-contest-floor",
+          "SR-sota-hard-metrics",
+          "SR-no-intermediate-terminal-statuses",
+          "SR-no-planned-stop-exit"
+        ],
+        "completion_claim": "Completes final review requirement by independently challenging the claim that all evidence implies SOTA completion.",
+        "completed_target_objects": [
+          "final completion claim"
+        ],
+        "claim_scope": {
+          "required_contexts": [
+            "before goal_achieved true"
+          ],
+          "forbidden_contexts": [
+            "self-review only"
+          ]
+        },
+        "blocks_goal_achieved_if_missing": true,
+        "required_evidence": [
+          {
+            "evidence_id": "evidence.final-counterexample-review",
+            "kind": "progress_event",
+            "description": "Independent counterexample review of the completed run and SOTA claim.",
+            "evidence_strength": "review_report",
+            "satisfies_source_requirements": [
+              "SR-counterexample-gate",
+              "SR-sota-fixed-target",
+              "SR-no-intermediate-terminal-statuses",
+              "SR-no-planned-stop-exit"
+            ],
+            "evidence_claim": "No counterexample remains against the final completion claim.",
+            "completed_target_objects": [
+              "completion claim",
+              "decomposition from requirements to outcomes/work packages",
+              "benchmark and report claims",
+              "ylong_http_client HTTPS proxy contest outcome",
+              "SOTA definition",
+              "completion logic",
+              "final answer status",
+              "orchestration handoff"
+            ],
+            "claim_scope": {
+              "applies_when": [
+                "before goal_achieved true",
+                "after implementation, tests, benchmark, and report evidence"
+              ],
+              "proves": "Final completion claim survived required review.",
+              "does_not_prove": [
+                "External contest ranking without contest feedback"
+              ]
+            }
+          }
+        ],
+        "not_satisfied_by": [
+          "The execution agent asserting completion."
+        ],
+        "counterexample_gate": {
+          "completion_standard": "Final completion is allowed only when an independent reviewer fails to find a case where evidence is true but SOTA remains false.",
+          "required_checked_transformations": [
+            "required_outcome:O-final-counterexample-gate->completion_gate",
+            "all_outcomes->SOTA_claim",
+            "all_result_paths->SOTA_claim"
+          ],
+          "required_evidence_ids": [
+            "evidence.final-counterexample-review"
+          ],
+          "reject_if": [
+            "Any required outcome lacks direct evidence.",
+            "Benchmark limitations make the SOTA claim stronger than evidence.",
+            "Report claims exceed implementation/test evidence."
+          ]
+        }
+      }
+    ],
+    "required_result_paths": [
+      {
+        "path_id": "RP-current-audit-to-workplan",
+        "statement": "The run begins from a source-grounded current implementation audit that is mapped into concrete work packages before implementation patches are claimed.",
+        "source_requirements": [
+          "SR-code-audit",
+          "SR-implementation-level-convergence"
+        ],
+        "satisfies_outcomes": [
+          "O-current-audit"
+        ],
+        "path_steps": [
+          "inspect current proxy source, tests, benchmark, and report files",
+          "record source-grounded gaps and preservation constraints",
+          "map findings into implementation work packages",
+          "use the audit as required evidence before patch completion claims"
+        ],
+        "completion_standard": "Path is complete only when audit evidence is tied to repository files and used to drive implementation work packages.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-current-audit-to-workplan->required_steps",
+            "result_path:RP-current-audit-to-workplan->completion_gate"
+          ],
+          "reject_if": [
+            "Implementation begins from generic proxy advice rather than current source inspection.",
+            "Audit evidence is not mapped to required steps or work packages."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-final-counterexample-to-sota-claim",
+        "statement": "The final completion claim can be emitted only after an independent counterexample review validates that all recorded evidence implies SOTA verified.",
+        "source_requirements": [
+          "SR-counterexample-gate",
+          "SR-sota-fixed-target",
+          "SR-no-intermediate-terminal-statuses",
+          "SR-no-planned-stop-exit"
+        ],
+        "satisfies_outcomes": [
+          "O-final-counterexample-gate"
+        ],
+        "path_steps": [
+          "collect implementation, test, benchmark, causal, and report evidence",
+          "run an independent final counterexample review",
+          "reject any weaker terminal label or planned stop",
+          "allow goal_achieved only if SOTA verified survives review"
+        ],
+        "completion_standard": "Path is complete only when the final independent counterexample review finds no case where all evidence is true but SOTA verified remains false.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-final-counterexample-to-sota-claim->required_steps",
+            "result_path:RP-final-counterexample-to-sota-claim->completion_gate"
+          ],
+          "reject_if": [
+            "The execution agent self-certifies completion without independent review.",
+            "A missing benchmark, mTLS, causal, or report evidence path is treated as an acceptable terminal state."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-http-over-https-proxy",
+        "statement": "A user can send an HTTP target request through an HTTPS proxy endpoint and receive the origin response.",
+        "source_requirements": [
+          "SR-proxy-tls-mtls",
+          "SR-test-matrix"
+        ],
+        "satisfies_outcomes": [
+          "O-proxy-tls-mtls",
+          "O-test-matrix"
+        ],
+        "path_steps": [
+          "configure Proxy::all or Proxy::http with https:// proxy URL",
+          "configure proxy TLS as needed",
+          "establish TLS to proxy",
+          "send HTTP request through proxy",
+          "read response body"
+        ],
+        "completion_standard": "Path is complete only when a local test proves HTTP target traffic works over an HTTPS proxy endpoint.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-http-over-https-proxy->required_steps",
+            "result_path:RP-http-over-https-proxy->completion_gate"
+          ],
+          "reject_if": [
+            "Only HTTPS target via CONNECT is tested.",
+            "The proxy endpoint is plaintext HTTP."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-https-over-https-proxy",
+        "statement": "A user can send an HTTPS target request through an HTTPS proxy endpoint using CONNECT and then origin TLS over the tunnel.",
+        "source_requirements": [
+          "SR-protocol-correctness",
+          "SR-proxy-tls-mtls",
+          "SR-test-matrix"
+        ],
+        "satisfies_outcomes": [
+          "O-protocol-correctness",
+          "O-proxy-tls-mtls",
+          "O-test-matrix"
+        ],
+        "path_steps": [
+          "establish TLS to HTTPS proxy",
+          "send CONNECT host:port",
+          "accept complete 2xx tunnel response",
+          "establish origin TLS over tunnel",
+          "send HTTPS request and read response"
+        ],
+        "completion_standard": "Path is complete only when local endpoint evidence proves two-hop TLS behavior with CONNECT tunnel semantics.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-https-over-https-proxy->required_steps",
+            "result_path:RP-https-over-https-proxy->completion_gate"
+          ],
+          "reject_if": [
+            "Proxy TLS and origin TLS are not separately exercised.",
+            "CONNECT success is accepted before complete header termination."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-proxy-tls-fail-closed",
+        "statement": "Proxy TLS validation fails closed for wrong CA, hostname mismatch, missing required client cert, unsupported HTTPS proxy without TLS feature, and HTTP/3 over proxy.",
+        "source_requirements": [
+          "SR-proxy-tls-mtls",
+          "SR-test-matrix"
+        ],
+        "satisfies_outcomes": [
+          "O-proxy-tls-mtls",
+          "O-test-matrix"
+        ],
+        "path_steps": [
+          "configure failing proxy TLS condition",
+          "attempt request",
+          "observe explicit error",
+          "confirm no successful tunnel/request is claimed"
+        ],
+        "completion_standard": "Path is complete only when negative tests prove failure behavior for contest-critical proxy TLS boundaries.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-proxy-tls-fail-closed->required_steps",
+            "result_path:RP-proxy-tls-fail-closed->completion_gate"
+          ],
+          "reject_if": [
+            "Only positive TLS cases are tested.",
+            "A failure path succeeds by disabling validation without being explicitly labeled insecure."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-shared-proxy-semantics",
+        "statement": "Sync and async clients share proxy selection, no_proxy matching, authentication header construction, CONNECT request formatting, and tunnel response parsing semantics where the feature is supported.",
+        "source_requirements": [
+          "SR-sync-async-proxy-semantics"
+        ],
+        "satisfies_outcomes": [
+          "O-sync-async-proxy-semantics"
+        ],
+        "path_steps": [
+          "exercise shared util::proxy semantics",
+          "exercise sync connector path where applicable",
+          "exercise async connector path where applicable",
+          "document unsupported or separate implementation scope"
+        ],
+        "completion_standard": "Path is complete only when shared semantics are verified or accurately scoped without overclaiming shared implementation.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-shared-proxy-semantics->required_steps",
+            "result_path:RP-shared-proxy-semantics->completion_gate"
+          ],
+          "reject_if": [
+            "The same code path is claimed when source uses separate sync/async connectors.",
+            "One supported path accepts a tunnel response the other rejects for the same parser semantics."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-fair-benchmark-to-report",
+        "statement": "Benchmark execution and report wording form a fair evidence chain for contest performance claims.",
+        "source_requirements": [
+          "SR-benchmark-fairness",
+          "SR-report-evidence-chain"
+        ],
+        "satisfies_outcomes": [
+          "O-benchmark-fairness",
+          "O-report-evidence-chain"
+        ],
+        "path_steps": [
+          "run the local benchmark, or request the exact missing local resource needed to run it",
+          "identify baseline type as curl CLI or libcurl library",
+          "record topology and reuse model",
+          "update report claims to match evidence"
+        ],
+        "completion_standard": "Path is complete only when report performance claims do not exceed benchmark evidence.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-fair-benchmark-to-report->required_steps",
+            "result_path:RP-fair-benchmark-to-report->completion_gate"
+          ],
+          "reject_if": [
+            "README/report still treats curl CLI as libcurl library evidence.",
+            "Large performance claims are central without caveats and reproducible commands."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-sota-threshold-verdict",
+        "statement": "A reviewer can trace the SOTA verified completion claim to a per-scenario numeric hard-threshold verdict instead of a generic fair-benchmark claim or weaker terminal label.",
+        "source_requirements": [
+          "SR-sota-definition",
+          "SR-sota-not-correctness-only",
+          "SR-performance-threshold-above-contest-floor",
+          "SR-sota-hard-metrics",
+          "SR-no-intermediate-terminal-statuses",
+          "SR-no-planned-stop-exit",
+          "SR-benchmark-fairness",
+          "SR-report-evidence-chain"
+        ],
+        "satisfies_outcomes": [
+          "O-sota-threshold-matrix",
+          "O-benchmark-fairness",
+          "O-report-evidence-chain"
+        ],
+        "path_steps": [
+          "declare the core HTTPS proxy benchmark matrix",
+          "run the same-model libcurl-library comparison, or request the exact missing live/resource access needed to run it",
+          "compute each numeric SOTA threshold with required confidence-bound rules",
+          "claim completion only if SOTA verified passes",
+          "otherwise record remaining required work and keep completion unclaimed"
+        ],
+        "completion_standard": "Path is complete only when completion is claimed exclusively as SOTA verified and no weaker terminal label can be emitted.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-sota-threshold-verdict->required_steps",
+            "result_path:RP-sota-threshold-verdict->completion_gate",
+            "numeric_threshold_verdict->report_claims",
+            "numeric_threshold_verdict->goal_achieved_status"
+          ],
+          "reject_if": [
+            "The final answer says SOTA verified without a complete passing hard-threshold matrix.",
+            "The report claims first-tier/SOTA based only on correctness or 20%+ improvement.",
+            "Unavailable libcurl-library evidence is hidden or converted into a weaker terminal label instead of remaining required work.",
+            "A failed threshold is offset by passing protocol, TLS, or report evidence."
+          ]
+        }
+      },
+      {
+        "path_id": "RP-real-client-causal-performance",
+        "statement": "A reviewer can trace any SOTA performance claim from benchmark result back to the real ylong_http_client code path and causal evidence, not a benchmark-only shortcut or baseline mismatch.",
+        "source_requirements": [
+          "SR-sota-definition",
+          "SR-sota-not-correctness-only",
+          "SR-performance-threshold-above-contest-floor",
+          "SR-sota-hard-metrics",
+          "SR-no-intermediate-terminal-statuses",
+          "SR-no-planned-stop-exit",
+          "SR-benchmark-fairness",
+          "SR-report-evidence-chain"
+        ],
+        "satisfies_outcomes": [
+          "O-causal-performance-evidence",
+          "O-sota-threshold-matrix",
+          "O-benchmark-fairness",
+          "O-report-evidence-chain"
+        ],
+        "path_steps": [
+          "show benchmark uses ordinary ylong_http_client public request path",
+          "show libcurl-library baseline uses the same topology, TLS/mTLS, pooling, validation, timeout, and response-check model",
+          "collect profiling, tracing, or ablation evidence for the measured delta",
+          "rule out startup overhead, pooling mismatch, disabled verification, and benchmark-only fast paths",
+          "claim completion only if SOTA verified is causally supported; otherwise record remaining required work and keep completion unclaimed"
+        ],
+        "completion_standard": "Path is complete only when a SOTA performance claim cannot be produced without real-client-path evidence and causal performance evidence.",
+        "counterexample_gate": {
+          "required_checked_transformations": [
+            "result_path:RP-real-client-causal-performance->required_steps",
+            "result_path:RP-real-client-causal-performance->completion_gate",
+            "real_client_path_evidence->numeric_threshold_verdict",
+            "causal_performance_evidence->final_SOTA_status"
+          ],
+          "reject_if": [
+            "The benchmark can pass thresholds while bypassing the production client path.",
+            "The benchmark can pass thresholds due to curl CLI startup overhead or mismatched connection reuse.",
+            "The final report claims SOTA without profiling, tracing, or ablation support.",
+            "Failed or unavailable causal evidence is offset by numeric threshold success."
+          ]
+        }
+      }
+    ],
+    "completion_logic": {
+      "all_required": [
+        "O-current-audit",
+        "O-protocol-correctness",
+        "O-proxy-tls-mtls",
+        "O-sync-async-proxy-semantics",
+        "O-test-matrix",
+        "O-benchmark-fairness",
+        "O-report-evidence-chain",
+        "O-sota-threshold-matrix",
+        "O-causal-performance-evidence",
+        "O-final-counterexample-gate"
+      ],
+      "no_offset": [
+        {
+          "failed_outcome": "O-proxy-tls-mtls",
+          "cannot_be_offset_by": [
+            "O-report-evidence-chain",
+            "O-benchmark-fairness"
+          ],
+          "reason": "Documentation and performance cannot prove TLS/mTLS security behavior."
+        },
+        {
+          "failed_outcome": "O-benchmark-fairness",
+          "cannot_be_offset_by": [
+            "O-protocol-correctness",
+            "O-test-matrix"
+          ],
+          "reason": "Correct code and tests cannot prove fair performance claims."
+        },
+        {
+          "failed_outcome": "O-sota-threshold-matrix",
+          "cannot_be_offset_by": [
+            "O-benchmark-fairness",
+            "O-report-evidence-chain",
+            "O-protocol-correctness",
+            "O-test-matrix",
+            "O-proxy-tls-mtls"
+          ],
+          "reason": "Fair methodology, correct behavior, and careful reporting cannot prove numeric SOTA threshold dominance."
+        },
+        {
+          "failed_outcome": "O-causal-performance-evidence",
+          "cannot_be_offset_by": [
+            "O-sota-threshold-matrix",
+            "O-benchmark-fairness",
+            "O-report-evidence-chain",
+            "O-protocol-correctness",
+            "O-test-matrix",
+            "O-proxy-tls-mtls"
+          ],
+          "reason": "Passing numeric thresholds and correct behavior cannot prove that the advantage comes from the real implementation rather than benchmark-only paths or baseline mismatch."
+        },
+        {
+          "failed_outcome": "O-protocol-correctness",
+          "cannot_be_offset_by": [
+            "O-benchmark-fairness"
+          ],
+          "reason": "Performance cannot offset protocol non-compliance."
+        }
+      ]
+    },
+    "counterexample_gate_contract": {
+      "quality_standard": "Independent review must try to disprove that all implementation, test, benchmark, and report evidence is enough to claim first-tier/SOTA completion in the contest context.",
+      "required_checked_transformations": [
+        "source_requirements->required_outcomes",
+        "source_requirements->required_result_paths",
+        "required_outcomes->required_steps",
+        "required_result_paths->required_steps",
+        "required_steps->work_packages",
+        "required_steps->runtime_steps",
+        "pre_runtime_compile",
+        "completion_or_remaining_required_work",
+        "benchmark_result->performance_claim",
+        "benchmark_result->numeric_SOTA_threshold_verdict",
+        "numeric_SOTA_threshold_verdict->final_SOTA_status",
+        "benchmark_harness->real_client_path",
+        "libcurl_baseline->same_model_semantics",
+        "numeric_SOTA_threshold_verdict->causal_performance_evidence",
+        "causal_performance_evidence->final_SOTA_status",
+        "remaining_required_work->next_required_action",
+        "forbidden_terminal_statuses->final_answer",
+        "test_matrix->SOTA_claim",
+        "report_claims->SOTA_claim"
+      ],
+      "minimum_reviewer": {
+        "allowed_kinds": [
+          "subagent",
+          "human",
+          "external"
+        ],
+        "independence": "Reviewer must be independent from the execution agent's completion claim and must cite evidence.",
+        "evidence_ref_required": true
+      },
+      "reject_if": [
+        "The run accepts a checklist or report-only output instead of implementation-level code/test/report changes.",
+        "CONNECT protocol semantics remain wrong or untested.",
+        "Proxy mTLS is claimed without endpoint negative and positive evidence.",
+        "curl CLI and libcurl library baselines are conflated.",
+        "A final SOTA claim is made with any required outcome missing or weakly evidenced.",
+        "Any terminal label other than SOTA verified is emitted.",
+        "Missing evidence is accepted as a final fallback explanation instead of being converted into remaining required work or an exact human/live resource request.",
+        "SOTA verified is claimed without a complete passing O-sota-threshold-matrix verdict.",
+        "SOTA verified is claimed without real-client-path evidence and causal profiling, tracing, or ablation evidence.",
+        "A benchmark-only fast path, curl CLI startup cost, connection reuse mismatch, disabled TLS verification, missing mTLS, or response-validation mismatch can explain the performance result.",
+        "A 20%+ contest-floor result is treated as SOTA verified.",
+        "A failed or unavailable numeric SOTA threshold is offset by correctness, TLS, benchmark fairness, or report evidence.",
+        "All component tests pass but a required user result path still fails."
+      ]
+    }
+  }
+}

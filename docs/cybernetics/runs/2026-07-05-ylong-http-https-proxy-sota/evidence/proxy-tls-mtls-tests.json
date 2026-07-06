@@ -1,0 +1,71 @@
+{
+  "evidence_id": "evidence.proxy-tls-mtls-tests",
+  "required_step": "S3-proxy-tls-mtls",
+  "work_package_id": "WP2-tls-mtls-test-matrix",
+  "status": "pass",
+  "verified_at": "2026-07-06T02:29:24+08:00",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/tests/sdv_async_https_proxy_tls.rs",
+      "summary": "Adds a local HTTPS proxy TLS fixture and async tokio_base endpoint tests for HTTP-over-HTTPS-proxy, HTTPS-over-HTTPS-proxy, proxy CA failure, proxy hostname mismatch, and proxy mTLS missing/present client certificate."
+    }
+  ],
+  "verified_scenarios": [
+    {
+      "test": "sdv_async_http_target_over_https_proxy",
+      "result": "pass",
+      "covers": [
+        "HTTP target over HTTPS proxy endpoint",
+        "proxy TLS CA verification",
+        "absolute-form HTTP/1.1 request sent through proxy"
+      ]
+    },
+    {
+      "test": "sdv_async_https_target_over_https_proxy",
+      "result": "pass",
+      "covers": [
+        "HTTPS target over HTTPS proxy endpoint",
+        "CONNECT tunnel setup",
+        "CONNECT 204 No Content accepted as successful 2xx",
+        "origin TLS performed over established tunnel",
+        "proxy TLS config distinct from origin TLS config"
+      ]
+    },
+    {
+      "test": "sdv_async_https_proxy_rejects_wrong_ca",
+      "result": "pass",
+      "covers": [
+        "proxy TLS wrong CA fails closed"
+      ]
+    },
+    {
+      "test": "sdv_async_https_proxy_rejects_hostname_mismatch",
+      "result": "pass",
+      "covers": [
+        "proxy TLS hostname mismatch fails closed"
+      ]
+    },
+    {
+      "test": "sdv_async_https_proxy_mtls_requires_client_cert",
+      "result": "pass",
+      "covers": [
+        "proxy mTLS without client certificate fails closed",
+        "proxy mTLS with generated client certificate and private key succeeds"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/openharmony/commonlibrary_rust_ylong_runtime.git.insteadOf' GIT_CONFIG_VALUE_0='https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git' cargo test -p ylong_http_client --test sdv_async_https_proxy_tls --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0 -- --nocapture --test-threads=1",
+      "result": "passed: 5 passed, 0 failed"
+    }
+  ],
+  "environment_notes": [
+    "CARGO_TARGET_DIR was set to /tmp/ylong_http_target because /home had insufficient free space for repeated Rust builds.",
+    "The gitee runtime dependency was fetched through a per-command Git URL rewrite to the reachable GitHub mirror; no global git config or approved control JSON was changed."
+  ],
+  "remaining_related_work": [
+    "S4 still needs sync/async shared semantics evidence and accurate report wording.",
+    "S5 still needs the broader test-matrix summary, including feature-off and HTTP/3-over-proxy boundaries where executable in this workspace."
+  ]
+}

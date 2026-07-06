@@ -1,0 +1,44 @@
+Run an independent SOTA/status-policy counterexample review for:
+docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json
+
+Reviewed artifact hashes:
+- raw file hash, command `sha256sum requirements.control.json`:
+  sha256:23f4efbd5b966cce5b45997ae45df8d44e83aac11e51617f3333e974eccf5b2a
+- compact canonical JSON hash, command equivalent to `json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'))` then sha256:
+  sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc
+
+Context:
+- Earlier reviews forced numeric SOTA thresholds into required outcomes and result paths.
+- Later reviews forced real-client-path and causal performance evidence into required outcomes and result paths.
+- The user then rejected all weaker terminal states and also rejected planned stop exits as acceptable outcomes.
+- The current requirement should allow exactly one successful terminal claim: SOTA verified. Anything else is unfinished required work that must be executed or turned into an exact human/live resource request needed to continue.
+
+Try to disprove that the updated requirements enforce this without leaving an alternate exit.
+
+Required checked transformations:
+- user_feedback->source_requirements
+- source_requirements->sota_definition.status_policy
+- source_requirements->completion_logic
+- source_requirements->required_outcomes
+- source_requirements->required_result_paths
+- completion_logic->final_answer
+- remaining_required_work->next_required_action
+- forbidden_terminal_statuses->final_answer
+- counterexample_gate_contract->final_counterexample_review
+- artifact_hash_binding->reviewed_requirements_identity
+
+Reject if any of these are true:
+- The current requirements.control.json raw hash or compact canonical hash does not match the values above.
+- Any terminal completion label other than SOTA verified can be emitted.
+- Missing libcurl-library baseline, causal evidence, mTLS endpoint evidence, benchmark data, or external resource can be accepted as a final outcome, final explanation, or planned stop.
+- The run can end successfully without all numeric SOTA thresholds, real-client-path evidence, causal performance evidence, and final counterexample review.
+- Remaining required work can be converted into a report-only result, premature completion result, or weaker SOTA label.
+- The previous semantic counterexamples about numeric thresholds or causal performance become possible again.
+
+Return a concise JSON object with:
+- status: pass | fail
+- verdict: approved | needs_revision
+- findings: array of objects with severity, claim, counterexample, affected_paths, suggested_repair
+- smallest_counterexample: string or null, using the form "All listed evidence/subgoals can be true while <required claim or result path> remains false."
+- approval_readiness: ready_for_user_approval | needs_requirements_revision
+- summary: one paragraph

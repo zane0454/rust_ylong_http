@@ -1,0 +1,61 @@
+{
+  "artifact_type": "sota_definition.counterexample_review.evidence",
+  "independent_review": true,
+  "status": "fail",
+  "verdict": "needs_revision",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "sota-definition-counterexample-final-reviewer"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "agent_id": "019f3306-495a-78d0-bd06-b4d79d3fb65f",
+    "transcript_ref": "evidence/sota_definition_counterexample_final_transcript.txt"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/sota_definition_counterexample_final_prompt.txt",
+    "prompt_hash": "sha256:5770ecd04399b982f871915e81236b7c79d188a2b1ce59edfd82f729152df448",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json.canonical_jq_s": "sha256:5fa57f719bff641b053c559535ab00f3bdce0deaf63ed74d3b574348f5a10beb"
+    }
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json.raw": "sha256:97718595b7ffc398484233ac083c1c998b2cd94ceb31c0231e836dab4d15713e",
+    "requirements.control.json.canonical_jq_s": "sha256:5fa57f719bff641b053c559535ab00f3bdce0deaf63ed74d3b574348f5a10beb"
+  },
+  "checked_transformations": [
+    "user_feedback->source_requirements",
+    "source_requirements->sota_definition",
+    "source_requirements->required_outcomes",
+    "source_requirements->required_result_paths",
+    "performance_thresholds->benchmark_methodology",
+    "benchmark_methodology->numeric_SOTA_threshold_verdict",
+    "benchmark_harness->real_client_path",
+    "libcurl_baseline->same_model_semantics",
+    "numeric_SOTA_threshold_verdict->causal_performance_evidence",
+    "causal_performance_evidence->final_SOTA_status",
+    "completion_logic->SOTA_verified_claim",
+    "counterexample_gate_contract->final_counterexample_review"
+  ],
+  "findings": [
+    {
+      "severity": "blocking",
+      "claim": "The third review hash binding was ambiguous and did not match the raw file artifact hash.",
+      "counterexample": "A reviewer can accept the semantic artifact while the prompt binds only a canonical jq hash and not the raw file hash.",
+      "affected_paths": [
+        "evidence/sota_definition_counterexample_final_prompt.txt",
+        "requirements.control.json"
+      ],
+      "suggested_repair": "Run a final review prompt that explicitly states both raw sha256sum and canonical jq -S sha256sum values."
+    }
+  ],
+  "smallest_counterexample": "All listed evidence/subgoals can be true while the reviewed artifact identity remains false.",
+  "approval_readiness": "needs_requirements_revision",
+  "repair_applied": {
+    "status": "pending_final_rerun",
+    "requirements_raw_hash": "sha256:97718595b7ffc398484233ac083c1c998b2cd94ceb31c0231e836dab4d15713e",
+    "requirements_canonical_jq_s_hash": "sha256:5fa57f719bff641b053c559535ab00f3bdce0deaf63ed74d3b574348f5a10beb",
+    "summary": "The semantic repairs were accepted by the reviewer, but the evidence-binding prompt used an ambiguous canonical hash. A final rerun must bind both raw and jq -S hashes."
+  },
+  "review_summary": "The third SOTA-definition counterexample gate failed only on artifact identity binding. A final rerun is required with explicit hash algorithms."
+}

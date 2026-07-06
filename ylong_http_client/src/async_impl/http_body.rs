@@ -14,7 +14,6 @@
 use core::pin::Pin;
 use core::task::{Context, Poll};
 use std::future::Future;
-use std::io::{Cursor, Read};
 use std::sync::Arc;
 
 use ylong_http::body::async_impl::Body;
@@ -211,7 +210,7 @@ enum Kind {
 
 struct UntilClose {
     interceptors: Arc<Interceptors>,
-    pre: Option<Cursor<Vec<u8>>>,
+    pre: Option<PreRead>,
     io: Option<BoxStreamData>,
 }
 
@@ -219,7 +218,7 @@ impl UntilClose {
     pub(crate) fn new(pre: &[u8], io: BoxStreamData, interceptors: Arc<Interceptors>) -> Self {
         Self {
             interceptors,
-            pre: (!pre.is_empty()).then_some(Cursor::new(pre.to_vec())),
+            pre: PreRead::new(pre),
             io: Some(io),
         }
     }
@@ -234,8 +233,7 @@ impl UntilClose {
         }
         let mut read = 0;
         if let Some(pre) = self.pre.as_mut() {
-            // Here cursor read never failed.
-            let this_read = Read::read(pre, buf).unwrap();
+            let this_read = pre.read_into(buf);
             if this_read == 0 {
                 self.pre = None;
             } else {
@@ -297,7 +295,7 @@ impl UntilClose {
 struct Text {
     interceptors: Arc<Interceptors>,
     decoder: TextBodyDecoder,
-    pre: Option<Cursor<Vec<u8>>>,
+    pre: Option<PreRead>,
     io: Option<BoxStreamData>,
 }
 
@@ -311,7 +309,7 @@ impl Text {
         Self {
             interceptors,
             decoder: TextBodyDecoder::new(len),
-            pre: (!pre.is_empty()).then_some(Cursor::new(pre.to_vec())),
+            pre: PreRead::new(pre),
             io: Some(io),
         }
     }
@@ -330,8 +328,7 @@ impl Text {
         let mut read = 0;
 
         if let Some(pre) = self.pre.as_mut() {
-            // Here cursor read never failed.
-            let this_read = Read::read(pre, buf).unwrap();
+            let this_read = pre.read_into(buf);
             if this_read == 0 {
                 self.pre = None;
             } else {
@@ -442,7 +439,7 @@ impl Text {
 struct Chunk {
     interceptors: Arc<Interceptors>,
     decoder: ChunkBodyDecoder,
-    pre: Option<Cursor<Vec<u8>>>,
+    pre: Option<PreRead>,
     io: Option<BoxStreamData>,
 }
 
@@ -452,7 +449,7 @@ impl Chunk {
         Self {
             interceptors,
             decoder: ChunkBodyDecoder::new().contains_trailer(true),
-            pre: (!pre.is_empty()).then_some(Cursor::new(pre.to_vec())),
+            pre: PreRead::new(pre),
             io: Some(io),
         }
     }
@@ -472,8 +469,7 @@ impl Chunk {
         let mut read = 0;
 
         while let Some(pre) = self.pre.as_mut() {
-            // Here cursor read never failed.
-            let size = Read::read(pre, &mut buf[read..]).unwrap();
+            let size = pre.read_into(&mut buf[read..]);
             if size == 0 {
                 self.pre = None;
             }
@@ -585,6 +581,31 @@ impl Chunk {
     }
 }
 
+struct PreRead {
+    bytes: Box<[u8]>,
+    pos: usize,
+}
+
+impl PreRead {
+    fn new(bytes: &[u8]) -> Option<Self> {
+        (!bytes.is_empty()).then(|| Self {
+            bytes: bytes.into(),
+            pos: 0,
+        })
+    }
+
+    fn read_into(&mut self, buf: &mut [u8]) -> usize {
+        let available = self.bytes.len().saturating_sub(self.pos);
+        let len = available.min(buf.len());
+        if len == 0 {
+            return 0;
+        }
+        buf[..len].copy_from_slice(&self.bytes[self.pos..self.pos + len]);
+        self.pos += len;
+        len
+    }
+}
+
 #[cfg(feature = "ylong_base")]
 #[cfg(test)]
 mod ut_async_http_body {
@@ -592,10 +613,23 @@ mod ut_async_http_body {
 
     use ylong_http::body::async_impl;
 
+    use super::PreRead;
     use crate::async_impl::HttpBody;
     use crate::util::interceptor::IdleInterceptor;
     use crate::util::normalizer::BodyLength;
     use crate::ErrorKind;
+
+    #[test]
+    fn ut_pre_read_drains_without_overread() {
+        let mut pre = PreRead::new(b"hello").expect("pre buffer");
+        let mut buf = [0u8; 3];
+
+        assert_eq!(pre.read_into(&mut buf), 3);
+        assert_eq!(&buf, b"hel");
+        assert_eq!(pre.read_into(&mut buf), 2);
+        assert_eq!(&buf[..2], b"lo");
+        assert_eq!(pre.read_into(&mut buf), 0);
+    }
 
     /// UT test cases for `HttpBody::trailer`.
     ///

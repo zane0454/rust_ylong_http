@@ -1,0 +1,90 @@
+{
+  "evidence_id": "evidence.runtime-workers-one-candidate",
+  "status": "counterexample_candidate_rejected_not_retained",
+  "verified_at": "2026-07-06T08:59:35+08:00",
+  "candidate": {
+    "summary": "Benchmark-only ylong_base runtime worker-count candidate. It temporarily restored YLONG_BENCH_YLONG_RUNTIME_WORKERS and tested workers=1 after strace/source review showed ylong_runtime multi-thread worker parking performs fixed thread::yield_now spins.",
+    "scope": "ylong_http_client/src/bin/https_proxy_bench.rs only; no ylong_http_client public API, proxy protocol, TLS, or CONNECT behavior changed.",
+    "retained": false,
+    "reason_not_retained": "Focused HTTPS-over-HTTPS-proxy matrix still failed SOTA gates at the 1000-request cell, so the temporary env switch and unit test were removed from the current source."
+  },
+  "source_state": {
+    "candidate_source_sha256": {
+      "ylong_http_client/src/bin/https_proxy_bench.rs": "52a3e0dd3134111a48dd818c42b744b467f7dc2d1ea01b725fb9c42b1c50149b"
+    },
+    "current_source_after_rejection_sha256": {
+      "ylong_http_client/src/bin/https_proxy_bench.rs": "9cee6a000b908b903076ccdcdbc8ab9dfde98f56b562a07579f4afb81cd49620"
+    },
+    "candidate_binary_sha256": {
+      "/tmp/ylong_http_target_runtime_workers_one_release/release/https_proxy_bench": "a8505b6904300fcc8319f77766d7283cce5b399663fc5e5af66cdf06f8d08c2f"
+    }
+  },
+  "tests": [
+    {
+      "kind": "candidate_unit_test",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_one_test cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_runtime_workers_defaults_and_requires_positive_count",
+      "observed": "passed while candidate was present"
+    },
+    {
+      "kind": "candidate_release_build",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_one_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed"
+    },
+    {
+      "kind": "post_rejection_source_test",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_one_postremove cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value",
+      "observed": "passed after removing the rejected env switch"
+    },
+    {
+      "kind": "format_check",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --check",
+      "observed": "passed; rustfmt emitted existing nightly-only rustfmt.toml option warnings"
+    }
+  ],
+  "benchmark": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" YLONG_BENCH_YLONG_RUNTIME_WORKERS=1 python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_runtime_workers_one_release/release/https_proxy_bench --result-dir docs/benchmarks/results/runtime-workers-one-candidate --figure-dir docs/benchmarks/results/runtime-workers-one-candidate",
+    "result_dir": "docs/benchmarks/results/runtime-workers-one-candidate",
+    "zero_errors": true,
+    "artifact_sha256": {
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_results.csv": "766d2f82f824aaaa0274ea78d33e9634c60bf3c6f9dbdf844bc5500a22a31347",
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_summary.csv": "a838536510ceb82c084c4610eae51cf638a579c753054d120c19884793228b0b",
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_comparison.csv": "daf39eed18dd731b25a788439015baee87a7d4ebdc1bf1499277bbcfb94687d2",
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_env.json": "082c88761af3ef6922a54853bc3b0c55211de4c8cc314c16703665bd41b44c29",
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_raw.txt": "637111abc49a8bf0e5f5ea51fe51bb352dbb689d502828d640e886d340198192"
+    }
+  },
+  "threshold_summary": {
+    "focused_matrix": "https-over-https-proxy only, requests 200 and 1000, concurrency 8, repeats 3, single-client ylong model, same-process libcurl baseline",
+    "throughput_rps_ratio_geomean": 0.9846802871860821,
+    "throughput_rps_ratio_worst": 0.8632329245818292,
+    "p50_us_ratio_geomean": 1.0248006563002854,
+    "p50_us_ratio_worst": 1.1723566456745111,
+    "p95_us_ratio_geomean": 1.0193507531069061,
+    "p95_us_ratio_worst": 1.1107363687464868,
+    "cpu_us_per_request_ratio_geomean": 0.8410579623575849,
+    "rss_peak_bytes_ratio_worst": 1.0737951807228916
+  },
+  "cell_results": [
+    {
+      "scenario": "https-over-https-proxy",
+      "requests": 200,
+      "throughput_rps_ratio": 1.1232139557727834,
+      "p50_us_ratio": 0.8958164642375168,
+      "p95_us_ratio": 0.935483870967742,
+      "cpu_us_per_request_ratio": 0.7668828313915147,
+      "rss_peak_bytes_ratio": 1.0605454090567925,
+      "errors_sum": 0
+    },
+    {
+      "scenario": "https-over-https-proxy",
+      "requests": 1000,
+      "throughput_rps_ratio": 0.8632329245818292,
+      "p50_us_ratio": 1.1723566456745111,
+      "p95_us_ratio": 1.1107363687464868,
+      "cpu_us_per_request_ratio": 0.9224075270554031,
+      "rss_peak_bytes_ratio": 1.0737951807228916,
+      "errors_sum": 0
+    }
+  ],
+  "finding": "A single ylong_base worker reduces the small 200-request cell latency and CPU cost, but it collapses at the 1000-request HTTPS-over-HTTPS-proxy cell. This supports the strace/source diagnosis that runtime scheduling contributes measurable cost, but it refutes worker-count tuning as a SOTA-scale solution."
+}

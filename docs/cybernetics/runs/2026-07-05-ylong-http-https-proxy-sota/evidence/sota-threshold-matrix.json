@@ -1,0 +1,597 @@
+{
+  "evidence_id": "evidence.sota-threshold-matrix",
+  "required_step": "S8-sota-threshold-matrix",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "evaluated_not_verified_full_matrix_counterexample_after_drain_buffer_reuse",
+  "verified_at": "2026-07-06T04:37:29+08:00",
+  "summary": "Canonical non-phase fair matrix covers all three HTTPS proxy scenarios at 200, 1000, and 3000 requests with five paired repeats and warmup 50. After reusing the ylong benchmark drain buffer, it remains a SOTA counterexample: all runs have zero errors and matching reuse traces, but the all-cell ylong/libcurl throughput geomean is 0.991x, the worst cell is 0.769x, p50/p95 gates fail, and CPU/request geomean is 0.932x libcurl.",
+  "hard_thresholds": {
+    "throughput_geomean_lower_ci": ">= 2.00",
+    "throughput_every_scenario_lower_ci": ">= 1.50",
+    "p50_every_scenario_upper_ci": "<= 0.60",
+    "p95_every_scenario_upper_ci": "<= 0.70",
+    "flagship": "throughput >= 3.00 or p95 <= 0.50",
+    "cpu_geomean": "<= 0.80",
+    "cpu_every_scenario": "<= 1.00",
+    "rss_every_scenario": "<= 1.10",
+    "errors": "0",
+    "repetitions": ">= 5 after warmup"
+  },
+  "measured_dataset": {
+    "result_files": [
+      "docs/benchmarks/results/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/https_proxy_bench_env.json",
+      "docs/benchmarks/results/https_proxy_bench_raw.txt"
+    ],
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_phase_release/release/https_proxy_bench",
+    "request_counts": [
+      200,
+      1000,
+      3000
+    ],
+    "repetitions": 5,
+    "warmup_requests": 50,
+    "request_body_bytes": 0,
+    "response_body_bytes": 4096,
+    "phase_timing": false,
+    "baseline": "same-process libcurl with one reused Easy handle across warmup and measured requests",
+    "proxy_tls": "local CA verified HTTPS proxy",
+    "origin_tls": "local CA verified HTTPS origin for HTTPS-origin scenarios",
+    "mTLS": "proxy client certificate/key enabled for proxy-mtls-https-origin",
+    "scenarios": [
+      {
+        "name": "http-over-https-proxy",
+        "label": "HTTP over HTTPS proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.1439850218418302,
+        "elapsed_ratio_ylong_over_libcurl": 0.8570610627714299,
+        "p50_latency_ratio_ylong_over_libcurl": 0.8551181102362204,
+        "p95_latency_ratio_ylong_over_libcurl": 0.8789237668161435,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.7957510039405254,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0658290084676318,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.130885194,
+          "libcurl": 0.152713966
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 7653.922992965619,
+          "libcurl": 6690.579725111005
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 440.27533686200576,
+            "libcurl": 1225.7065474982412
+          },
+          "p50_us": {
+            "ylong_http_client": 5.9925604010305955,
+            "libcurl": 23.22568233658594
+          },
+          "p95_us": {
+            "ylong_http_client": 95.98860491037463,
+            "libcurl": 112.61667822201113
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 250.0,
+          "proxy_connect_requests": 0.0,
+          "origin_connections": 0.0,
+          "origin_requests": 0.0,
+          "origin_tls_connections": 0.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 19750.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 1024000.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 27750.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 1024000.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        }
+      },
+      {
+        "name": "http-over-https-proxy",
+        "label": "HTTP over HTTPS proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.1979628404544054,
+        "elapsed_ratio_ylong_over_libcurl": 0.8631624433605649,
+        "p50_latency_ratio_ylong_over_libcurl": 0.8520833333333333,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9241486068111456,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.81561504296611,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0665753424657534,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.102845787,
+          "libcurl": 0.11914997899999999
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 10273.626736076307,
+          "libcurl": 8575.914368244816
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 3463.598999128605,
+            "libcurl": 1929.3554366091435
+          },
+          "p50_us": {
+            "ylong_http_client": 35.14025671847034,
+            "libcurl": 30.674485971243264
+          },
+          "p95_us": {
+            "ylong_http_client": 16.94497322984017,
+            "libcurl": 10.585263295733364
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 1050.0,
+          "proxy_connect_requests": 0.0,
+          "origin_connections": 0.0,
+          "origin_requests": 0.0,
+          "origin_tls_connections": 0.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 82950.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 4300800.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 116550.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 4300800.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        }
+      },
+      {
+        "name": "http-over-https-proxy",
+        "label": "HTTP over HTTPS proxy",
+        "requests": 3000,
+        "throughput_ratio_ylong_over_libcurl": 1.1162202206741991,
+        "elapsed_ratio_ylong_over_libcurl": 0.8687754646463719,
+        "p50_latency_ratio_ylong_over_libcurl": 0.8678038379530918,
+        "p95_latency_ratio_ylong_over_libcurl": 1.045112781954887,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.815216026858025,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0658290084676318,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.09537639793333333,
+          "libcurl": 0.10978256386666667
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 10864.777835036646,
+          "libcurl": 9733.543286354641
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 2969.210503635505,
+            "libcurl": 4124.710791165188
+          },
+          "p50_us": {
+            "ylong_http_client": 32.26137211217154,
+            "libcurl": 26.991514945256405
+          },
+          "p95_us": {
+            "ylong_http_client": 11.083160444566342,
+            "libcurl": 35.03263606638815
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 3050.0,
+          "proxy_connect_requests": 0.0,
+          "origin_connections": 0.0,
+          "origin_requests": 0.0,
+          "origin_tls_connections": 0.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 240950.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 12492800.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 338550.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 12492800.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        }
+      },
+      {
+        "name": "https-over-https-proxy",
+        "label": "HTTPS origin over HTTPS proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.8611310975855755,
+        "elapsed_ratio_ylong_over_libcurl": 1.0454956363552084,
+        "p50_latency_ratio_ylong_over_libcurl": 1.035,
+        "p95_latency_ratio_ylong_over_libcurl": 1.022184300341297,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 1.0086102924982434,
+        "rss_peak_ratio_ylong_over_libcurl": 1.060614297363414,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.22726119100000003,
+          "libcurl": 0.21737172600000002
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4400.67217534299,
+          "libcurl": 5110.339398590434
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 61.859676849621906,
+            "libcurl": 2710.3999334596174
+          },
+          "p50_us": {
+            "ylong_http_client": 3.5113931138509638,
+            "libcurl": 77.09587244982704
+          },
+          "p95_us": {
+            "ylong_http_client": 20.932586255883436,
+            "libcurl": 102.54530473190862
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 250.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 14250.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 1024000.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 14750.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 1024000.0
+        }
+      },
+      {
+        "name": "https-over-https-proxy",
+        "label": "HTTPS origin over HTTPS proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.7693578086403419,
+        "elapsed_ratio_ylong_over_libcurl": 1.1865344375479325,
+        "p50_latency_ratio_ylong_over_libcurl": 1.249367088607595,
+        "p95_latency_ratio_ylong_over_libcurl": 1.0695238095238095,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 1.1260178591060677,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0594623947868584,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.2184928968,
+          "libcurl": 0.1841437466
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4579.311415145969,
+          "libcurl": 5952.121839432318
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 148.62005119248988,
+            "libcurl": 2838.8210449348207
+          },
+          "p50_us": {
+            "ylong_http_client": 6.119805173369488,
+            "libcurl": 71.79060181388647
+          },
+          "p95_us": {
+            "ylong_http_client": 15.864542481899687,
+            "libcurl": 71.35994044840562
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 1050.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 59850.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 4300800.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 61950.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 4300800.0
+        }
+      },
+      {
+        "name": "https-over-https-proxy",
+        "label": "HTTPS origin over HTTPS proxy",
+        "requests": 3000,
+        "throughput_ratio_ylong_over_libcurl": 1.056888207584735,
+        "elapsed_ratio_ylong_over_libcurl": 0.9690648413521641,
+        "p50_latency_ratio_ylong_over_libcurl": 0.9065606361829026,
+        "p95_latency_ratio_ylong_over_libcurl": 1.0347222222222223,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9294167795694949,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0593631948192122,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.21029764946666668,
+          "libcurl": 0.2170109166
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4872.585995317297,
+          "libcurl": 4610.313522612221
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 1178.2263053878419,
+            "libcurl": 142.2797451405669
+          },
+          "p50_us": {
+            "ylong_http_client": 56.50779669532338,
+            "libcurl": 4.595097631171723
+          },
+          "p95_us": {
+            "ylong_http_client": 9.315124355584308,
+            "libcurl": 8.02643329007349
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 3050.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 173850.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 12492800.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 179950.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 12492800.0
+        }
+      },
+      {
+        "name": "proxy-mtls-https-origin",
+        "label": "proxy mTLS HTTPS origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.8229740476214441,
+        "elapsed_ratio_ylong_over_libcurl": 1.1236152062957627,
+        "p50_latency_ratio_ylong_over_libcurl": 1.1096774193548387,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9221949221949222,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 1.0715992345234453,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0630092341118957,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.22584317999999998,
+          "libcurl": 0.200996906
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4434.074066403677,
+          "libcurl": 5387.866214273728
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 233.76401044192306,
+            "libcurl": 2506.032621600764
+          },
+          "p50_us": {
+            "ylong_http_client": 9.719964905286435,
+            "libcurl": 60.25263076082238
+          },
+          "p95_us": {
+            "ylong_http_client": 13.411269434322762,
+            "libcurl": 95.3401428520012
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 250.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 14250.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 1024000.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 14750.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 1024000.0
+        }
+      },
+      {
+        "name": "proxy-mtls-https-origin",
+        "label": "proxy mTLS HTTPS origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.029938609081805,
+        "elapsed_ratio_ylong_over_libcurl": 0.9704149045730058,
+        "p50_latency_ratio_ylong_over_libcurl": 0.9655850540806293,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9717223650385605,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9294894875456646,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0610975939443092,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.2163482948,
+          "libcurl": 0.2229441178
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4632.06934400517,
+          "libcurl": 4497.422762056353
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 301.812875372249,
+            "libcurl": 323.7787627226098
+          },
+          "p50_us": {
+            "ylong_http_client": 6.426904648429134,
+            "libcurl": 12.371121831103274
+          },
+          "p95_us": {
+            "ylong_http_client": 11.888282796098013,
+            "libcurl": 20.673280362825825
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 1050.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 59850.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 4300800.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 61950.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 4300800.0
+        }
+      },
+      {
+        "name": "proxy-mtls-https-origin",
+        "label": "proxy mTLS HTTPS origin",
+        "requests": 3000,
+        "throughput_ratio_ylong_over_libcurl": 1.0163670452268214,
+        "elapsed_ratio_ylong_over_libcurl": 0.9852722173726084,
+        "p50_latency_ratio_ylong_over_libcurl": 0.9689689689689689,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9923208191126279,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9525917327045031,
+        "rss_peak_ratio_ylong_over_libcurl": 1.053835800807537,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.20702079439999999,
+          "libcurl": 0.21011532726666665
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4873.741994347614,
+          "libcurl": 4795.257793172492
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 671.8590532847456,
+            "libcurl": 590.2602144997198
+          },
+          "p50_us": {
+            "ylong_http_client": 16.43710833936432,
+            "libcurl": 11.626105411529691
+          },
+          "p95_us": {
+            "ylong_http_client": 15.194638296451812,
+            "libcurl": 19.164455331681093
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 3050.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 173850.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 12492800.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 179950.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 12492800.0
+        }
+      }
+    ],
+    "geomean": {
+      "throughput_ratio_ylong_over_libcurl": 0.9911078683235877,
+      "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9318700058881665
+    },
+    "threshold_eval": {
+      "throughput_geomean_ratio": 0.9911078683235877,
+      "throughput_min_ratio": 0.7693578086403419,
+      "throughput_max_ratio": 1.1979628404544054,
+      "p50_min_ratio": 0.8520833333333333,
+      "p50_max_ratio": 1.249367088607595,
+      "p95_min_ratio": 0.8789237668161435,
+      "p95_max_ratio": 1.0695238095238095,
+      "cpu_geomean_ratio": 0.9318700058881665,
+      "cpu_min_ratio": 0.7957510039405254,
+      "cpu_max_ratio": 1.1260178591060677,
+      "rss_max_ratio": 1.0665753424657534,
+      "errors_sum_total": 0
+    }
+  },
+  "verdict": {
+    "sota_verified": false,
+    "reason": "Point estimates fail the hard thresholds before confidence-bound tightening: throughput geomean 0.991x is below 2.00x, every-cell minimum 0.769x is below 1.50x, p50/p95 ratios exceed the 0.60/0.70 limits, CPU geomean is 0.932x instead of <=0.80x, and no flagship cell reaches 3.00x throughput or 0.50x p95 latency.",
+    "passing_gates": [
+      "zero protocol/TLS/proxy/request errors",
+      "five measured repetitions after warmup",
+      "RSS ratio <= 1.10 in every measured cell",
+      "same local proxy/origin topology and connection-reuse trace"
+    ],
+    "failing_gates": [
+      "throughput geomean hard threshold",
+      "every-scenario throughput hard threshold",
+      "p50 latency hard threshold",
+      "p95 latency hard threshold",
+      "flagship gap hard threshold",
+      "CPU/request hard threshold"
+    ]
+  },
+  "completion_effect": "S8 remains evaluated, but the matrix cannot support SOTA verified. S9 remains active because current causal evidence refutes rather than proves a SOTA performance advantage."
+}

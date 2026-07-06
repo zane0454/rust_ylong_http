@@ -292,7 +292,7 @@ pub(crate) fn parse_tunnel_response(buf: &[u8]) -> Result<TunnelResponse, Create
     let code = status_code(status)?;
 
     match code {
-        b"200" => {
+        [b'2', _, _] => {
             if header_end.is_some() {
                 Ok(TunnelResponse::Complete)
             } else if buf.len() >= MAX_TUNNEL_RESPONSE_SIZE {
@@ -580,6 +580,14 @@ mod ut_proxy {
 
         assert!(matches!(
             parse_tunnel_response(b"HTTP/1.1 200 Connection Established\r\n\r\n"),
+            Ok(TunnelResponse::Complete)
+        ));
+        assert!(matches!(
+            parse_tunnel_response(b"HTTP/1.1 201 Created\r\n\r\n"),
+            Ok(TunnelResponse::Complete)
+        ));
+        assert!(matches!(
+            parse_tunnel_response(b"HTTP/1.1 204 No Content\r\n\r\n"),
             Ok(TunnelResponse::Complete)
         ));
         assert!(matches!(

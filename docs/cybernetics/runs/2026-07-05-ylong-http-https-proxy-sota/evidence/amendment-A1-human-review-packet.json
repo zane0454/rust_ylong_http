@@ -1,0 +1,64 @@
+{
+  "evidence_id": "evidence.amendment-A1-human-review-packet",
+  "runtime_generation": "gen-000",
+  "amendment_id": "A1-runtime-readiness-s9",
+  "purpose": "Prepare the unresolved authority-expanding amendment for human review without changing approved control JSON or switching generations.",
+  "review_decision_required": {
+    "decision": "approve_or_reject",
+    "approve_means": [
+      "Allow a reviewed gen-001 to expand writable source authority beyond gen-000 so the run can inspect and patch a pinned ylong_runtime source or an equivalent reviewed dependency patch.",
+      "Keep the original SOTA fixed target, required outcomes, numeric hard-threshold policy, and no-intermediate-terminal-status policy unchanged.",
+      "Require S9 to be proven by real-client-path causal performance evidence and the approved HTTPS proxy benchmark matrix before S10 can run."
+    ],
+    "reject_means": [
+      "Keep gen-000 authority limited to ylong_http_client/, benches/, README.md, docs/, and evidence/.",
+      "Do not attempt runtime-source changes under this run.",
+      "S9 remains unsatisfied unless a new within-scope production-grade candidate is found and survives the fixed SOTA matrix."
+    ]
+  },
+  "why_human_review_is_required": {
+    "authority_expanded": true,
+    "semantic_base_change": false,
+    "required_outcomes_changed": false,
+    "reason": "run.control.json amendment_policy does not allow changing authority for live/external resources without human approval; gen-000 writable_evidence_paths do not include ylong_runtime source."
+  },
+  "evidence_basis": [
+    {
+      "artifact": "evidence/ylong-client-production-lever-hard-negative.json",
+      "finding": "Focused source and subagent review found no remaining ylong_http_client-internal production-grade lever plausibly cutting nested HTTPS-over-HTTPS-proxy response_read latency by >=30% without semantic changes."
+    },
+    {
+      "artifact": "evidence/s9-ylong-runtime-current-thread-candidate-rejected.json",
+      "finding": "Temporary current-thread runtime benchmark mode was tested and rolled back: geomean throughput ratio vs libcurl was 0.931, p95 ratio 1.160, CPU/request ratio 1.175, RSS ratio 1.184, and the 1000-request row regressed throughput to 0.760."
+    },
+    {
+      "artifact": "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_comparison.csv",
+      "finding": "Prior strace diagnostic narrowed the gap toward runtime readiness/parking behavior rather than network syscall count alone."
+    },
+    {
+      "artifact": "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_comparison.csv",
+      "finding": "Server/proxy send timing was not sufficient to explain the nested response_read gap."
+    }
+  ],
+  "counterexample_gate_for_approval": [
+    "Reject approval if reviewer believes an untested ylong_http_client-internal production candidate remains with plausible SOTA-scale impact.",
+    "Reject approval if current-thread benchmark mode is being treated as a production optimization instead of a rejected diagnostic.",
+    "Reject approval if gen-001 would weaken the SOTA target, numeric thresholds, required outcomes, or final counterexample gate.",
+    "Reject approval if the proposed runtime-source work cannot be pinned and reproduced."
+  ],
+  "proposed_review_output_if_approved": {
+    "event_type": "control.amendment.approved",
+    "amendment_id": "A1-runtime-readiness-s9",
+    "runtime_generation": "gen-000",
+    "next_generation": "gen-001",
+    "required_followup": "orchestrator creates reviewed gen-001 runtime control before any runtime-source patching begins"
+  },
+  "proposed_review_output_if_rejected": {
+    "event_type": "control.amendment.rejected",
+    "amendment_id": "A1-runtime-readiness-s9",
+    "runtime_generation": "gen-000",
+    "required_followup": "continue S9 only within gen-000 authority or propose a different reviewed amendment"
+  },
+  "status": "human_review_ready",
+  "goal_achieved": false
+}

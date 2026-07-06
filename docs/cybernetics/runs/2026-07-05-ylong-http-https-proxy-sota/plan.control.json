@@ -1,0 +1,512 @@
+{
+  "artifact_type": "plan.control",
+  "schema_version": "1.0.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json",
+    "design": "design.control.json",
+    "goal": "goal.control.json"
+  },
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+  },
+  "approved_control": {
+    "work_coverage": "The plan covers current-state audit, CONNECT parser protocol repair, proxy TLS/mTLS endpoint verification, sync/async proxy semantics, contest-critical tests, fair benchmark labeling and libcurl-library baseline evidence, SOTA threshold classification, real-client-path and causal performance evidence, report revision, and final counterexample review.",
+    "action_that_can_make_it_done": "Execute the work packages in dependency order, record direct evidence for every required step, run the selected tests and benchmarks, revise documentation only after evidence exists, and finish only when the verifier and final counterexample gate allow SOTA verified."
+  },
+  "required_steps": [
+    {
+      "step_id": "S1-current-audit",
+      "transition": "Current HTTPS proxy implementation is audited before patches are applied.",
+      "evidence": [
+        "evidence.current-audit"
+      ],
+      "satisfies_outcomes": [
+        "O-current-audit"
+      ]
+    },
+    {
+      "step_id": "S2-protocol-correctness",
+      "transition": "HTTPS proxy CONNECT handling follows required protocol semantics and fails closed on invalid responses.",
+      "evidence": [
+        "evidence.connect-2xx-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-protocol-correctness"
+      ]
+    },
+    {
+      "step_id": "S3-proxy-tls-mtls",
+      "transition": "Proxy TLS and proxy mutual TLS are verified end to end and kept distinct from origin TLS.",
+      "evidence": [
+        "evidence.proxy-tls-mtls-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-proxy-tls-mtls"
+      ]
+    },
+    {
+      "step_id": "S4-sync-async-proxy-semantics",
+      "transition": "Sync and async proxy semantics are verified and accurately represented.",
+      "evidence": [
+        "evidence.sync-async-proxy-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-sync-async-proxy-semantics"
+      ]
+    },
+    {
+      "step_id": "S5-test-matrix",
+      "transition": "A contest-critical HTTPS proxy test matrix is implemented and run.",
+      "evidence": [
+        "evidence.test-matrix-run"
+      ],
+      "satisfies_outcomes": [
+        "O-test-matrix"
+      ]
+    },
+    {
+      "step_id": "S6-benchmark-fairness",
+      "transition": "Benchmark methodology and claims are fair, reproducible, and correctly labeled.",
+      "evidence": [
+        "evidence.benchmark-fairness"
+      ],
+      "satisfies_outcomes": [
+        "O-benchmark-fairness"
+      ]
+    },
+    {
+      "step_id": "S7-report-evidence-chain",
+      "transition": "README/report narrative is revised to match verified implementation and benchmark evidence.",
+      "evidence": [
+        "evidence.report-diff"
+      ],
+      "satisfies_outcomes": [
+        "O-report-evidence-chain"
+      ]
+    },
+    {
+      "step_id": "S8-sota-threshold-matrix",
+      "transition": "SOTA performance status is evaluated against the predeclared numeric hard-threshold matrix.",
+      "evidence": [
+        "evidence.sota-threshold-matrix"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ]
+    },
+    {
+      "step_id": "S9-causal-performance-evidence",
+      "transition": "SOTA performance advantage is causally tied to the real ylong_http_client HTTPS proxy implementation and not to benchmark-only shortcuts or mismatched baseline mechanics.",
+      "evidence": [
+        "evidence.real-client-path",
+        "evidence.performance-causality"
+      ],
+      "satisfies_outcomes": [
+        "O-causal-performance-evidence"
+      ]
+    },
+    {
+      "step_id": "S10-final-counterexample-gate",
+      "transition": "Final SOTA completion claim survives counterexample review.",
+      "evidence": [
+        "evidence.final-counterexample-review"
+      ],
+      "satisfies_outcomes": [
+        "O-final-counterexample-gate"
+      ]
+    }
+  ],
+  "step_action_alignment": [
+    {
+      "required_step_id": "S1-current-audit",
+      "what_would_make_it_true": "A repo-current audit cites the exact proxy, connector, test, benchmark, and report files that determine HTTPS proxy SOTA readiness.",
+      "current_state": "Requirements identify known gaps, but runtime execution must refresh source truth before edits.",
+      "planned_producing_action": "Inspect util::proxy, sync and async connectors, TLS configuration surfaces, tests, benchmark assets, and README/report claims; record evidence.current-audit with file references.",
+      "why_this_can_make_it_true": "Direct source inspection produces the required audit evidence and prevents abstract or stale implementation work.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "rg -n proxy ylong_http_client",
+          "git diff -- ylong_http_client README.md benches docs"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.current-audit"
+      ],
+      "if_not_producible": "Record the exact missing repo state or unreadable file as remaining required work and do not proceed to a completion claim."
+    },
+    {
+      "required_step_id": "S2-protocol-correctness",
+      "what_would_make_it_true": "CONNECT response handling accepts complete 2xx responses and rejects authentication, failure, malformed, incomplete, and oversized responses with tests.",
+      "current_state": "The requirements captured a current parser gap: only 200 was accepted as success.",
+      "planned_producing_action": "Patch parse_tunnel_response and targeted parser tests for 200, 201, 204, 407, 500, malformed status, incomplete headers, and oversized tunnel response.",
+      "why_this_can_make_it_true": "The code patch and tests directly exercise the protocol rule and fail-closed paths.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "ylong_http_client/src/util/proxy.rs",
+          "ylong_http_client/tests/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "cargo test -p ylong_http_client tunnel",
+          "cargo test -p ylong_http_client proxy"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.connect-2xx-tests"
+      ],
+      "if_not_producible": "Record the failing parser case and keep O-protocol-correctness incomplete."
+    },
+    {
+      "required_step_id": "S3-proxy-tls-mtls",
+      "what_would_make_it_true": "Local endpoint tests prove proxy-hop CA success/failure, hostname mismatch, and mTLS success/failure separately from origin TLS.",
+      "current_state": "Configuration surfaces exist, but endpoint evidence is required before claiming proxy mTLS behavior.",
+      "planned_producing_action": "Add or repair local TLS proxy fixtures and integration-style tests for proxy CA, hostname mismatch, missing client certificate failure, and valid client certificate success.",
+      "why_this_can_make_it_true": "Only endpoint tests can prove that proxy TLS and mTLS are enforced on the proxy hop rather than merely configured.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "ylong_http_client/tests/",
+          "ylong_http_client/src/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "cargo test -p ylong_http_client --features __tls proxy_tls",
+          "cargo test -p ylong_http_client --features __tls proxy_mtls"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.proxy-tls-mtls-tests"
+      ],
+      "if_not_producible": "Record exact missing TLS dependency or failing certificate case as remaining required work; do not substitute API presence."
+    },
+    {
+      "required_step_id": "S4-sync-async-proxy-semantics",
+      "what_would_make_it_true": "Sync and async paths share proxy selection, auth, CONNECT construction, and response parsing semantics, with any separate connector mechanics accurately scoped.",
+      "current_state": "The required outcome allows shared semantics but rejects overclaiming shared implementation.",
+      "planned_producing_action": "Verify or patch shared util::proxy behavior and add tests or evidence that sync and async use the same proxy semantic rules without claiming identical connector implementations.",
+      "why_this_can_make_it_true": "Tests and source references can prove semantic sharing while preserving implementation differences.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "ylong_http_client/src/",
+          "ylong_http_client/tests/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "cargo test -p ylong_http_client proxy",
+          "rg -n \"parse_tunnel_response|tunnel_request|Proxy\" ylong_http_client/src"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.sync-async-proxy-tests"
+      ],
+      "if_not_producible": "Record the divergent semantic and keep O-sync-async-proxy-semantics incomplete until patched or explicitly scoped."
+    },
+    {
+      "required_step_id": "S5-test-matrix",
+      "what_would_make_it_true": "The selected HTTPS proxy critical test matrix is implemented and all required commands pass.",
+      "current_state": "The exact matrix depends on source shape after audit and patches.",
+      "planned_producing_action": "Run parser, TLS/mTLS, sync/async proxy semantics, feature-boundary, and fail-closed tests under selected cargo features; record command outputs.",
+      "why_this_can_make_it_true": "Passing command results are the required evidence for the contest-critical matrix.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "ylong_http_client/tests/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "cargo test -p ylong_http_client",
+          "cargo test -p ylong_http_client --all-features"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.test-matrix-run"
+      ],
+      "if_not_producible": "Record the failing command, environment requirement, and exact next command; do not count partial test success as completion."
+    },
+    {
+      "required_step_id": "S6-benchmark-fairness",
+      "what_would_make_it_true": "Benchmark evidence identifies curl CLI separately from libcurl-library, documents topology and reuse model, and can be rerun.",
+      "current_state": "Current assets risk conflating curl CLI with libcurl/library evidence.",
+      "planned_producing_action": "Audit and repair benchmark harness naming, add or document libcurl-library baseline requirements, record exact commands, topology, TLS settings, warmup, repeats, and limitations.",
+      "why_this_can_make_it_true": "The benchmark methodology evidence directly controls whether performance claims are fair and reproducible.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "ylong_http_client/",
+          "benches/",
+          "README.md",
+          "docs/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "cargo bench -p ylong_http_client",
+          "rg -n \"curl|libcurl|benchmark|proxy\" README.md ylong_http_client benches docs"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.benchmark-fairness"
+      ],
+      "if_not_producible": "Record unavailable libcurl-library resources as exact remaining required work; curl CLI evidence cannot satisfy this outcome if library evidence is required."
+    },
+    {
+      "required_step_id": "S7-report-evidence-chain",
+      "what_would_make_it_true": "README/report claims are rewritten so every strong claim points to produced code, test, benchmark, or limitation evidence.",
+      "current_state": "Report wording must be revised after implementation and benchmark evidence, not before.",
+      "planned_producing_action": "Update README/report evidence chain, remove unsupported 95% core conclusion wording, separate curl CLI from libcurl-library evidence, and scope mTLS/SOTA claims to direct evidence.",
+      "why_this_can_make_it_true": "A diff tied to evidence can prove that narrative claims no longer exceed implementation and benchmark evidence.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "README.md",
+          "docs/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "git diff -- README.md docs",
+          "rg -n \"95%|curl/libcurl|SOTA|mTLS|HTTPS proxy\" README.md docs"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.report-diff"
+      ],
+      "if_not_producible": "Record the unrevised claim and keep O-report-evidence-chain incomplete."
+    },
+    {
+      "required_step_id": "S8-sota-threshold-matrix",
+      "what_would_make_it_true": "Every predeclared core scenario and numeric hard threshold has a measured pass/fail verdict with required statistics.",
+      "current_state": "No current evidence can satisfy this without fair libcurl-library benchmark execution and threshold classification.",
+      "planned_producing_action": "Run or prepare the libcurl-library comparison matrix, collect throughput, p50, p95, CPU/request, RSS, errors, repetitions, confidence intervals, and compute pass/fail for each hard threshold.",
+      "why_this_can_make_it_true": "The matrix directly determines whether SOTA verified is mathematically supported.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "ylong_http_client/",
+          "benches/",
+          "docs/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "cargo bench -p ylong_http_client --bench https_proxy",
+          "cargo run -p ylong_http_client --example https_proxy_benchmark"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.sota-threshold-matrix"
+      ],
+      "if_not_producible": "Record missing benchmark resource or failed threshold as remaining required work; do not emit a weaker terminal success label."
+    },
+    {
+      "required_step_id": "S9-causal-performance-evidence",
+      "what_would_make_it_true": "The benchmark is shown to use the real public client/connector/proxy/TLS path and the measured advantage is explained by profiling, tracing, or ablation under same-model semantics.",
+      "current_state": "Elapsed-time tables alone cannot prove causality or real-client-path execution.",
+      "planned_producing_action": "Trace benchmark call paths, inspect for benchmark-only shortcuts, add instrumentation or ablation/profiling, and rule out curl CLI startup, pooling mismatch, disabled verification, missing mTLS, and response-validation mismatch.",
+      "why_this_can_make_it_true": "Real-client-path evidence plus causal analysis closes the benchmark-only and baseline-mismatch counterexamples.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "ylong_http_client/",
+          "benches/",
+          "docs/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+        ],
+        "run_commands": [
+          "cargo bench -p ylong_http_client",
+          "perf stat true",
+          "rg -n \"Client|Proxy|Connector|Tls|bench\" ylong_http_client benches"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.real-client-path",
+        "evidence.performance-causality"
+      ],
+      "if_not_producible": "Record exact missing profiler/tool/resource or unresolved causal alternative; do not claim SOTA verified."
+    },
+    {
+      "required_step_id": "S10-final-counterexample-gate",
+      "what_would_make_it_true": "An independent final reviewer cannot find a case where all recorded evidence is true but SOTA remains false.",
+      "current_state": "This can only run after implementation, tests, benchmark, causal evidence, and report evidence exist.",
+      "planned_producing_action": "Run a final counterexample review over progress evidence, final report, code diff, tests, benchmark data, threshold matrix, and report claims.",
+      "why_this_can_make_it_true": "Independent review is the required final guard against evidence gaps and overclaims.",
+      "allowed_authority_needed": {
+        "write_paths": [
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/final-report.json",
+          "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/progress.jsonl"
+        ],
+        "run_commands": [
+          "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+          "git diff --stat"
+        ]
+      },
+      "evidence_after_action": [
+        "evidence.final-counterexample-review"
+      ],
+      "if_not_producible": "Record exact unresolved counterexample or missing evidence as remaining required work and leave goal_achieved false."
+    }
+  ],
+  "work_packages": [
+    {
+      "work_package_id": "WP1-audit-protocol-semantics",
+      "role": "mainline",
+      "required_steps": [
+        "S1-current-audit",
+        "S2-protocol-correctness",
+        "S4-sync-async-proxy-semantics"
+      ],
+      "uses_step_action_alignment": [
+        "S1-current-audit",
+        "S2-protocol-correctness",
+        "S4-sync-async-proxy-semantics"
+      ],
+      "state_change_it_produces": "Audited source truth, CONNECT parser protocol repair, and scoped sync/async proxy semantics evidence.",
+      "not_merely_verification": true,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "ylong_http_client/src/",
+        "ylong_http_client/tests/",
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+      ],
+      "forbidden_write_paths": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json"
+      ],
+      "required_tests": [
+        "cargo test -p ylong_http_client tunnel",
+        "cargo test -p ylong_http_client proxy"
+      ]
+    },
+    {
+      "work_package_id": "WP2-tls-mtls-test-matrix",
+      "role": "mainline",
+      "required_steps": [
+        "S3-proxy-tls-mtls",
+        "S5-test-matrix"
+      ],
+      "uses_step_action_alignment": [
+        "S3-proxy-tls-mtls",
+        "S5-test-matrix"
+      ],
+      "state_change_it_produces": "Proxy TLS/mTLS endpoint fixtures and a passing contest-critical HTTPS proxy test matrix.",
+      "not_merely_verification": true,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "ylong_http_client/src/",
+        "ylong_http_client/tests/",
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+      ],
+      "forbidden_write_paths": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json"
+      ],
+      "required_tests": [
+        "cargo test -p ylong_http_client --features __tls proxy_tls",
+        "cargo test -p ylong_http_client --features __tls proxy_mtls",
+        "cargo test -p ylong_http_client --all-features"
+      ]
+    },
+    {
+      "work_package_id": "WP3-benchmark-sota-causality",
+      "role": "mainline",
+      "required_steps": [
+        "S6-benchmark-fairness",
+        "S8-sota-threshold-matrix",
+        "S9-causal-performance-evidence"
+      ],
+      "uses_step_action_alignment": [
+        "S6-benchmark-fairness",
+        "S8-sota-threshold-matrix",
+        "S9-causal-performance-evidence"
+      ],
+      "state_change_it_produces": "Fair benchmark method, libcurl-library threshold verdict, real-client-path proof, and causal performance evidence.",
+      "not_merely_verification": true,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "ylong_http_client/",
+        "benches/",
+        "docs/",
+        "README.md",
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/"
+      ],
+      "forbidden_write_paths": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json"
+      ],
+      "required_tests": [
+        "cargo bench -p ylong_http_client",
+        "cargo test -p ylong_http_client"
+      ]
+    },
+    {
+      "work_package_id": "WP4-report-final-review",
+      "role": "mainline",
+      "required_steps": [
+        "S7-report-evidence-chain",
+        "S10-final-counterexample-gate"
+      ],
+      "uses_step_action_alignment": [
+        "S7-report-evidence-chain",
+        "S10-final-counterexample-gate"
+      ],
+      "state_change_it_produces": "Evidence-aligned README/report wording and final independent counterexample approval.",
+      "not_merely_verification": true,
+      "counts_as_goal_progress": true,
+      "allowed_write_paths": [
+        "README.md",
+        "docs/",
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/",
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/progress.jsonl",
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/final-report.json"
+      ],
+      "forbidden_write_paths": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json"
+      ],
+      "required_tests": [
+        "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+        "git diff -- README.md docs"
+      ]
+    }
+  ],
+  "registry_bindings": {
+    "selected_agent_workflow": "superpowers-dispatching-parallel-agents",
+    "allowed_work_assignment": "Mainline execution may use up to four subagents only for read-only audits, independent reviews, or disjoint implementation slices with non-overlapping ownership; the main agent remains responsible for integration and verifier evidence."
+  },
+  "runtime": {
+    "readonly_files": [
+      "requirements.control.json",
+      "run.control.json",
+      "design.control.json",
+      "goal.control.json",
+      "plan.control.json",
+      "review.control.json",
+      "gen-000/runtime.control.json"
+    ],
+    "writable_files": [
+      "progress.jsonl",
+      "runtime-status.json",
+      "final-report.json"
+    ],
+    "writable_evidence_paths": [
+      "evidence/",
+      "ylong_http_client/",
+      "benches/",
+      "README.md",
+      "docs/"
+    ]
+  },
+  "progress": {
+    "event_schema": "progress-event.schema.json",
+    "append_only": true
+  },
+  "verifier": {
+    "required_before_goal_achieved": true,
+    "required_outcomes": [
+      "O-current-audit",
+      "O-protocol-correctness",
+      "O-proxy-tls-mtls",
+      "O-sync-async-proxy-semantics",
+      "O-test-matrix",
+      "O-benchmark-fairness",
+      "O-report-evidence-chain",
+      "O-sota-threshold-matrix",
+      "O-causal-performance-evidence",
+      "O-final-counterexample-gate"
+    ],
+    "output_schema": "final-report.schema.json"
+  }
+}

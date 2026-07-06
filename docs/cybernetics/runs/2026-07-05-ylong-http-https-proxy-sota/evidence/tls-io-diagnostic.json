@@ -1,0 +1,201 @@
+{
+  "evidence_id": "evidence.tls-io-diagnostic",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "diagnostic_counterexample_to_tls_poll_explosion_hypothesis_feature_isolated",
+  "verified_at": "2026-07-06T05:22:26+08:00",
+  "summary": "Benchmark-only TLS I/O counters were isolated behind the opt-in bench_tls_io feature and exercised on a short three-scenario phase diagnostic. Canonical libcurl_bench builds compile without bench_tls_io, so the fair matrix does not pay diagnostic counter overhead. The diagnostic data still refutes TLS wrapper poll explosion as a SOTA-scale bottleneck: HTTP over HTTPS proxy averages 2 SSL reads and 1 SSL-read pending per request; HTTPS origin over HTTPS proxy and proxy-mTLS HTTPS origin average 5 SSL reads and 2 SSL-read pendings per request. Response-read time still dominates response-head time, so the remaining bottleneck is consistent with sequential HTTP/1 request/response wait and runtime/TLS wakeup cost rather than excessive wrapper loops.",
+  "source_changes": [
+    {
+      "file": "ylong_http_client/Cargo.toml",
+      "summary": "Adds the bench_tls_io feature so TLS I/O diagnostics are not compiled into canonical libcurl_bench fairness builds."
+    },
+    {
+      "file": "ylong_http_client/src/lib.rs",
+      "summary": "Re-exports TLS diagnostic snapshot helpers only when bench_tls_io is enabled and provides no-op fallbacks otherwise."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/ssl_stream/mod.rs",
+      "summary": "Adds bench_tls_io-only atomic TLS I/O counters and public snapshot/delta types for the benchmark binary."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/ssl_stream/c_ssl_stream.rs",
+      "summary": "Records SSL read/write call and WouldBlock counts in AsyncSslStream poll_read and poll_write."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/ssl_stream/wrapper.rs",
+      "summary": "Records underlying stream read/write call and Pending counts from the OpenSSL wrapper BIO."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Captures TLS counter snapshot deltas for measured runs and prints ylong_http_client_tls_io when phase timing is enabled."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Parses ylong_http_client_tls_io rows and writes TLS counter columns to result and summary CSVs."
+    }
+  ],
+  "diagnostic_dataset": {
+    "result_files": [
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200 --repeats 3 --warmup 20 --phase-timing --bench-bin /tmp/ylong_http_target_tlsdiag_ylong_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tls-io-diagnostic --figure-dir docs/benchmarks/results/tls-io-diagnostic",
+    "phase_timing": true,
+    "diagnostic_feature": "bench_tls_io",
+    "canonical_fairness_note": "Canonical libcurl_bench fairness builds omit bench_tls_io; TLS counters are opt-in diagnostics only.",
+    "request_counts": [
+      200
+    ],
+    "repetitions": 3,
+    "warmup_requests": 20,
+    "scenario_summaries": [
+      {
+        "scenario": "http-over-https-proxy",
+        "throughput_ratio_ylong_over_libcurl": 1.0214423748402508,
+        "p50_latency_ratio_ylong_over_libcurl": 0.923841059602649,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9926108374384236,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9910179640718563,
+        "ylong_phase_us_mean": {
+          "request_execute": 19295.666666666668,
+          "send_on_conn": 18167.666666666668,
+          "http1_write_io": 3303.3333333333335,
+          "response_read": 12320.333333333334
+        },
+        "tls_io_counts_mean": {
+          "ssl_read_calls": 400.0,
+          "ssl_read_pending": 200.0,
+          "ssl_write_calls": 200.0,
+          "ssl_write_pending": 0.0,
+          "underlying_read_calls": 600.0,
+          "underlying_read_pending": 200.0,
+          "underlying_write_calls": 200.0,
+          "underlying_write_pending": 0.0
+        },
+        "tls_io_counts_per_request": {
+          "ssl_read_calls": 2.0,
+          "ssl_read_pending": 1.0,
+          "ssl_write_calls": 1.0,
+          "ssl_write_pending": 0.0,
+          "underlying_read_calls": 3.0,
+          "underlying_read_pending": 1.0,
+          "underlying_write_calls": 1.0,
+          "underlying_write_pending": 0.0
+        }
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "throughput_ratio_ylong_over_libcurl": 1.061887850670069,
+        "p50_latency_ratio_ylong_over_libcurl": 0.9815668202764977,
+        "p95_latency_ratio_ylong_over_libcurl": 0.7897196261682243,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9311822421416026,
+        "ylong_phase_us_mean": {
+          "request_execute": 43857.666666666664,
+          "send_on_conn": 42386.0,
+          "http1_write_io": 4346.0,
+          "response_read": 34954.666666666664
+        },
+        "tls_io_counts_mean": {
+          "ssl_read_calls": 1000.0,
+          "ssl_read_pending": 400.0,
+          "ssl_write_calls": 400.0,
+          "ssl_write_pending": 0.0,
+          "underlying_read_calls": 1200.0,
+          "underlying_read_pending": 400.0,
+          "underlying_write_calls": 400.0,
+          "underlying_write_pending": 0.0
+        },
+        "tls_io_counts_per_request": {
+          "ssl_read_calls": 5.0,
+          "ssl_read_pending": 2.0,
+          "ssl_write_calls": 2.0,
+          "ssl_write_pending": 0.0,
+          "underlying_read_calls": 6.0,
+          "underlying_read_pending": 2.0,
+          "underlying_write_calls": 2.0,
+          "underlying_write_pending": 0.0
+        }
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "throughput_ratio_ylong_over_libcurl": 1.3431737882866746,
+        "p50_latency_ratio_ylong_over_libcurl": 0.856682769726248,
+        "p95_latency_ratio_ylong_over_libcurl": 0.801906779661017,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.8090063851237818,
+        "ylong_phase_us_mean": {
+          "request_execute": 36445.0,
+          "send_on_conn": 35253.333333333336,
+          "http1_write_io": 3581.0,
+          "response_read": 29166.0
+        },
+        "tls_io_counts_mean": {
+          "ssl_read_calls": 1000.0,
+          "ssl_read_pending": 400.0,
+          "ssl_write_calls": 400.0,
+          "ssl_write_pending": 0.0,
+          "underlying_read_calls": 1200.0,
+          "underlying_read_pending": 400.0,
+          "underlying_write_calls": 400.0,
+          "underlying_write_pending": 0.0
+        },
+        "tls_io_counts_per_request": {
+          "ssl_read_calls": 5.0,
+          "ssl_read_pending": 2.0,
+          "ssl_write_calls": 2.0,
+          "ssl_write_pending": 0.0,
+          "underlying_read_calls": 6.0,
+          "underlying_read_pending": 2.0,
+          "underlying_write_calls": 2.0,
+          "underlying_write_pending": 0.0
+        }
+      }
+    ]
+  },
+  "verification_commands": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tls_stats_gate_red cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_tls_bench_stats_disabled_by_default",
+      "observed": "failed before feature-isolation fix because diagnostic enable/disable control was not implemented"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tls_stats_feature_green cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io ut_tls_bench_stats_",
+      "observed": "passed: 2 TLS diagnostic tests passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_canonical_no_tlsio_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings; canonical benchmark feature set omits bench_tls_io"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tlsio_diag_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "observed": "10 tests passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tlsdiag_no_libcurl cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tlsdiag_ylong_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "TLS I/O diagnostic command listed in diagnostic_dataset.command",
+      "observed": "all 18 scenario/client/repeat runs ok; TLS counts parsed into summary CSV after bench_tls_io isolation"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" rustfmt --check --config skip_children=true ylong_http_client/src/lib.rs ylong_http_client/src/async_impl/mod.rs ylong_http_client/src/async_impl/ssl_stream/mod.rs ylong_http_client/src/async_impl/ssl_stream/c_ssl_stream.rs ylong_http_client/src/async_impl/ssl_stream/wrapper.rs ylong_http_client/src/bin/https_proxy_bench.rs",
+      "observed": "passed with existing nightly-only rustfmt.toml warnings"
+    }
+  ],
+  "verdict": {
+    "sota_verified": false,
+    "reason": "This diagnostic is causal narrowing evidence only. It rules out TLS wrapper poll explosion as the main SOTA-scale cause, but the short matrix still fails SOTA thresholds and does not provide a SOTA-passing full matrix."
+  },
+  "completion_effect": "S9 remains active. S10 must not run as a completion gate."
+}

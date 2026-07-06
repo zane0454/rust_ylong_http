@@ -1,0 +1,182 @@
+{
+  "evidence_id": "evidence.current-audit",
+  "required_step": "S1-current-audit",
+  "work_package_id": "WP1-audit-protocol-semantics",
+  "status": "pass",
+  "audited_at": "2026-07-06T02:18:00+08:00",
+  "scope": [
+    "ylong_http_client/src/util/proxy.rs",
+    "ylong_http_client/src/util/config/settings.rs",
+    "ylong_http_client/src/sync_impl/connector.rs",
+    "ylong_http_client/src/async_impl/connector/mod.rs",
+    "ylong_http_client/tests/sdv_async_http_proxy.rs",
+    "ylong_http_client/src/bin/https_proxy_bench.rs",
+    "docs/benchmarks/run_https_proxy_bench.py",
+    "README.md"
+  ],
+  "commands": [
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "result": "ok"
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/compiling-cybernetic-runtime-goals/scripts/control_chain_guard.py --run-dir docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "result": "PASS"
+    },
+    {
+      "command": "rg -n \"parse_tunnel_response|tunnel|CONNECT|Proxy|proxy|tls|curl|libcurl\" ylong_http_client README.md docs/benchmarks -S",
+      "result": "used to identify proxy implementation, tests, docs, and benchmark surfaces"
+    }
+  ],
+  "findings": [
+    {
+      "id": "audit.protocol.connect_success_2xx",
+      "severity": "must_fix",
+      "summary": "CONNECT response parsing currently treats only status code 200 as a successful tunnel response.",
+      "source_refs": [
+        "ylong_http_client/src/util/proxy.rs:281",
+        "ylong_http_client/src/util/proxy.rs:294",
+        "ylong_http_client/src/util/proxy.rs:304",
+        "ylong_http_client/src/util/proxy.rs:573"
+      ],
+      "impact": "Valid complete 2xx CONNECT responses such as 201 or 204 fail as unsuccessful even though HTTP tunnel success semantics are 2xx-based.",
+      "mapped_steps": [
+        "S2-protocol-correctness",
+        "S5-test-matrix"
+      ]
+    },
+    {
+      "id": "audit.protocol.fail_closed_shape",
+      "severity": "preserve",
+      "summary": "The parser already fails closed for malformed status lines, 407 proxy authentication, non-2xx statuses, incomplete headers, and oversized tunnel headers.",
+      "source_refs": [
+        "ylong_http_client/src/util/proxy.rs:281",
+        "ylong_http_client/src/util/proxy.rs:309",
+        "ylong_http_client/src/util/proxy.rs:328",
+        "ylong_http_client/src/util/proxy.rs:581"
+      ],
+      "impact": "The protocol patch should widen success from 200 to complete 2xx without weakening malformed, 407, non-2xx, incomplete, or oversized handling.",
+      "mapped_steps": [
+        "S2-protocol-correctness"
+      ]
+    },
+    {
+      "id": "audit.proxy_tls.origin_tls_separation",
+      "severity": "preserve_and_verify",
+      "summary": "Proxy TLS and origin TLS are represented as separate hops in both connector implementations.",
+      "source_refs": [
+        "ylong_http_client/src/sync_impl/connector.rs:138",
+        "ylong_http_client/src/sync_impl/connector.rs:140",
+        "ylong_http_client/src/sync_impl/connector.rs:142",
+        "ylong_http_client/src/sync_impl/connector.rs:171",
+        "ylong_http_client/src/async_impl/connector/mod.rs:468",
+        "ylong_http_client/src/async_impl/connector/mod.rs:470",
+        "ylong_http_client/src/async_impl/connector/mod.rs:478",
+        "ylong_http_client/src/async_impl/connector/mod.rs:560"
+      ],
+      "impact": "This is the core existing contribution and must be protected by endpoint tests that distinguish proxy TLS from origin TLS.",
+      "mapped_steps": [
+        "S3-proxy-tls-mtls",
+        "S4-sync-async-proxy-semantics",
+        "S5-test-matrix"
+      ]
+    },
+    {
+      "id": "audit.proxy_tls_config_api",
+      "severity": "preserve_and_verify",
+      "summary": "ProxyBuilder exposes proxy TLS config under cfg(feature = \"__tls\"), and ProxyInfo stores a proxy-specific TlsConfig.",
+      "source_refs": [
+        "ylong_http_client/src/util/proxy.rs:97",
+        "ylong_http_client/src/util/proxy.rs:168",
+        "ylong_http_client/src/util/proxy.rs:230",
+        "ylong_http_client/src/util/config/settings.rs:451",
+        "ylong_http_client/src/util/config/settings.rs:469"
+      ],
+      "impact": "The API can carry proxy CA, client certificate, private key, and cipher settings through TlsConfig, but current evidence is mostly API/unit-level rather than endpoint-level mTLS proof.",
+      "mapped_steps": [
+        "S3-proxy-tls-mtls"
+      ]
+    },
+    {
+      "id": "audit.sync_async_shared_semantics",
+      "severity": "clarify_and_verify",
+      "summary": "Sync and async connectors are separate implementations that share proxy selection, auth header value, CONNECT request construction, and tunnel response parsing through util::proxy.",
+      "source_refs": [
+        "ylong_http_client/src/util/proxy.rs:33",
+        "ylong_http_client/src/util/proxy.rs:236",
+        "ylong_http_client/src/util/proxy.rs:281",
+        "ylong_http_client/src/sync_impl/connector.rs:92",
+        "ylong_http_client/src/async_impl/connector/mod.rs:248",
+        "README.md:27"
+      ],
+      "impact": "The report should claim shared proxy semantics, not fully shared sync/async connector implementation.",
+      "mapped_steps": [
+        "S4-sync-async-proxy-semantics",
+        "S7-report-evidence-chain"
+      ]
+    },
+    {
+      "id": "audit.http3_proxy_rejection",
+      "severity": "preserve_and_verify",
+      "summary": "Async HTTPS connection logic explicitly rejects HTTP/3 over proxy when the http3 feature is enabled.",
+      "source_refs": [
+        "ylong_http_client/src/async_impl/connector/mod.rs:323",
+        "ylong_http_client/src/async_impl/connector/mod.rs:325",
+        "ylong_http_client/src/async_impl/connector/mod.rs:327"
+      ],
+      "impact": "This is a fail-closed boundary that should remain covered by the matrix or explicitly scoped if feature combinations make local testing unavailable.",
+      "mapped_steps": [
+        "S5-test-matrix"
+      ]
+    },
+    {
+      "id": "audit.test_gap_tls_mtls",
+      "severity": "must_fix",
+      "summary": "Current visible tests cover HTTP proxy async behavior and tunnel parser/error paths, but do not yet prove HTTP over HTTPS proxy, HTTPS over HTTPS proxy, proxy CA failure, hostname mismatch, or proxy mTLS success/failure end to end.",
+      "source_refs": [
+        "ylong_http_client/tests/sdv_async_http_proxy.rs:33",
+        "ylong_http_client/src/async_impl/connector/mod.rs:691",
+        "ylong_http_client/src/async_impl/connector/mod.rs:798",
+        "ylong_http_client/src/async_impl/connector/mod.rs:837"
+      ],
+      "impact": "The TLS/mTLS claims in README need endpoint tests before they can support SOTA-quality evidence.",
+      "mapped_steps": [
+        "S3-proxy-tls-mtls",
+        "S5-test-matrix"
+      ]
+    },
+    {
+      "id": "audit.benchmark_baseline_mismatch",
+      "severity": "must_fix",
+      "summary": "The benchmark harness measures ylong_http_client in process and curl CLI as a child process; README currently describes this as curl/libcurl comparison.",
+      "source_refs": [
+        "ylong_http_client/src/bin/https_proxy_bench.rs:57",
+        "ylong_http_client/src/bin/https_proxy_bench.rs:67",
+        "ylong_http_client/src/bin/https_proxy_bench.rs:129",
+        "docs/benchmarks/run_https_proxy_bench.py:263",
+        "README.md:90",
+        "README.md:115"
+      ],
+      "impact": "Existing 95% local results may be useful as a curl CLI regression signal but cannot satisfy the predeclared libcurl-library SOTA threshold matrix.",
+      "mapped_steps": [
+        "S6-benchmark-fairness",
+        "S8-sota-threshold-matrix",
+        "S9-causal-performance-evidence",
+        "S7-report-evidence-chain"
+      ]
+    }
+  ],
+  "preservation_constraints": [
+    "Keep proxy TLS configuration separate from origin TLS configuration.",
+    "Keep connect_request and parse_tunnel_response shared between sync and async connector paths.",
+    "Keep 407, malformed, incomplete, and oversized CONNECT response handling fail-closed.",
+    "Do not strengthen performance or SOTA claims beyond evidence from same-model benchmark measurements."
+  ],
+  "next_actions": [
+    "Patch parse_tunnel_response to accept complete 2xx CONNECT responses and add 200/201/204/407/500/malformed/incomplete tests.",
+    "Add endpoint-level proxy TLS and proxy mTLS tests that distinguish proxy TLS from origin TLS.",
+    "Add or document sync and async proxy semantic coverage without overclaiming a shared connector implementation.",
+    "Relabel benchmark evidence to curl CLI unless a same-process libcurl-library baseline is implemented and measured.",
+    "Revise README/report performance wording to follow the evidence chain."
+  ]
+}

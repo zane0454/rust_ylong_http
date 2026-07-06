@@ -63,7 +63,7 @@
 use std::io::Read;
 
 use crate::error::{ErrorKind, HttpError};
-use crate::headers::{HeaderName, Headers, HeadersIntoIter};
+use crate::headers::{HeaderName, Headers, HeadersIntoIter, HeadersIter};
 use crate::request::method::Method;
 use crate::request::uri::Uri;
 use crate::request::RequestPart;
@@ -126,6 +126,23 @@ pub struct RequestEncoder {
     version_part: EncodeVersion,
     version_crlf_part: EncodeCrlf,
     headers_part: EncodeHeader,
+    headers_crlf_part: EncodeCrlf,
+    is_absolute_uri: bool,
+}
+
+/// A borrowed encoder that serializes a [`RequestPart`] without cloning it.
+///
+/// This encoder produces the same bytes as [`RequestEncoder`], but keeps
+/// references to method, URI, version, and headers while encoding.
+pub struct RequestRefEncoder<'a> {
+    encode_status: EncodeState,
+    method_part: EncodeMethodRef<'a>,
+    method_sp_part: EncodeSp,
+    uri_part: EncodeUriRef<'a>,
+    uri_sp_part: EncodeSp,
+    version_part: EncodeVersionRef<'a>,
+    version_crlf_part: EncodeCrlf,
+    headers_part: EncodeHeaderRef<'a>,
     headers_crlf_part: EncodeCrlf,
     is_absolute_uri: bool,
 }
@@ -413,9 +430,179 @@ impl RequestEncoder {
     }
 }
 
+impl<'a> RequestRefEncoder<'a> {
+    /// Creates a new borrowed `RequestRefEncoder` from a `RequestPart`.
+    pub fn new(part: &'a RequestPart) -> Self {
+        Self {
+            encode_status: EncodeState::Method,
+            method_part: EncodeMethodRef::new(&part.method),
+            method_sp_part: EncodeSp::new(),
+            uri_part: EncodeUriRef::new(&part.uri, false),
+            uri_sp_part: EncodeSp::new(),
+            version_part: EncodeVersionRef::new(&part.version),
+            version_crlf_part: EncodeCrlf::new(),
+            headers_part: EncodeHeaderRef::new(&part.headers),
+            headers_crlf_part: EncodeCrlf::new(),
+            is_absolute_uri: false,
+        }
+    }
+
+    /// Encodes the borrowed `RequestPart` into target buf and returns the
+    /// number of bytes written.
+    pub fn encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        if dst.is_empty() {
+            return Err(ErrorKind::InvalidInput.into());
+        }
+        let mut count = 0;
+        while count != dst.len() {
+            count += match self.encode_status {
+                EncodeState::Method => self.method_encode(&mut dst[count..]),
+                EncodeState::MethodSp => self.method_sp_encode(&mut dst[count..]),
+                EncodeState::Uri => self.uri_encode(&mut dst[count..]),
+                EncodeState::UriSp => self.uri_sp_encode(&mut dst[count..]),
+                EncodeState::Version => self.version_encode(&mut dst[count..]),
+                EncodeState::VersionCrlf => self.version_crlf_encode(&mut dst[count..]),
+                EncodeState::Header => self.header_encode(&mut dst[count..]),
+                EncodeState::HeaderCrlf => self.header_crlf_encode(&mut dst[count..]),
+                EncodeState::EncodeFinished => return Ok(count),
+            }?;
+        }
+        Ok(dst.len())
+    }
+
+    /// Sets the `is_absolute_uri` flag.
+    pub fn absolute_uri(&mut self, is_absolute: bool) {
+        self.is_absolute_uri = is_absolute;
+    }
+
+    fn method_encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        match self.method_part.encode(dst)? {
+            TokenStatus::Complete(output_size) => {
+                self.encode_status = EncodeState::MethodSp;
+                Ok(output_size)
+            }
+            TokenStatus::Partial(output_size) => {
+                self.encode_status = EncodeState::Method;
+                Ok(output_size)
+            }
+        }
+    }
+
+    fn method_sp_encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        match self.method_sp_part.encode(dst)? {
+            TokenStatus::Complete(output_size) => {
+                self.uri_part.is_absolute = self.is_absolute_uri;
+                self.encode_status = EncodeState::Uri;
+                Ok(output_size)
+            }
+            TokenStatus::Partial(output_size) => {
+                self.encode_status = EncodeState::MethodSp;
+                Ok(output_size)
+            }
+        }
+    }
+
+    fn uri_encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        match self.uri_part.encode(dst)? {
+            TokenStatus::Complete(output_size) => {
+                self.encode_status = EncodeState::UriSp;
+                Ok(output_size)
+            }
+            TokenStatus::Partial(output_size) => {
+                self.encode_status = EncodeState::Uri;
+                Ok(output_size)
+            }
+        }
+    }
+
+    fn uri_sp_encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        match self.uri_sp_part.encode(dst)? {
+            TokenStatus::Complete(output_size) => {
+                self.encode_status = EncodeState::Version;
+                Ok(output_size)
+            }
+            TokenStatus::Partial(output_size) => {
+                self.encode_status = EncodeState::UriSp;
+                Ok(output_size)
+            }
+        }
+    }
+
+    fn version_encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        match self.version_part.encode(dst)? {
+            TokenStatus::Complete(output_size) => {
+                self.encode_status = EncodeState::VersionCrlf;
+                Ok(output_size)
+            }
+            TokenStatus::Partial(output_size) => {
+                self.encode_status = EncodeState::Version;
+                Ok(output_size)
+            }
+        }
+    }
+
+    fn version_crlf_encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        match self.version_crlf_part.encode(dst)? {
+            TokenStatus::Complete(output_size) => {
+                self.encode_status = EncodeState::Header;
+                Ok(output_size)
+            }
+            TokenStatus::Partial(output_size) => {
+                self.encode_status = EncodeState::VersionCrlf;
+                Ok(output_size)
+            }
+        }
+    }
+
+    fn header_encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        match self.headers_part.encode(dst)? {
+            TokenStatus::Complete(output_size) => {
+                self.encode_status = EncodeState::HeaderCrlf;
+                Ok(output_size)
+            }
+            TokenStatus::Partial(output_size) => {
+                self.encode_status = EncodeState::Header;
+                Ok(output_size)
+            }
+        }
+    }
+
+    fn header_crlf_encode(&mut self, dst: &mut [u8]) -> Result<usize, HttpError> {
+        match self.headers_crlf_part.encode(dst)? {
+            TokenStatus::Complete(output_size) => {
+                self.encode_status = EncodeState::EncodeFinished;
+                Ok(output_size)
+            }
+            TokenStatus::Partial(output_size) => {
+                self.encode_status = EncodeState::HeaderCrlf;
+                Ok(output_size)
+            }
+        }
+    }
+}
+
 struct EncodeMethod {
     inner: Method,
     src_idx: usize,
+}
+
+struct EncodeMethodRef<'a> {
+    inner: &'a Method,
+    src_idx: usize,
+}
+
+impl<'a> EncodeMethodRef<'a> {
+    fn new(method: &'a Method) -> Self {
+        Self {
+            inner: method,
+            src_idx: 0,
+        }
+    }
+
+    fn encode(&mut self, buf: &mut [u8]) -> TokenResult<usize> {
+        let method = self.inner.as_str().as_bytes();
+        WriteData::new(method, &mut self.src_idx, buf).write()
+    }
 }
 
 impl EncodeMethod {
@@ -437,6 +624,46 @@ struct EncodeUri {
     origin: Vec<u8>,
     src_idx: usize,
     is_absolute: bool,
+}
+
+struct EncodeUriRef<'a> {
+    inner: &'a Uri,
+    absolute: Option<Vec<u8>>,
+    origin: Option<Vec<u8>>,
+    src_idx: usize,
+    is_absolute: bool,
+}
+
+impl<'a> EncodeUriRef<'a> {
+    fn new(uri: &'a Uri, is_absolute: bool) -> Self {
+        Self {
+            inner: uri,
+            absolute: None,
+            origin: None,
+            src_idx: 0,
+            is_absolute,
+        }
+    }
+
+    fn encode(&mut self, buf: &mut [u8]) -> TokenResult<usize> {
+        let uri = if self.is_absolute {
+            if self.absolute.is_none() {
+                self.absolute = Some(self.inner.to_string().into_bytes());
+            }
+            self.absolute.as_ref().unwrap().as_slice()
+        } else {
+            if self.origin.is_none() {
+                let origin = self
+                    .inner
+                    .path_and_query()
+                    .map(|path| path.into_bytes())
+                    .unwrap_or_else(|| b"/".to_vec());
+                self.origin = Some(origin);
+            }
+            self.origin.as_ref().unwrap().as_slice()
+        };
+        WriteData::new(uri, &mut self.src_idx, buf).write()
+    }
 }
 
 impl EncodeUri {
@@ -469,6 +696,26 @@ impl EncodeUri {
 struct EncodeVersion {
     inner: Version,
     src_idx: usize,
+}
+
+struct EncodeVersionRef<'a> {
+    inner: &'a Version,
+    src_idx: usize,
+}
+
+impl<'a> EncodeVersionRef<'a> {
+    fn new(version: &'a Version) -> Self {
+        Self {
+            inner: version,
+            src_idx: 0,
+        }
+    }
+
+    fn encode(&mut self, buf: &mut [u8]) -> TokenResult<usize> {
+        let version = self.inner.as_str().as_bytes();
+        let mut task = WriteData::new(version, &mut self.src_idx, buf);
+        task.write()
+    }
 }
 
 impl EncodeVersion {
@@ -512,7 +759,7 @@ impl EncodeHeader {
                 inner: header_iter,
                 status: Some(HeaderStatus::Name),
                 name: header_name,
-                value: header_value.to_string().unwrap().into_bytes(),
+                value: header_value.to_vec(),
                 name_idx: 0,
                 colon_idx: 0,
                 value_idx: 0,
@@ -593,7 +840,122 @@ impl EncodeHeader {
                     let (header_name, header_value) = iter;
                     self.status = Some(HeaderStatus::Name);
                     self.name = header_name;
-                    self.value = header_value.to_string().unwrap().into_bytes();
+                    self.value = header_value.to_vec();
+                    self.name_idx = 0;
+                    self.colon_idx = 0;
+                    self.value_idx = 0;
+                    Ok(TokenStatus::Partial(size))
+                } else {
+                    Ok(TokenStatus::Complete(size))
+                }
+            }
+            TokenStatus::Partial(size) => {
+                self.status = Some(HeaderStatus::Crlf(crlf));
+                Ok(TokenStatus::Partial(size))
+            }
+        }
+    }
+}
+
+struct EncodeHeaderRef<'a> {
+    inner: HeadersIter<'a>,
+    status: Option<HeaderStatus>,
+    name: Option<&'a HeaderName>,
+    value: Vec<u8>,
+    name_idx: usize,
+    colon_idx: usize,
+    value_idx: usize,
+}
+
+impl<'a> EncodeHeaderRef<'a> {
+    fn new(headers: &'a Headers) -> Self {
+        let mut header_iter = headers.iter();
+        if let Some((header_name, header_value)) = header_iter.next() {
+            Self {
+                inner: header_iter,
+                status: Some(HeaderStatus::Name),
+                name: Some(header_name),
+                value: header_value.to_vec(),
+                name_idx: 0,
+                colon_idx: 0,
+                value_idx: 0,
+            }
+        } else {
+            Self {
+                inner: header_iter,
+                status: Some(HeaderStatus::EmptyHeader),
+                name: None,
+                value: vec![],
+                name_idx: 0,
+                colon_idx: 0,
+                value_idx: 0,
+            }
+        }
+    }
+
+    fn encode(&mut self, buf: &mut [u8]) -> TokenResult<usize> {
+        match self.status.take().unwrap() {
+            HeaderStatus::Name => self.encode_name(buf),
+            HeaderStatus::Colon => self.encode_colon(buf),
+            HeaderStatus::Value => self.encode_value(buf),
+            HeaderStatus::Crlf(crlf) => self.encode_crlf(buf, crlf),
+            HeaderStatus::EmptyHeader => Ok(TokenStatus::Complete(0)),
+        }
+    }
+
+    fn encode_name(&mut self, buf: &mut [u8]) -> TokenResult<usize> {
+        let name = self.name.unwrap().as_bytes();
+        let mut task = WriteData::new(name, &mut self.name_idx, buf);
+        match task.write()? {
+            TokenStatus::Complete(size) => {
+                self.status = Some(HeaderStatus::Colon);
+                Ok(TokenStatus::Partial(size))
+            }
+            TokenStatus::Partial(size) => {
+                self.status = Some(HeaderStatus::Name);
+                Ok(TokenStatus::Partial(size))
+            }
+        }
+    }
+
+    fn encode_colon(&mut self, buf: &mut [u8]) -> TokenResult<usize> {
+        let colon = ":".as_bytes();
+        let mut task = WriteData::new(colon, &mut self.colon_idx, buf);
+        match task.write()? {
+            TokenStatus::Complete(size) => {
+                self.status = Some(HeaderStatus::Value);
+                Ok(TokenStatus::Partial(size))
+            }
+            TokenStatus::Partial(size) => {
+                self.status = Some(HeaderStatus::Colon);
+                Ok(TokenStatus::Partial(size))
+            }
+        }
+    }
+
+    fn encode_value(&mut self, buf: &mut [u8]) -> TokenResult<usize> {
+        let value = self.value.as_slice();
+        let mut task = WriteData::new(value, &mut self.value_idx, buf);
+        match task.write()? {
+            TokenStatus::Complete(size) => {
+                let crlf = EncodeCrlf::new();
+                self.status = Some(HeaderStatus::Crlf(crlf));
+                Ok(TokenStatus::Partial(size))
+            }
+            TokenStatus::Partial(size) => {
+                self.status = Some(HeaderStatus::Value);
+                Ok(TokenStatus::Partial(size))
+            }
+        }
+    }
+
+    fn encode_crlf(&mut self, buf: &mut [u8], mut crlf: EncodeCrlf) -> TokenResult<usize> {
+        match crlf.encode(buf)? {
+            TokenStatus::Complete(size) => {
+                if let Some((header_name, header_value)) = self.inner.next() {
+                    self.status = Some(HeaderStatus::Name);
+                    self.name = Some(header_name);
+                    self.value = header_value.to_vec();
                     self.name_idx = 0;
                     self.colon_idx = 0;
                     self.value_idx = 0;
@@ -673,8 +1035,24 @@ impl Default for RequestEncoder {
 
 #[cfg(test)]
 mod ut_request_encoder {
-    use super::RequestEncoder;
+    use super::{RequestEncoder, RequestRefEncoder};
     use crate::request::{Request, RequestBuilder};
+
+    fn encode_to_vec<E>(mut encode: E) -> Vec<u8>
+    where
+        E: FnMut(&mut [u8]) -> usize,
+    {
+        let mut buf = [0u8; 5];
+        let mut res = Vec::new();
+        loop {
+            let size = encode(&mut buf);
+            res.extend_from_slice(&buf[..size]);
+            if size < buf.len() {
+                break;
+            }
+        }
+        res
+    }
 
     /// UT test cases for `RequestEncoder::new`.
     ///
@@ -798,5 +1176,49 @@ mod ut_request_encoder {
         let size = encoder.encode(&mut buf).unwrap();
         let res = std::str::from_utf8(&buf[..size]).unwrap();
         assert_eq!(res, "GET / HTTP/1.1\r\n\r\n");
+    }
+
+    #[test]
+    fn ut_request_ref_encoder_matches_owned_encoder() {
+        let mut request = RequestBuilder::new()
+            .method("GET")
+            .url("http://www.example.com/path?q=1")
+            .version("HTTP/1.1")
+            .header("ACCEPT", "text/html")
+            .body(())
+            .unwrap();
+        request
+            .headers_mut()
+            .append("accept", "application/json")
+            .unwrap();
+
+        let (part, _) = request.into_parts();
+
+        let mut owned = RequestEncoder::new(part.clone());
+        owned.absolute_uri(false);
+        let owned_origin = encode_to_vec(|buf| owned.encode(buf).unwrap());
+
+        let mut borrowed = RequestRefEncoder::new(&part);
+        borrowed.absolute_uri(false);
+        let borrowed_origin = encode_to_vec(|buf| borrowed.encode(buf).unwrap());
+        assert_eq!(borrowed_origin, owned_origin);
+        assert!(std::str::from_utf8(&borrowed_origin)
+            .unwrap()
+            .contains("GET /path?q=1 HTTP/1.1\r\n"));
+
+        let mut owned = RequestEncoder::new(part.clone());
+        owned.absolute_uri(true);
+        let owned_absolute = encode_to_vec(|buf| owned.encode(buf).unwrap());
+
+        let mut borrowed = RequestRefEncoder::new(&part);
+        borrowed.absolute_uri(true);
+        let borrowed_absolute = encode_to_vec(|buf| borrowed.encode(buf).unwrap());
+        assert_eq!(borrowed_absolute, owned_absolute);
+        assert!(std::str::from_utf8(&borrowed_absolute)
+            .unwrap()
+            .contains("GET http://www.example.com/path?q=1 HTTP/1.1\r\n"));
+        assert!(std::str::from_utf8(&borrowed_absolute)
+            .unwrap()
+            .contains("accept:text/html, application/json\r\n"));
     }
 }

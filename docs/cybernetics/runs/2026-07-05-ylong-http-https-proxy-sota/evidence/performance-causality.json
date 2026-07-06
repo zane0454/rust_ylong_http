@@ -1,0 +1,2697 @@
+{
+  "evidence_id": "evidence.performance-causality",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "counterexample_after_single_driver_candidate",
+  "verified_at": "2026-07-06T09:20:11+08:00",
+  "summary": "S9 now includes response-head pre-read diagnostics, concurrent phase diagnostics, rejected OpenSSL release-buffers, explicit HTTP/1 flush, ylong runtime-worker=8 and runtime-worker=1 candidates, a rejected single-driver parent-future polling candidate, a superseded concurrency=8 bench_tls_io diagnostic, retained dynamic request-budget fairness correction, server-side send/relay timing, a tokio_base dynamic-budget candidate, refreshed real-client-path evidence, and an strace syscall-shape diagnostic. Strace/source review refutes a simple network syscall-count explanation and points to ylong_runtime scheduling cost, but worker-count tuning and parent-future single-driver polling both fail SOTA gates and are not retained. S9 remains active.",
+  "source_changes": [
+    {
+      "file": "ylong_http/src/h1/request/encoder.rs",
+      "summary": "Adds RequestRefEncoder, a borrowed HTTP/1 request encoder that preserves RequestEncoder wire bytes while avoiding RequestPart/header-map cloning."
+    },
+    {
+      "file": "ylong_http/src/h1/request/mod.rs",
+      "summary": "Re-exports RequestRefEncoder from the HTTP/1 request module."
+    },
+    {
+      "file": "ylong_http/src/h1/mod.rs",
+      "summary": "Re-exports RequestRefEncoder from ylong_http::h1."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/conn/http1.rs",
+      "summary": "Async HTTP/1 request sending uses RequestRefEncoder, skips empty request-body encoding, and uses a fixed 16 KiB buffer instead of per-request Vec allocation."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/request.rs",
+      "summary": "Body::is_empty is available outside http2 so HTTP/1 can fast-path empty request bodies."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/http_body.rs",
+      "summary": "Replaces Cursor<Vec<u8>> response pre-read storage with a small PreRead helper for Text, Chunk, and UntilClose bodies, with a regression test for drain behavior."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/ssl_stream/mod.rs",
+      "summary": "Adds bench_tls_io-only TLS I/O counter snapshots used to measure SSL read/write calls and underlying stream pending counts."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/ssl_stream/c_ssl_stream.rs",
+      "summary": "Instruments AsyncSslStream poll_read and poll_write with benchmark-only SSL call and WouldBlock counters."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/ssl_stream/wrapper.rs",
+      "summary": "Instruments the OpenSSL wrapper BIO with benchmark-only underlying read/write call and Pending counters."
+    },
+    {
+      "file": "ylong_http_client/src/util/monitor/time_group.rs",
+      "summary": "Adds opt-in benchmark-only phase counters for request_format, pool_checkout, send_on_conn, HTTP/1 write split, and response-head split."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/pool.rs",
+      "summary": "HTTP/1 pool checkout now scans the dispatcher list in place and removes shutdown entries without replacing the Vec, preserving retained capacity across hot-path reuse; a regression test proves the old capacity-loss behavior."
+    },
+    {
+      "file": "ylong_http_client/src/util/monitor/time_group.rs",
+      "summary": "Adds libcurl_bench-only response-head poll and pending counters used to test whether response waits are caused by repeated polling."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Benchmark phase timing is opt-in through YLONG_BENCH_PHASES, prints HTTP/1 encode/write-I/O plus response read poll/pending/intercept/decode counters, reuses the ylong body-drain buffer across requests, and can run under ylong_base or tokio_base."
+    },
+    {
+      "file": "ylong_http_client/Cargo.toml",
+      "summary": "Relaxed the https_proxy_bench required features so the same benchmark binary can be built with either ylong_base or tokio_base, and adds bench_tls_io so TLS diagnostics do not contaminate canonical libcurl_bench builds."
+    },
+    {
+      "file": "ylong_http_client/src/lib.rs",
+      "summary": "Re-exports TLS diagnostic snapshot helpers only when bench_tls_io is enabled and provides no-op fallbacks otherwise."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Harness parses finer phase timing columns, records proxy/origin request-shape byte counters, records request_body_bytes metadata, and supports result/figure directories so diagnostics do not overwrite canonical outputs."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds tests for finer phase parsing, trace request-shape parsing, opt-in phase env, result-dir output, figure-dir output, and benchmark fixture behavior."
+    },
+    {
+      "file": "README.md",
+      "summary": "Updates the checked-in fair matrix and explicitly keeps it as non-SOTA counterexample evidence."
+    },
+    {
+      "file": "ylong_http_client/src/sync_impl/connector.rs",
+      "summary": "Sync connector now sets TCP_NODELAY through a shared connect_tcp helper, with a regression test."
+    },
+    {
+      "file": "ylong_http_client/src/sync_impl/pool.rs",
+      "summary": "Sync HTTP/1 pool checkout now preserves dispatcher-list Vec capacity, matching the async capacity fix."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Benchmark binary can explicitly select ylong_http_client_sync as a separate public-client candidate while keeping all/default canonical async selection unchanged."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Adds YLONG_BENCH_YLONG_CONCURRENCY_MODEL=threaded|single-client. Default threaded preserves existing behavior; single-client explicitly runs concurrency > 1 through one shared async public Client."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Adds --ylong-concurrency-model and groups results/comparisons by ylong_concurrency_model to prevent threaded and single-client diagnostics from being merged."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds regression coverage for single-client concurrency-model environment wiring and comparison grouping."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Adds YlongBenchConfig so async ylong benchmark clients match max_h1_conn_number to benchmark concurrency for fair single-client/multi comparisons while preserving default behavior at concurrency=1."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Adds SharedRequestBudget so single-client async benchmark workers dynamically claim one request at a time, matching libcurl multi's complete-and-refill model more closely than fixed split_work partitions."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "For single-client async concurrency, samples global bench_tls_io counters once in the outer coordinator instead of collecting and summing one global delta per worker."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Adds benchmark-only body chunk/byte counters to BenchRun, async/sync body drain paths, concurrent aggregation, and same-process libcurl write callback state."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Parses *_body_stats lines and records body_chunks/body_bytes in raw and summary benchmark CSVs."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds regression coverage for body stats parsing and summary aggregation."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Records server-observed proxy/origin TLS fingerprints after handshake and propagates them through trace output, result CSVs, and summary CSVs."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds regression coverage for TLS fingerprint parsing, summary aggregation, and repeated same-fingerprint delta counting."
+    },
+    {
+      "file": "ylong_http_client/src/util/monitor/time_group.rs",
+      "summary": "Adds libcurl_bench-only response_pre_read_bytes and response_pre_read_events counters with accumulation and getters."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/conn/http1.rs",
+      "summary": "Records rem.len() when HTTP/1 response-head decode succeeds while phase timing is enabled."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Aggregates and prints response pre-read byte/event counters in _phase_us output."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Parses, writes, and summarizes response_pre_read_bytes/events phase fields."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds regression coverage for response pre-read phase parsing and summary columns."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Records proxy direct-response send time, proxy tunnel send-to-client/send-to-origin relay time, and origin response send time, then propagates them through raw, summary, and comparison CSVs."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds regression coverage for parsing and summarizing proxy/origin server-side timing fields."
+    }
+  ],
+  "available_causal_support": [
+    "Canonical threshold run uses public ylong async ClientBuilder, Proxy builder, request builder, client.request, and response body drain path.",
+    "Same-process libcurl baseline reuses one Easy handle across warmup and measured requests.",
+    "Canonical threshold CSVs have phase_timing=false and zero phase columns; diagnostic phase CSVs are isolated under docs/benchmarks/results/phase-diagnostic/.",
+    "Server-side trace parity holds: one proxy connection per repeat; HTTPS-origin scenarios use one CONNECT tunnel, one origin connection, and one origin TLS connection per repeat.",
+    "The benchmark records request_body_bytes=0 and response_body_bytes=4096, so empty-body and request-encoding optimizations are measured-path optimizations but do not prove upload-heavy performance.",
+    "RequestRefEncoder is covered by a ylong_http unit test that compares borrowed and owned encoder bytes for origin-form, absolute-form, and combined header values.",
+    "Opt-in phase timing now separates HTTP/1 encode from socket write I/O and response read from interceptor/decode work.",
+    "Latest phase diagnostic shows parser/encoder costs are small relative to socket write and response read/wait costs, creating a counterexample to encoder-only SOTA explanations.",
+    "Proxy/origin trace counters now record request header bytes, request body bytes, and response body bytes, showing ylong and libcurl exercise the same response payload size and zero request bodies.",
+    "The ylong benchmark now reuses its response drain buffer across requests so the canonical matrix does not include a per-request 16 KiB benchmark-side buffer initialization artifact.",
+    "The same public benchmark path now builds under tokio_base, which improves the best observed full-matrix point estimate but still refutes SOTA completion.",
+    "The HttpBody PreRead helper removes Cursor<Vec<u8>> from response pre-read body handling, but fresh ylong_base and tokio_base matrices still refute SOTA and show this is not a SOTA-scale lever.",
+    "TLS I/O diagnostics are isolated behind bench_tls_io so canonical libcurl_bench fairness builds do not compile diagnostic counter code.",
+    "TLS I/O diagnostics show no wrapper poll explosion: HTTP over HTTPS proxy averages 2 SSL reads and 1 SSL-read pending per measured request; HTTPS-origin proxy scenarios average 5 SSL reads and 2 SSL-read pendings per request.",
+    "The HTTP/1 pool capacity test is a true red/green regression: before the fix, exist_h1_conn dropped list capacity from 65 to 4; after the fix, repeated reuse preserves the reserved capacity.",
+    "The response-poll diagnostic shows each measured response head averages exactly 2 polls and 1 pending, so the response wait is not a repeated-poll/wakeup storm.",
+    "The public sync ClientBuilder + Client::request path can now be benchmarked explicitly as ylong_http_client_sync without redefining the canonical async ylong_http_client matrix.",
+    "The sync candidate improves CPU/request geomean to 0.738x of libcurl, but fails fixed SOTA gates with 1.024x throughput geomean, 0.718x worst throughput, p50/p95 regressions, a CPU failing cell, and RSS up to 1.066x.",
+    "The benchmark can now explicitly distinguish threaded ylong concurrency from a single-runtime, single-public-Client ylong async concurrency model without changing defaults.",
+    "The single-client concurrency candidate refutes a benchmark-model-only explanation for the prior concurrent failure: even with one public ylong client, throughput geomean is 0.895x of libcurl, worst throughput is 0.676x, CPU/request geomean is 1.588x, and RSS reaches 1.176x.",
+    "The worst single-client concurrent cell is proxy-mtls-https-origin at 1000 requests, reinforcing that the remaining SOTA-scale problem is concentrated in HTTPS origin over HTTPS proxy and proxy mTLS nested TLS paths rather than client construction alone.",
+    "The fairness-corrected single-client max-H1 candidate confirms same-concurrency trace parity: both ylong and libcurl use 8 proxy connections; HTTPS-origin scenarios use 8 CONNECT tunnels, 8 origin connections, and 8 origin TLS connections.",
+    "The max-H1 candidate improves single-client throughput geomean from 0.895x to 1.022x, but still fails fixed SOTA gates with 0.676x worst throughput, p50 max 1.488x, p95 max 1.378x, CPU/request geomean 1.305x, and RSS max 1.190x.",
+    "The worst max-H1 concurrent cell is https-over-https-proxy at 1000 requests, and proxy-mTLS HTTPS-origin at 1000 requests is also 0.699x, reinforcing that the remaining SOTA-scale problem is nested TLS over CONNECT rather than HTTP-over-proxy forwarding.",
+    "Body-drain chunk/byte diagnostics show ylong_http_client and libcurl both produce exactly one measured body chunk per request and exactly 4096 body bytes per request in all fair single-client max-H1 scenarios.",
+    "The body-stats diagnostic refutes body chunk fragmentation as the remaining SOTA-scale cause; HTTPS-origin over HTTPS proxy still fails throughput, p50/p95, CPU, and RSS gates despite identical body callback shape.",
+    "Server-observed TLS fingerprint diagnostics show ylong_http_client and libcurl both negotiate TLSv1.3:TLS_AES_256_GCM_SHA384:256 on every proxy TLS connection and every origin TLS connection in the fair single-client max-H1 matrix.",
+    "The TLS fingerprint diagnostic refutes TLS version/cipher mismatch as the remaining nested TLS performance cause; the remaining SOTA-scale work is in ylong's nested TLS implementation path rather than benchmark TLS parameter fairness.",
+    "A dedicated AsyncSslStream<AsyncSslStream<TcpStream>> HTTPS-over-secure-proxy candidate was tested and rejected; it worsened throughput geomean to 0.913x and worst throughput to 0.650x while increasing CPU/RSS costs.",
+    "The rejected nested TLS variant refutes ProxyStream enum dispatch as a sufficient SOTA-scale root cause and was not retained in the production code path.",
+    "tokio_base single-client max-H1 reduces CPU/request geomean to 0.841x of libcurl but still fails throughput, p50/p95, and RSS SOTA gates.",
+    "The worst tokio_base concurrent cell is proxy-mTLS HTTPS-origin at 1000 requests with 0.790x throughput, reinforcing that proxy mTLS nested TLS remains the hardest path even when runtime substrate improves.",
+    "Response pre-read diagnostics show ylong_http_client pre-reads exactly 4096 body bytes and one pre-read event per measured request in every single-concurrency phase scenario.",
+    "The same diagnostic shows body_drain is already about 0.9-1.0us/request, so PreRead storage/copy alone is not a SOTA-scale explanation for the remaining gap.",
+    "Because phase timing is intentionally restricted to concurrency=1, response-preread-diagnostic is causal narrowing evidence and cannot replace the fixed concurrency=8 SOTA threshold matrices.",
+    "Concurrent phase diagnostics at concurrency=8 show response_read accounts for about 95% of request_execute time in the failing HTTPS-origin proxy cells, while pool_checkout is about 3us/request and body_drain is about 1.5us/request.",
+    "The concurrent phase diagnostic narrows the next implementation target to nested TLS response-read or runtime scheduling around it; CONNECT parsing, request formatting, connection-pool checkout, and body-drain storage are not sufficient SOTA levers.",
+    "Corrected concurrent bench_tls_io diagnostics keep the top-level HTTP response read shape stable at exactly 2 polls and 1 pending per measured ylong request.",
+    "The corrected concurrent bench_tls_io diagnostic refutes the earlier inflated nested TLS call-count explanation: HTTPS-over-HTTPS-proxy 1000 and proxy-mTLS HTTPS-origin 1000 both average 5 SSL_read calls and 2 SSL-read pendings per measured request.",
+    "HTTP-over-HTTPS-proxy 1000 averages 2 SSL_read calls and 1 SSL-read pending per request, so nested HTTPS-origin proxy still has more TLS work than HTTP-over-proxy but not a call-count explosion.",
+    "Server-side timing diagnostics show ylong nested HTTPS-origin cells have slower proxy/origin send/relay timing than libcurl, but the delta is too small to explain the full 1.26-1.31 ms/request response_read cost.",
+    "tokio_base dynamic-budget results improve throughput geomean to 1.133x and CPU/request geomean to 0.779x, but still fail SOTA with 0.809x worst throughput and nested p50/p95 regressions; 1.073x max RSS is above libcurl but within the <=1.10x hard threshold.",
+    "An explicit async HTTP/1 flush before response read can be tested and made observable in a fake stream, but the full fair matrix shows it is not a SOTA-scale performance lever.",
+    "An explicit ylong_base 8-worker runtime benchmark configuration improves HTTP-over-HTTPS-proxy throughput, but the full matrix still fails SOTA with 1.006x throughput geomean, 0.686x worst throughput, nested HTTPS-origin p50/p95 regressions, 1.269x CPU/request geomean, and 1.165x max RSS.",
+    "A ylong_base 1-worker runtime benchmark configuration improves the HTTPS-over-HTTPS-proxy 200-request cell, but the focused 1000-request cell still fails with 0.863x throughput, 1.172x p50, and 1.111x p95 ratios, so worker-count tuning is not a SOTA-scale solution.",
+    "A benchmark-only single-driver parent future that directly polls concurrent public Client::request futures was tested and removed. It improves CPU/request geomean to 0.709x of libcurl on the focused HTTPS-over-HTTPS-proxy matrix, but fails throughput and tail gates with 0.951x throughput geomean, 0.823x worst throughput, 1.212x p50 max, and 1.098x p95 max.",
+    "A strace -f syscall-shape diagnostic on HTTPS-over-HTTPS-proxy refutes a simple network syscall-count explanation: ylong has comparable recvfrom/sendto counts to libcurl, while futex, clock_nanosleep, epoll_wait, and sched_yield activity is much higher under tracing. Because strace distorts timings, this is causal narrowing evidence rather than threshold evidence."
+  ],
+  "phase_diagnostic_dataset": {
+    "result_files": [
+      "docs/benchmarks/results/phase-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/phase-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/phase-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/phase-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/phase-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200 --repeats 3 --warmup 20 --bench-bin /tmp/ylong_http_target_phase_release/release/https_proxy_bench --phase-timing --result-dir docs/benchmarks/results/phase-diagnostic --figure-dir docs/benchmarks/results/phase-diagnostic",
+    "phase_timing": true,
+    "request_body_bytes": 0,
+    "response_body_bytes": 4096,
+    "scenarios": [
+      {
+        "name": "http-over-https-proxy",
+        "requests": 200,
+        "repetitions": 3,
+        "phase_timing": true,
+        "throughput_ratio_ylong_over_libcurl": 0.6884654003162518,
+        "ylong_phase_us_mean": {
+          "request_build": 264.0,
+          "request_execute": 22076.666666666668,
+          "body_drain": 201.66666666666666,
+          "connect": 209.33333333333334,
+          "transfer": 18293.333333333332,
+          "request_format": 515.0,
+          "pool_checkout": 380.6666666666667,
+          "send_on_conn": 20795.0,
+          "http1_write": 4118.666666666667,
+          "http1_encode": 226.33333333333334,
+          "http1_write_io": 3732.0,
+          "response_head": 14855.0,
+          "response_read": 14176.333333333334,
+          "response_intercept": 19.0,
+          "response_decode": 614.0
+        },
+        "ylong_phase_us_per_request": {
+          "request_build": 1.32,
+          "request_execute": 110.38333333333334,
+          "body_drain": 1.0083333333333333,
+          "connect": 1.0466666666666666,
+          "transfer": 91.46666666666665,
+          "request_format": 2.575,
+          "pool_checkout": 1.9033333333333333,
+          "send_on_conn": 103.975,
+          "http1_write": 20.593333333333334,
+          "http1_encode": 1.1316666666666668,
+          "http1_write_io": 18.66,
+          "response_head": 74.275,
+          "response_read": 70.88166666666667,
+          "response_intercept": 0.095,
+          "response_decode": 3.07
+        },
+        "derived_phase_ratios": {
+          "http1_encode_over_http1_write": 0.05495305924247329,
+          "http1_write_io_over_http1_write": 0.9061184849465845,
+          "response_read_over_response_head": 0.9543139234825536,
+          "response_decode_over_response_head": 0.04133288455065635
+        },
+        "trace_shape": {
+          "ylong_proxy_request_header_bytes": 17380.0,
+          "libcurl_proxy_request_header_bytes": 24420.0,
+          "ylong_origin_request_header_bytes": 0.0,
+          "libcurl_origin_request_header_bytes": 0.0,
+          "ylong_proxy_response_body_bytes": 901120.0,
+          "libcurl_proxy_response_body_bytes": 901120.0,
+          "ylong_origin_response_body_bytes": 0.0,
+          "libcurl_origin_response_body_bytes": 0.0
+        },
+        "libcurl_perform_us_mean": 16439.666666666668
+      },
+      {
+        "name": "https-over-https-proxy",
+        "requests": 200,
+        "repetitions": 3,
+        "phase_timing": true,
+        "throughput_ratio_ylong_over_libcurl": 0.9714905818684743,
+        "ylong_phase_us_mean": {
+          "request_build": 307.6666666666667,
+          "request_execute": 44352.0,
+          "body_drain": 202.66666666666666,
+          "connect": 243.66666666666666,
+          "transfer": 40163.333333333336,
+          "request_format": 559.0,
+          "pool_checkout": 437.6666666666667,
+          "send_on_conn": 42918.333333333336,
+          "http1_write": 4688.666666666667,
+          "http1_encode": 200.66666666666666,
+          "http1_write_io": 4337.333333333333,
+          "response_head": 36239.666666666664,
+          "response_read": 35483.666666666664,
+          "response_intercept": 20.0,
+          "response_decode": 680.3333333333334
+        },
+        "ylong_phase_us_per_request": {
+          "request_build": 1.5383333333333333,
+          "request_execute": 221.76,
+          "body_drain": 1.0133333333333332,
+          "connect": 1.2183333333333333,
+          "transfer": 200.8166666666667,
+          "request_format": 2.795,
+          "pool_checkout": 2.1883333333333335,
+          "send_on_conn": 214.59166666666667,
+          "http1_write": 23.443333333333335,
+          "http1_encode": 1.0033333333333332,
+          "http1_write_io": 21.686666666666664,
+          "response_head": 181.19833333333332,
+          "response_read": 177.41833333333332,
+          "response_intercept": 0.1,
+          "response_decode": 3.401666666666667
+        },
+        "derived_phase_ratios": {
+          "http1_encode_over_http1_write": 0.042798236883264604,
+          "http1_write_io_over_http1_write": 0.925067538745912,
+          "response_read_over_response_head": 0.979138880968368,
+          "response_decode_over_response_head": 0.01877316752361593
+        },
+        "trace_shape": {
+          "ylong_proxy_request_header_bytes": 59.0,
+          "libcurl_proxy_request_header_bytes": 89.0,
+          "ylong_origin_request_header_bytes": 12540.0,
+          "libcurl_origin_request_header_bytes": 12980.0,
+          "ylong_proxy_response_body_bytes": 0.0,
+          "libcurl_proxy_response_body_bytes": 0.0,
+          "ylong_origin_response_body_bytes": 901120.0,
+          "libcurl_origin_response_body_bytes": 901120.0
+        },
+        "libcurl_perform_us_mean": 43598.333333333336
+      },
+      {
+        "name": "proxy-mtls-https-origin",
+        "requests": 200,
+        "repetitions": 3,
+        "phase_timing": true,
+        "throughput_ratio_ylong_over_libcurl": 1.0130613110253723,
+        "ylong_phase_us_mean": {
+          "request_build": 328.0,
+          "request_execute": 44026.0,
+          "body_drain": 205.0,
+          "connect": 231.33333333333334,
+          "transfer": 39801.0,
+          "request_format": 562.6666666666666,
+          "pool_checkout": 449.3333333333333,
+          "send_on_conn": 42556.0,
+          "http1_write": 4768.666666666667,
+          "http1_encode": 195.66666666666666,
+          "http1_write_io": 4419.666666666667,
+          "response_head": 35771.333333333336,
+          "response_read": 35037.666666666664,
+          "response_intercept": 20.666666666666668,
+          "response_decode": 661.3333333333334
+        },
+        "ylong_phase_us_per_request": {
+          "request_build": 1.64,
+          "request_execute": 220.13,
+          "body_drain": 1.025,
+          "connect": 1.1566666666666667,
+          "transfer": 199.005,
+          "request_format": 2.813333333333333,
+          "pool_checkout": 2.2466666666666666,
+          "send_on_conn": 212.78,
+          "http1_write": 23.843333333333334,
+          "http1_encode": 0.9783333333333333,
+          "http1_write_io": 22.098333333333336,
+          "response_head": 178.85666666666668,
+          "response_read": 175.18833333333333,
+          "response_intercept": 0.10333333333333333,
+          "response_decode": 3.3066666666666666
+        },
+        "derived_phase_ratios": {
+          "http1_encode_over_http1_write": 0.04103173493639032,
+          "http1_write_io_over_http1_write": 0.9268139242275968,
+          "response_read_over_response_head": 0.9794900944890693,
+          "response_decode_over_response_head": 0.018487802150697952
+        },
+        "trace_shape": {
+          "ylong_proxy_request_header_bytes": 59.0,
+          "libcurl_proxy_request_header_bytes": 89.0,
+          "ylong_origin_request_header_bytes": 12540.0,
+          "libcurl_origin_request_header_bytes": 12980.0,
+          "ylong_proxy_response_body_bytes": 0.0,
+          "libcurl_proxy_response_body_bytes": 0.0,
+          "ylong_origin_response_body_bytes": 901120.0,
+          "libcurl_origin_response_body_bytes": 901120.0
+        },
+        "libcurl_perform_us_mean": 45336.666666666664
+      }
+    ],
+    "diagnosis": [
+      "HTTP/1 request encoding is about 1.0-1.1 us/request in the measured ylong path, only a small fraction of the HTTP/1 write phase.",
+      "HTTP/1 socket write I/O is about 19-22 us/request and accounts for roughly 91-93% of the HTTP/1 write phase.",
+      "response_read accounts for roughly 95-98% of response_head; response decode is about 3 us/request and interceptor time is about 0.1 us/request.",
+      "The benchmark drain buffer is now reused across requests; body_drain remains about 1 us/request and is not a SOTA-scale lever.",
+      "Trace-shape counters show ylong sends no more request body bytes and no larger response body than libcurl; request header bytes are smaller for ylong in the local fixture, so request size does not explain the remaining SOTA gap.",
+      "The full non-phase matrix remains the authoritative SOTA threshold dataset; phase timing is diagnostic only."
+    ]
+  },
+  "canonical_threshold_dataset": {
+    "result_files": [
+      "docs/benchmarks/results/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/https_proxy_bench_env.json",
+      "docs/benchmarks/results/https_proxy_bench_raw.txt"
+    ],
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_phase_release/release/https_proxy_bench",
+    "request_counts": [
+      200,
+      1000,
+      3000
+    ],
+    "repetitions": 5,
+    "warmup_requests": 50,
+    "request_body_bytes": 0,
+    "response_body_bytes": 4096,
+    "phase_timing": false,
+    "baseline": "same-process libcurl with one reused Easy handle across warmup and measured requests",
+    "proxy_tls": "local CA verified HTTPS proxy",
+    "origin_tls": "local CA verified HTTPS origin for HTTPS-origin scenarios",
+    "mTLS": "proxy client certificate/key enabled for proxy-mtls-https-origin",
+    "scenarios": [
+      {
+        "name": "http-over-https-proxy",
+        "label": "HTTP over HTTPS proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.1439850218418302,
+        "elapsed_ratio_ylong_over_libcurl": 0.8570610627714299,
+        "p50_latency_ratio_ylong_over_libcurl": 0.8551181102362204,
+        "p95_latency_ratio_ylong_over_libcurl": 0.8789237668161435,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.7957510039405254,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0658290084676318,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.130885194,
+          "libcurl": 0.152713966
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 7653.922992965619,
+          "libcurl": 6690.579725111005
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 440.27533686200576,
+            "libcurl": 1225.7065474982412
+          },
+          "p50_us": {
+            "ylong_http_client": 5.9925604010305955,
+            "libcurl": 23.22568233658594
+          },
+          "p95_us": {
+            "ylong_http_client": 95.98860491037463,
+            "libcurl": 112.61667822201113
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 250.0,
+          "proxy_connect_requests": 0.0,
+          "origin_connections": 0.0,
+          "origin_requests": 0.0,
+          "origin_tls_connections": 0.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 19750.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 1024000.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 27750.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 1024000.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        }
+      },
+      {
+        "name": "http-over-https-proxy",
+        "label": "HTTP over HTTPS proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.1979628404544054,
+        "elapsed_ratio_ylong_over_libcurl": 0.8631624433605649,
+        "p50_latency_ratio_ylong_over_libcurl": 0.8520833333333333,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9241486068111456,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.81561504296611,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0665753424657534,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.102845787,
+          "libcurl": 0.11914997899999999
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 10273.626736076307,
+          "libcurl": 8575.914368244816
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 3463.598999128605,
+            "libcurl": 1929.3554366091435
+          },
+          "p50_us": {
+            "ylong_http_client": 35.14025671847034,
+            "libcurl": 30.674485971243264
+          },
+          "p95_us": {
+            "ylong_http_client": 16.94497322984017,
+            "libcurl": 10.585263295733364
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 1050.0,
+          "proxy_connect_requests": 0.0,
+          "origin_connections": 0.0,
+          "origin_requests": 0.0,
+          "origin_tls_connections": 0.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 82950.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 4300800.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 116550.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 4300800.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        }
+      },
+      {
+        "name": "http-over-https-proxy",
+        "label": "HTTP over HTTPS proxy",
+        "requests": 3000,
+        "throughput_ratio_ylong_over_libcurl": 1.1162202206741991,
+        "elapsed_ratio_ylong_over_libcurl": 0.8687754646463719,
+        "p50_latency_ratio_ylong_over_libcurl": 0.8678038379530918,
+        "p95_latency_ratio_ylong_over_libcurl": 1.045112781954887,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.815216026858025,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0658290084676318,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.09537639793333333,
+          "libcurl": 0.10978256386666667
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 10864.777835036646,
+          "libcurl": 9733.543286354641
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 2969.210503635505,
+            "libcurl": 4124.710791165188
+          },
+          "p50_us": {
+            "ylong_http_client": 32.26137211217154,
+            "libcurl": 26.991514945256405
+          },
+          "p95_us": {
+            "ylong_http_client": 11.083160444566342,
+            "libcurl": 35.03263606638815
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 3050.0,
+          "proxy_connect_requests": 0.0,
+          "origin_connections": 0.0,
+          "origin_requests": 0.0,
+          "origin_tls_connections": 0.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 240950.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 12492800.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 338550.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 12492800.0,
+          "origin_request_header_bytes": 0.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 0.0
+        }
+      },
+      {
+        "name": "https-over-https-proxy",
+        "label": "HTTPS origin over HTTPS proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.8611310975855755,
+        "elapsed_ratio_ylong_over_libcurl": 1.0454956363552084,
+        "p50_latency_ratio_ylong_over_libcurl": 1.035,
+        "p95_latency_ratio_ylong_over_libcurl": 1.022184300341297,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 1.0086102924982434,
+        "rss_peak_ratio_ylong_over_libcurl": 1.060614297363414,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.22726119100000003,
+          "libcurl": 0.21737172600000002
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4400.67217534299,
+          "libcurl": 5110.339398590434
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 61.859676849621906,
+            "libcurl": 2710.3999334596174
+          },
+          "p50_us": {
+            "ylong_http_client": 3.5113931138509638,
+            "libcurl": 77.09587244982704
+          },
+          "p95_us": {
+            "ylong_http_client": 20.932586255883436,
+            "libcurl": 102.54530473190862
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 250.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 14250.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 1024000.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 14750.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 1024000.0
+        }
+      },
+      {
+        "name": "https-over-https-proxy",
+        "label": "HTTPS origin over HTTPS proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.7693578086403419,
+        "elapsed_ratio_ylong_over_libcurl": 1.1865344375479325,
+        "p50_latency_ratio_ylong_over_libcurl": 1.249367088607595,
+        "p95_latency_ratio_ylong_over_libcurl": 1.0695238095238095,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 1.1260178591060677,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0594623947868584,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.2184928968,
+          "libcurl": 0.1841437466
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4579.311415145969,
+          "libcurl": 5952.121839432318
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 148.62005119248988,
+            "libcurl": 2838.8210449348207
+          },
+          "p50_us": {
+            "ylong_http_client": 6.119805173369488,
+            "libcurl": 71.79060181388647
+          },
+          "p95_us": {
+            "ylong_http_client": 15.864542481899687,
+            "libcurl": 71.35994044840562
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 1050.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 59850.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 4300800.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 61950.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 4300800.0
+        }
+      },
+      {
+        "name": "https-over-https-proxy",
+        "label": "HTTPS origin over HTTPS proxy",
+        "requests": 3000,
+        "throughput_ratio_ylong_over_libcurl": 1.056888207584735,
+        "elapsed_ratio_ylong_over_libcurl": 0.9690648413521641,
+        "p50_latency_ratio_ylong_over_libcurl": 0.9065606361829026,
+        "p95_latency_ratio_ylong_over_libcurl": 1.0347222222222223,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9294167795694949,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0593631948192122,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.21029764946666668,
+          "libcurl": 0.2170109166
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4872.585995317297,
+          "libcurl": 4610.313522612221
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 1178.2263053878419,
+            "libcurl": 142.2797451405669
+          },
+          "p50_us": {
+            "ylong_http_client": 56.50779669532338,
+            "libcurl": 4.595097631171723
+          },
+          "p95_us": {
+            "ylong_http_client": 9.315124355584308,
+            "libcurl": 8.02643329007349
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 3050.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 173850.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 12492800.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 179950.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 12492800.0
+        }
+      },
+      {
+        "name": "proxy-mtls-https-origin",
+        "label": "proxy mTLS HTTPS origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.8229740476214441,
+        "elapsed_ratio_ylong_over_libcurl": 1.1236152062957627,
+        "p50_latency_ratio_ylong_over_libcurl": 1.1096774193548387,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9221949221949222,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 1.0715992345234453,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0630092341118957,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.22584317999999998,
+          "libcurl": 0.200996906
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4434.074066403677,
+          "libcurl": 5387.866214273728
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 233.76401044192306,
+            "libcurl": 2506.032621600764
+          },
+          "p50_us": {
+            "ylong_http_client": 9.719964905286435,
+            "libcurl": 60.25263076082238
+          },
+          "p95_us": {
+            "ylong_http_client": 13.411269434322762,
+            "libcurl": 95.3401428520012
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 250.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 14250.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 1024000.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 14750.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 1024000.0
+        }
+      },
+      {
+        "name": "proxy-mtls-https-origin",
+        "label": "proxy mTLS HTTPS origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.029938609081805,
+        "elapsed_ratio_ylong_over_libcurl": 0.9704149045730058,
+        "p50_latency_ratio_ylong_over_libcurl": 0.9655850540806293,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9717223650385605,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9294894875456646,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0610975939443092,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.2163482948,
+          "libcurl": 0.2229441178
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4632.06934400517,
+          "libcurl": 4497.422762056353
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 301.812875372249,
+            "libcurl": 323.7787627226098
+          },
+          "p50_us": {
+            "ylong_http_client": 6.426904648429134,
+            "libcurl": 12.371121831103274
+          },
+          "p95_us": {
+            "ylong_http_client": 11.888282796098013,
+            "libcurl": 20.673280362825825
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 1050.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 59850.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 4300800.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 61950.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 4300800.0
+        }
+      },
+      {
+        "name": "proxy-mtls-https-origin",
+        "label": "proxy mTLS HTTPS origin",
+        "requests": 3000,
+        "throughput_ratio_ylong_over_libcurl": 1.0163670452268214,
+        "elapsed_ratio_ylong_over_libcurl": 0.9852722173726084,
+        "p50_latency_ratio_ylong_over_libcurl": 0.9689689689689689,
+        "p95_latency_ratio_ylong_over_libcurl": 0.9923208191126279,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.9525917327045031,
+        "rss_peak_ratio_ylong_over_libcurl": 1.053835800807537,
+        "errors_sum": 0,
+        "latency_ms_mean": {
+          "ylong_http_client": 0.20702079439999999,
+          "libcurl": 0.21011532726666665
+        },
+        "throughput_rps_mean": {
+          "ylong_http_client": 4873.741994347614,
+          "libcurl": 4795.257793172492
+        },
+        "ci95_half_width": {
+          "throughput_rps": {
+            "ylong_http_client": 671.8590532847456,
+            "libcurl": 590.2602144997198
+          },
+          "p50_us": {
+            "ylong_http_client": 16.43710833936432,
+            "libcurl": 11.626105411529691
+          },
+          "p95_us": {
+            "ylong_http_client": 15.194638296451812,
+            "libcurl": 19.164455331681093
+          }
+        },
+        "trace_mean": {
+          "proxy_connections": 1.0,
+          "proxy_forward_requests": 0.0,
+          "proxy_connect_requests": 1.0,
+          "origin_connections": 1.0,
+          "origin_requests": 3050.0,
+          "origin_tls_connections": 1.0,
+          "proxy_tls_client_auth_failures_sum": 0,
+          "proxy_request_header_bytes": 59.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 173850.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 12492800.0
+        },
+        "baseline_trace_mean": {
+          "proxy_request_header_bytes": 89.0,
+          "proxy_request_body_bytes": 0.0,
+          "proxy_response_body_bytes": 0.0,
+          "origin_request_header_bytes": 179950.0,
+          "origin_request_body_bytes": 0.0,
+          "origin_response_body_bytes": 12492800.0
+        }
+      }
+    ],
+    "threshold_eval": {
+      "throughput_geomean_ratio": 0.9911078683235877,
+      "throughput_min_ratio": 0.7693578086403419,
+      "throughput_max_ratio": 1.1979628404544054,
+      "p50_min_ratio": 0.8520833333333333,
+      "p50_max_ratio": 1.249367088607595,
+      "p95_min_ratio": 0.8789237668161435,
+      "p95_max_ratio": 1.0695238095238095,
+      "cpu_geomean_ratio": 0.9318700058881665,
+      "cpu_min_ratio": 0.7957510039405254,
+      "cpu_max_ratio": 1.1260178591060677,
+      "rss_max_ratio": 1.0665753424657534,
+      "errors_sum_total": 0
+    },
+    "verdict": "counterexample_to_sota"
+  },
+  "runtime_candidate_dataset": {
+    "evidence_ref": "evidence/tokio-runtime-candidate.json",
+    "runtime": "tokio_base",
+    "result_files": [
+      "docs/benchmarks/results/tokio-full/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/tokio-full/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/tokio-full/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/tokio-full/https_proxy_bench_env.json",
+      "docs/benchmarks/results/tokio-full/https_proxy_bench_raw.txt"
+    ],
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_tokio_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tokio-full --figure-dir docs/benchmarks/results/tokio-full",
+    "threshold_eval": {
+      "throughput_geomean_ratio": 1.0650884103493619,
+      "throughput_min_ratio": 0.8619621952060578,
+      "throughput_max_ratio": 1.429714005342895,
+      "p50_max_ratio": 1.1078320090805902,
+      "p95_max_ratio": 1.0769230769230769,
+      "cpu_geomean_ratio": 0.8462072827563497,
+      "cpu_max_ratio": 1.0341587997625568,
+      "rss_max_ratio": 1.0686835650040882,
+      "errors_sum_total": 0
+    },
+    "verdict": "candidate_counterexample_to_sota"
+  },
+  "preread_buffer_candidate_dataset": {
+    "evidence_ref": "evidence/preread-buffer-candidate.json",
+    "source_change": "ylong_http_client/src/async_impl/http_body.rs",
+    "ylong_base": {
+      "result_files": [
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_results.csv",
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_summary.csv",
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_comparison.csv",
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_env.json",
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_raw.txt"
+      ],
+      "threshold_eval": {
+        "throughput_geomean_ratio": 1.0127711152548504,
+        "throughput_min_ratio": 0.8190408295527728,
+        "p95_max_ratio": 1.5928449744463373,
+        "cpu_geomean_ratio": 0.9286055197960377,
+        "errors_sum_total": 0
+      }
+    },
+    "tokio_base": {
+      "result_files": [
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_results.csv",
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_summary.csv",
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_comparison.csv",
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_env.json",
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_raw.txt"
+      ],
+      "threshold_eval": {
+        "throughput_geomean_ratio": 1.0679818683073952,
+        "throughput_min_ratio": 0.6913703360632113,
+        "p95_max_ratio": 1.1481865284974093,
+        "cpu_geomean_ratio": 0.8407423647973016,
+        "errors_sum_total": 0
+      }
+    },
+    "verdict": "micro_optimization_counterexample_to_sota"
+  },
+  "tls_io_diagnostic_dataset": {
+    "evidence_ref": "evidence/tls-io-diagnostic.json",
+    "result_files": [
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/tls-io-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200 --repeats 3 --warmup 20 --phase-timing --bench-bin /tmp/ylong_http_target_tlsdiag_ylong_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tls-io-diagnostic --figure-dir docs/benchmarks/results/tls-io-diagnostic",
+    "diagnostic_feature": "bench_tls_io",
+    "canonical_fairness_note": "Canonical libcurl_bench builds omit bench_tls_io; TLS counters are opt-in diagnostics only.",
+    "diagnostic_conclusion": "TLS wrapper poll explosion is refuted as a SOTA-scale bottleneck. The dominant measured ylong phase remains response_read within send_on_conn, with only one SSL-read pending per HTTP-over-proxy request and two SSL-read pendings per HTTPS-origin request.",
+    "per_request_tls_io": {
+      "http-over-https-proxy": {
+        "ssl_read_calls": 2.0,
+        "ssl_read_pending": 1.0,
+        "ssl_write_calls": 1.0,
+        "ssl_write_pending": 0.0,
+        "underlying_read_calls": 3.0,
+        "underlying_read_pending": 1.0
+      },
+      "https-over-https-proxy": {
+        "ssl_read_calls": 5.0,
+        "ssl_read_pending": 2.0,
+        "ssl_write_calls": 2.0,
+        "ssl_write_pending": 0.0,
+        "underlying_read_calls": 6.0,
+        "underlying_read_pending": 2.0
+      },
+      "proxy-mtls-https-origin": {
+        "ssl_read_calls": 5.0,
+        "ssl_read_pending": 2.0,
+        "ssl_write_calls": 2.0,
+        "ssl_write_pending": 0.0,
+        "underlying_read_calls": 6.0,
+        "underlying_read_pending": 2.0
+      }
+    },
+    "verdict": "diagnostic_counterexample_to_tls_poll_explosion_hypothesis_feature_isolated"
+  },
+  "same_concurrency_diagnostic": {
+    "evidence_ref": "evidence/concurrency-diagnostic.json",
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200 --repeats 3 --warmup 32 --concurrency 8 --bench-bin /tmp/ylong_http_target_concurrency_release/release/https_proxy_bench --result-dir docs/benchmarks/results/concurrency-diagnostic --figure-dir docs/benchmarks/results/concurrency-diagnostic",
+    "baseline": "same-process libcurl multi API with maxconnects/max-host/max-total connection limits set to concurrency",
+    "concurrency": 8,
+    "request_counts": [
+      200
+    ],
+    "repetitions": 3,
+    "result_files": [
+      "docs/benchmarks/results/concurrency-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/concurrency-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/concurrency-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/concurrency-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/concurrency-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.84226416656822,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.7331265107575405,
+    "cpu_geomean_ratio_ylong_over_libcurl": 2.065248664512679,
+    "rss_max_ratio_ylong_over_libcurl": 1.8420507509062662,
+    "errors_sum_total": 0,
+    "verdict": "diagnostic_counterexample_to_same_concurrency_sota_hypothesis"
+  },
+  "pool_capacity_candidate_dataset": {
+    "evidence_ref": "evidence/pool-capacity-candidate.json",
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000 --repeats 3 --warmup 50 --bench-bin /tmp/ylong_http_target_pool_release/release/https_proxy_bench --result-dir docs/benchmarks/results/pool-capacity-candidate --figure-dir docs/benchmarks/results/pool-capacity-candidate",
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "concurrency": 1,
+    "result_files": [
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_env.json",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_raw.txt"
+    ],
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.92132,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.631649,
+    "latency_geomean_ratio_ylong_over_libcurl": 1.063011,
+    "p50_geomean_ratio_ylong_over_libcurl": 1.095616,
+    "p95_geomean_ratio_ylong_over_libcurl": 0.99026,
+    "cpu_geomean_ratio_ylong_over_libcurl": 0.984888,
+    "rss_max_ratio_ylong_over_libcurl": 1.070726,
+    "errors_sum_total": 0,
+    "verdict": "candidate_counterexample_to_h1_pool_capacity_sota_hypothesis"
+  },
+  "response_poll_diagnostic_dataset": {
+    "evidence_ref": "evidence/response-poll-diagnostic.json",
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200 --repeats 3 --warmup 20 --phase-timing --bench-bin /tmp/ylong_http_target_resp_poll_release/release/https_proxy_bench --result-dir docs/benchmarks/results/response-poll-diagnostic --figure-dir docs/benchmarks/results/response-poll-diagnostic",
+    "result_files": [
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/response-poll-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "request_counts": [
+      200
+    ],
+    "repetitions": 3,
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.046338,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.74711,
+    "response_read_polls_per_request": 2.0,
+    "response_read_pending_per_request": 1.0,
+    "http_over_proxy_tls_ssl_read_pending_per_request": 1.0,
+    "https_origin_tls_ssl_read_pending_per_request": 2.0,
+    "errors_sum_total": 0,
+    "verdict": "diagnostic_counterexample_to_response_poll_churn_hypothesis"
+  },
+  "sota_counterexample": {
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.9911078683235877,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.7693578086403419,
+    "cpu_geomean_ratio_ylong_over_libcurl": 0.9318700058881665,
+    "max_rss_ratio_ylong_over_libcurl": 1.0665753424657534,
+    "errors_sum_total": 0
+  },
+  "causal_conclusion": [
+    "The borrowed encoder and empty-body/fixed-buffer optimizations are real-client-path changes; response drain-buffer reuse removes a benchmark-side allocation artifact without bypassing body reads.",
+    "They improve the canonical matrix but do not reach SOTA: throughput geomean is 0.991x and the worst cell is 0.769x.",
+    "A tokio_base candidate improves the best observed full matrix to 1.065x throughput geomean and 0.862x worst cell, but still fails the fixed SOTA thresholds.",
+    "The PreRead response pre-buffer helper is a real-path micro-optimization, but its full matrices still fail SOTA: ylong_base reaches 1.013x geomean and tokio_base reaches 1.068x geomean with a 0.691x worst cell.",
+    "TLS I/O diagnostics are now isolated behind bench_tls_io; canonical libcurl_bench builds omit the counters, and the opt-in diagnostic refutes wrapper poll explosion as the next SOTA-scale lever.",
+    "The same-concurrency diagnostic uses libcurl multi rather than multi-threaded Easy handles, records concurrency as a comparison dimension, and is kept opt-in so it cannot redefine the canonical matrix.",
+    "The same-concurrency diagnostic is also a counterexample: ylong reaches only 0.842x throughput geomean at concurrency=8 while using 2.065x CPU/request and up to 1.842x RSS.",
+    "The H1 pool capacity candidate fixes a real allocation-retention bug, but the 200/1000 x 3 matrix is also a counterexample: 0.921x throughput geomean, 0.632x worst cell, p50/p95 gates fail, and RSS remains higher than libcurl.",
+    "The response-poll diagnostic refutes repeated wakeup churn: every scenario averages exactly two response-head polls and one pending per request.",
+    "The TLS fingerprint diagnostic refutes TLS version/cipher mismatch: ylong_http_client and libcurl both negotiate TLSv1.3:TLS_AES_256_GCM_SHA384:256 on proxy and origin TLS legs.",
+    "The dedicated nested TLS stream variant was tested and rejected because it worsened the matrix; it should not be used as a SOTA path.",
+    "Current causal evidence therefore refutes SOTA completion rather than supporting it.",
+    "S10 final counterexample review must not be run as a completion gate until a SOTA-passing matrix exists."
+  ],
+  "verification_commands": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo test -p ylong_http --no-default-features --features http1_1 ut_request_ref_encoder_matches_owned_encoder",
+      "observed": "passed"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "observed": "10 tests passed"
+    },
+    {
+      "command": "python3 -m py_compile docs/benchmarks/run_https_proxy_bench.py docs/benchmarks/test_run_https_proxy_bench.py",
+      "observed": "passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_phase_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "phase diagnostic command listed in phase_diagnostic_dataset.command",
+      "observed": "all scenario/client/repeat runs ok"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_phase_release/release/https_proxy_bench",
+      "observed": "all scenario/client/repeat runs ok; zero errors in summary"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_preread_red cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_pre_read_drains_without_overread",
+      "observed": "failed before implementation with E0433 because PreRead was not defined"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_preread_green cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_pre_read_drains_without_overread",
+      "observed": "passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_preread_ylong_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_preread_ylong_release/release/https_proxy_bench --result-dir docs/benchmarks/results/preread-ylong-full --figure-dir docs/benchmarks/results/preread-ylong-full",
+      "observed": "all scenario/client/repeat runs ok; zero errors; 1.013x throughput geomean and 0.819x worst cell"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_preread_tokio_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_preread_tokio_release/release/https_proxy_bench --result-dir docs/benchmarks/results/preread-tokio-full --figure-dir docs/benchmarks/results/preread-tokio-full",
+      "observed": "all scenario/client/repeat runs ok; zero errors; 1.068x throughput geomean and 0.691x worst cell"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tls_stats_feature_green cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io ut_tls_bench_stats_",
+      "observed": "passed: 2 TLS diagnostic tests passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_canonical_no_tlsio_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings; canonical benchmark feature set omits bench_tls_io"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tlsio_diag_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tlsdiag_no_libcurl cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tlsdiag_ylong_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "TLS I/O diagnostic command listed in tls_io_diagnostic_dataset.command",
+      "observed": "all scenario/client/repeat runs ok; TLS counts parsed into summary CSV"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_capacity_red cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_exist_h1_conn_preserves_list_capacity -- --nocapture",
+      "observed": "failed before implementation because exist_h1_conn replaced the Vec and lost reserved capacity"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_capacity_green cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_exist_h1_conn_preserves_list_capacity -- --nocapture",
+      "observed": "passed after in-place list scan implementation"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_tokio_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "Pool capacity candidate command listed in pool_capacity_candidate_dataset.command",
+      "observed": "all scenario/client/repeat runs ok; zero errors; 0.921x throughput geomean and 0.632x worst cell"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_resp_poll_green cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_response_read_poll_counts_accumulate -- --nocapture",
+      "observed": "passed after TimeGroup response-read poll counters were implemented"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_resp_poll_canonical_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "Response-poll diagnostic command listed in response_poll_diagnostic_dataset.command",
+      "observed": "all scenario/client/repeat runs ok; every scenario averaged 2 response-head polls and 1 pending per request"
+    }
+  ],
+  "completion_effect": "S9 is not complete because causal evidence currently disproves, rather than proves, SOTA. S10 final counterexample review must not be run as a completion gate until a SOTA-passing matrix exists.",
+  "sync_client_candidate": {
+    "evidence_id": "evidence.sync-client-candidate",
+    "evidence_path": "evidence/sync-client-candidate.json",
+    "throughput_geomean_ratio_ylong_sync_over_libcurl": 1.023857,
+    "worst_throughput_ratio_ylong_sync_over_libcurl": 0.718468,
+    "cpu_geomean_ratio_ylong_sync_over_libcurl": 0.73775,
+    "rss_max_ratio_ylong_sync_over_libcurl": 1.066486,
+    "verdict": "counterexample"
+  },
+  "single_client_concurrency_candidate": {
+    "evidence_id": "evidence.async-single-client-concurrency-candidate",
+    "status": "counterexample",
+    "result_files": [
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_env.json",
+      "docs/benchmarks/results/async-single-client-concurrency-candidate/https_proxy_bench_raw.txt"
+    ],
+    "baseline": "same-process libcurl multi API",
+    "ylong_client": "ylong_http_client",
+    "ylong_concurrency_model": "single-client",
+    "client_runtime": "ylong_base",
+    "scenario_count": 3,
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "warmup_requests": 50,
+    "concurrency": 8,
+    "phase_timing": false,
+    "errors_sum_total": 0,
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.894757,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.676473,
+    "best_throughput_ratio_ylong_over_libcurl": 1.313454,
+    "p50_max_ratio_ylong_over_libcurl": 1.561491,
+    "p95_max_ratio_ylong_over_libcurl": 1.258089,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.587595,
+    "cpu_max_ratio_ylong_over_libcurl": 2.265395,
+    "rss_max_ratio_ylong_over_libcurl": 1.175683,
+    "worst_cell": {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 1000,
+      "concurrency": 8,
+      "ylong_concurrency_model": "single-client",
+      "throughput_ratio_ylong_over_libcurl": 0.676473,
+      "p50_ratio_ylong_over_libcurl": 1.561491,
+      "p95_ratio_ylong_over_libcurl": 1.226698,
+      "cpu_ratio_ylong_over_libcurl": 1.728123,
+      "rss_ratio_ylong_over_libcurl": 1.131817
+    },
+    "verdict": "counterexample_to_benchmark_concurrency_model_only_hypothesis"
+  },
+  "async_single_client_maxh1_candidate": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_maxh1_release/release/https_proxy_bench --result-dir docs/benchmarks/results/async-single-client-maxh1-candidate --figure-dir docs/benchmarks/results/async-single-client-maxh1-candidate",
+    "result_files": [
+      "docs/benchmarks/results/async-single-client-maxh1-candidate/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/async-single-client-maxh1-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/async-single-client-maxh1-candidate/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/async-single-client-maxh1-candidate/https_proxy_bench_env.json",
+      "docs/benchmarks/results/async-single-client-maxh1-candidate/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/async-single-client-maxh1-candidate/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/async-single-client-maxh1-candidate/https_proxy_bench_performance.pdf"
+    ],
+    "hashes": {
+      "bench_binary_sha256": "d4091c60c258437ba6c16218789538011191a1aea4145f42ef19eefa7160ef69",
+      "results_csv_sha256": "0720732d982844f762e04c7862fe39372de3f70e3038f5169e09d97cb55de98a",
+      "summary_csv_sha256": "7821f35a86dfec468b576d6faadf6ade34c6eba8006793d3ca9ac349efea4625",
+      "comparison_csv_sha256": "4b2b39263ba83afaf29d78cc98e3812c2d55c9277591d60567ac99ef79938c1e",
+      "env_json_sha256": "403831195332d87e4f0b708889022f28c3203a9e4cac2b951011a2c05d856182"
+    },
+    "baseline": "same-process libcurl multi API",
+    "ylong_client": "ylong_http_client",
+    "ylong_concurrency_model": "single-client",
+    "client_runtime": "ylong_base",
+    "scenario_count": 3,
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "warmup_requests": 50,
+    "concurrency": 8,
+    "phase_timing": false,
+    "request_body_bytes": 0,
+    "response_body_bytes": 4096,
+    "ylong_error_count": 0,
+    "baseline_error_count": 0,
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.022212,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.675795,
+    "best_throughput_ratio_ylong_over_libcurl": 1.758264,
+    "p50_max_ratio_ylong_over_libcurl": 1.487644,
+    "p95_max_ratio_ylong_over_libcurl": 1.378161,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.304811,
+    "cpu_max_ratio_ylong_over_libcurl": 1.612698,
+    "rss_max_ratio_ylong_over_libcurl": 1.190452,
+    "errors_sum_total": 0,
+    "worst_cell": {
+      "scenario": "https-over-https-proxy",
+      "requests": 1000,
+      "concurrency": 8,
+      "ylong_concurrency_model": "single-client",
+      "throughput_ratio_ylong_over_libcurl": 0.675795,
+      "p50_ratio_ylong_over_libcurl": 1.487644,
+      "p95_ratio_ylong_over_libcurl": 1.378161,
+      "cpu_ratio_ylong_over_libcurl": 1.612698,
+      "rss_ratio_ylong_over_libcurl": 1.154853
+    },
+    "per_cell": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 1.435969,
+        "p50_ratio_ylong_over_libcurl": 0.555233,
+        "p95_ratio_ylong_over_libcurl": 1.088633,
+        "cpu_ratio_ylong_over_libcurl": 1.444762,
+        "rss_ratio_ylong_over_libcurl": 1.180763,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 1.758264,
+        "p50_ratio_ylong_over_libcurl": 0.476826,
+        "p95_ratio_ylong_over_libcurl": 0.775155,
+        "cpu_ratio_ylong_over_libcurl": 1.087474,
+        "rss_ratio_ylong_over_libcurl": 1.190452,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 0.873536,
+        "p50_ratio_ylong_over_libcurl": 1.140428,
+        "p95_ratio_ylong_over_libcurl": 1.114306,
+        "cpu_ratio_ylong_over_libcurl": 1.202853,
+        "rss_ratio_ylong_over_libcurl": 1.168105,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 0.675795,
+        "p50_ratio_ylong_over_libcurl": 1.487644,
+        "p95_ratio_ylong_over_libcurl": 1.378161,
+        "cpu_ratio_ylong_over_libcurl": 1.612698,
+        "rss_ratio_ylong_over_libcurl": 1.154853,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 1.095265,
+        "p50_ratio_ylong_over_libcurl": 0.902347,
+        "p95_ratio_ylong_over_libcurl": 0.891946,
+        "cpu_ratio_ylong_over_libcurl": 1.063851,
+        "rss_ratio_ylong_over_libcurl": 1.160609,
+        "errors_sum": 0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "throughput_ratio_ylong_over_libcurl": 0.698877,
+        "p50_ratio_ylong_over_libcurl": 1.466327,
+        "p95_ratio_ylong_over_libcurl": 1.273434,
+        "cpu_ratio_ylong_over_libcurl": 1.522032,
+        "rss_ratio_ylong_over_libcurl": 1.166134,
+        "errors_sum": 0
+      }
+    ],
+    "connection_trace": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "client": "libcurl",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 250,
+        "proxy_connect_requests_mean": 0,
+        "origin_connections_mean": 0,
+        "origin_requests_mean": 0,
+        "origin_tls_connections_mean": 0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 250,
+        "proxy_connect_requests_mean": 0,
+        "origin_connections_mean": 0,
+        "origin_requests_mean": 0,
+        "origin_tls_connections_mean": 0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "client": "libcurl",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 1050,
+        "proxy_connect_requests_mean": 0,
+        "origin_connections_mean": 0,
+        "origin_requests_mean": 0,
+        "origin_tls_connections_mean": 0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 1050,
+        "proxy_connect_requests_mean": 0,
+        "origin_connections_mean": 0,
+        "origin_requests_mean": 0,
+        "origin_tls_connections_mean": 0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "client": "libcurl",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 0,
+        "proxy_connect_requests_mean": 8,
+        "origin_connections_mean": 8,
+        "origin_requests_mean": 250,
+        "origin_tls_connections_mean": 8
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 0,
+        "proxy_connect_requests_mean": 8,
+        "origin_connections_mean": 8,
+        "origin_requests_mean": 250,
+        "origin_tls_connections_mean": 8
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "client": "libcurl",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 0,
+        "proxy_connect_requests_mean": 8,
+        "origin_connections_mean": 8,
+        "origin_requests_mean": 1050,
+        "origin_tls_connections_mean": 8
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 0,
+        "proxy_connect_requests_mean": 8,
+        "origin_connections_mean": 8,
+        "origin_requests_mean": 1050,
+        "origin_tls_connections_mean": 8
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "client": "libcurl",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 0,
+        "proxy_connect_requests_mean": 8,
+        "origin_connections_mean": 8,
+        "origin_requests_mean": 250,
+        "origin_tls_connections_mean": 8
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 0,
+        "proxy_connect_requests_mean": 8,
+        "origin_connections_mean": 8,
+        "origin_requests_mean": 250,
+        "origin_tls_connections_mean": 8
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "client": "libcurl",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 0,
+        "proxy_connect_requests_mean": 8,
+        "origin_connections_mean": 8,
+        "origin_requests_mean": 1050,
+        "origin_tls_connections_mean": 8
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "proxy_connections_mean": 8,
+        "proxy_forward_requests_mean": 0,
+        "proxy_connect_requests_mean": 8,
+        "origin_connections_mean": 8,
+        "origin_requests_mean": 1050,
+        "origin_tls_connections_mean": 8
+      }
+    ],
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/async-single-client-maxh1-candidate.json",
+    "sota_gate_result": {
+      "passes_sota": false,
+      "failed_gates": [
+        "throughput geomean is 1.022x, below fixed SOTA lower-bound threshold 2.00x",
+        "worst throughput cell is 0.676x, below fixed per-scenario threshold 1.50x",
+        "p50 max ratio is 1.488x, above no-regression threshold",
+        "p95 max ratio is 1.378x, above no-regression threshold",
+        "CPU/request geomean is 1.305x and max is 1.613x, so resource cost worsens",
+        "RSS max ratio is 1.190x, so memory cost worsens"
+      ],
+      "fairness_result": "connection trace now confirms both ylong_http_client and libcurl use 8 proxy connections, 8 CONNECT tunnels for HTTPS-origin scenarios, 8 origin connections, and 8 origin TLS connections under concurrency=8."
+    }
+  },
+  "body_stats_diagnostic": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_body_stats_release/release/https_proxy_bench --result-dir docs/benchmarks/results/body-stats-diagnostic --figure-dir docs/benchmarks/results/body-stats-diagnostic",
+    "result_files": [
+      "docs/benchmarks/results/body-stats-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/body-stats-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/body-stats-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/body-stats-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/body-stats-diagnostic/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/body-stats-diagnostic/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/body-stats-diagnostic/https_proxy_bench_performance.pdf"
+    ],
+    "hashes": {
+      "bench_binary_sha256": "7caf4890bba573dc751fd9785db99b87458aceec8c01f02463ba07a84c338dbc",
+      "results_csv_sha256": "23725bfb757589c99bea98515579cbb51119fc1994080807fe1f1b0bc9424c93",
+      "summary_csv_sha256": "519f27df9459872003b79bfb5067fe4d6f1310da20387a768582b860afc22b87",
+      "comparison_csv_sha256": "23eac0d436eb0ac2268f94590de96ee9544832593a0e57364104afd9708852a8",
+      "env_json_sha256": "2bc5ae5ddd1d9eb1baa22dd32320bd5a0cba8330266c4e4b2f5a96c45309c101"
+    },
+    "baseline": "same-process libcurl multi API",
+    "ylong_client": "ylong_http_client",
+    "ylong_concurrency_model": "single-client",
+    "client_runtime": "ylong_base",
+    "concurrency": 8,
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "warmup_requests": 50,
+    "request_body_bytes": 0,
+    "response_body_bytes": 4096,
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.081507,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.702274,
+    "best_throughput_ratio_ylong_over_libcurl": 2.110456,
+    "p50_max_ratio_ylong_over_libcurl": 1.409218,
+    "p95_max_ratio_ylong_over_libcurl": 1.348194,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.247889,
+    "cpu_max_ratio_ylong_over_libcurl": 1.560953,
+    "rss_max_ratio_ylong_over_libcurl": 1.197365,
+    "errors_sum_total": 0,
+    "worst_cell": {
+      "scenario": "https-over-https-proxy",
+      "requests": 1000,
+      "throughput_ratio_ylong_over_libcurl": 0.702274,
+      "p50_ratio_ylong_over_libcurl": 1.409218,
+      "p95_ratio_ylong_over_libcurl": 1.348194,
+      "cpu_ratio_ylong_over_libcurl": 1.52294,
+      "rss_ratio_ylong_over_libcurl": 1.182155
+    },
+    "body_shape": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "client": "libcurl",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 0.0,
+        "origin_connections_mean": 0.0,
+        "origin_tls_connections_mean": 0.0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 0.0,
+        "origin_connections_mean": 0.0,
+        "origin_tls_connections_mean": 0.0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "client": "libcurl",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 0.0,
+        "origin_connections_mean": 0.0,
+        "origin_tls_connections_mean": 0.0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 0.0,
+        "origin_connections_mean": 0.0,
+        "origin_tls_connections_mean": 0.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "client": "libcurl",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "client": "libcurl",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "client": "libcurl",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "client": "libcurl",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "chunks_per_request": 1.0,
+        "bytes_per_request": 4096.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      }
+    ],
+    "per_cell": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 2.110456,
+        "p50_ratio_ylong_over_libcurl": 0.37454,
+        "p95_ratio_ylong_over_libcurl": 0.763983,
+        "cpu_ratio_ylong_over_libcurl": 0.937342,
+        "rss_ratio_ylong_over_libcurl": 1.179534
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.319917,
+        "p50_ratio_ylong_over_libcurl": 0.600978,
+        "p95_ratio_ylong_over_libcurl": 1.146771,
+        "cpu_ratio_ylong_over_libcurl": 1.560953,
+        "rss_ratio_ylong_over_libcurl": 1.197365
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.892372,
+        "p50_ratio_ylong_over_libcurl": 1.091921,
+        "p95_ratio_ylong_over_libcurl": 1.106629,
+        "cpu_ratio_ylong_over_libcurl": 1.159447,
+        "rss_ratio_ylong_over_libcurl": 1.174988
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.702274,
+        "p50_ratio_ylong_over_libcurl": 1.409218,
+        "p95_ratio_ylong_over_libcurl": 1.348194,
+        "cpu_ratio_ylong_over_libcurl": 1.52294,
+        "rss_ratio_ylong_over_libcurl": 1.182155
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.234419,
+        "p50_ratio_ylong_over_libcurl": 0.872029,
+        "p95_ratio_ylong_over_libcurl": 0.708818,
+        "cpu_ratio_ylong_over_libcurl": 0.971562,
+        "rss_ratio_ylong_over_libcurl": 1.167156
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.742569,
+        "p50_ratio_ylong_over_libcurl": 1.39639,
+        "p95_ratio_ylong_over_libcurl": 1.177662,
+        "cpu_ratio_ylong_over_libcurl": 1.504404,
+        "rss_ratio_ylong_over_libcurl": 1.17967
+      }
+    ],
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/body-stats-diagnostic.json",
+    "finding": "The body-drain chunk-shape hypothesis is refuted. Every scenario and request count shows both ylong_http_client and libcurl delivering exactly one measured body callback/data chunk per request and exactly 4096 body bytes per request. The remaining HTTPS-origin-over-HTTPS-proxy gap is not explained by benchmark-side body chunk fragmentation."
+  },
+  "tls_fingerprint_diagnostic": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200 --repeats 1 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_body_stats_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tls-fingerprint-diagnostic --figure-dir docs/benchmarks/results/tls-fingerprint-diagnostic",
+    "result_files": [
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_performance.pdf"
+    ],
+    "hashes": {
+      "bench_binary_sha256": "7caf4890bba573dc751fd9785db99b87458aceec8c01f02463ba07a84c338dbc",
+      "results_csv_sha256": "5300dd2be6d7116768834e6033624dcdb6de9daff6c8d3cefb719342ec6f5d93",
+      "summary_csv_sha256": "4dd90f249ccb4a7d3f0df45f18e3cf712fad4bc7a2ddf763b36310d100aa66a6",
+      "comparison_csv_sha256": "9a9d20bef27902c343e7ca915e1d033cf29e7ad899a4b070658b8e4cfdd15dee",
+      "env_json_sha256": "df1dd32a861db51fc11664e73640d2d27bff4b076d0b316604a3fc4adf8663df",
+      "raw_txt_sha256": "10efde001d357c4d0f0032e4503f7f2bfee04346807fa61c60d12b870d6ff282"
+    },
+    "baseline": "same-process libcurl multi API",
+    "ylong_client": "ylong_http_client",
+    "ylong_concurrency_model": "single-client",
+    "client_runtime": "ylong_base",
+    "concurrency": 8,
+    "request_counts": [
+      200
+    ],
+    "repetitions": 1,
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.150005,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.903166,
+    "p50_max_ratio_ylong_over_libcurl": 1.059432,
+    "p95_max_ratio_ylong_over_libcurl": 1.171038,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.173977,
+    "rss_max_ratio_ylong_over_libcurl": 1.172612,
+    "errors_sum_total": 0,
+    "observed_fingerprints": [
+      "http-over-https-proxy ylong_http_client proxy=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8 origin=-",
+      "http-over-https-proxy libcurl proxy=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8 origin=-",
+      "https-over-https-proxy ylong_http_client proxy=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8 origin=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+      "https-over-https-proxy libcurl proxy=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8 origin=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+      "proxy-mtls-https-origin ylong_http_client proxy=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8 origin=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+      "proxy-mtls-https-origin libcurl proxy=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8 origin=TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+    ],
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/tls-fingerprint-diagnostic.json",
+    "finding": "The TLS version/cipher mismatch hypothesis is refuted. ylong_http_client and libcurl negotiate the same TLSv1.3 cipher on every proxy TLS and origin TLS connection in this fair single-client max-H1 diagnostic."
+  },
+  "nested_tls_variant_candidate": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_nested_variant_release/release/https_proxy_bench --result-dir docs/benchmarks/results/nested-tls-variant-candidate --figure-dir docs/benchmarks/results/nested-tls-variant-candidate",
+    "result_files": [
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_env.json",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/nested-tls-variant-candidate/https_proxy_bench_performance.pdf"
+    ],
+    "hashes": {
+      "bench_binary_sha256": "8129f0fa13ebc1a102ee5bbfd5e9f9e82f5fdd2163c0c1210891c43fd6c716fd",
+      "results_csv_sha256": "77b0bf8d8ee2acecbb28c53697d9dbdde5aeab88a715b2c67e2be80928dc3354",
+      "summary_csv_sha256": "9fa254b9731d7747b26aab5a5841bfcf6cdebb0a8810e60368cc85f9bba5e699",
+      "comparison_csv_sha256": "11452552222e389345311d540f7bf6a4888adda912b79b31a9ee5af24f716a4f",
+      "env_json_sha256": "d0874bcd2251cbb12ba41e4b65b8c128a5c119b20bd1d71bd7847e0afb6a22f5",
+      "raw_txt_sha256": "55c7d2ec78e88bde1c188ace65c75bac7590f32f484f77c941d0256b7497ed04"
+    },
+    "candidate_retained": false,
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.912976,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.650132,
+    "best_throughput_ratio_ylong_over_libcurl": 1.168906,
+    "p50_max_ratio_ylong_over_libcurl": 1.498596,
+    "p95_max_ratio_ylong_over_libcurl": 1.441032,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.427967,
+    "cpu_max_ratio_ylong_over_libcurl": 1.73183,
+    "rss_max_ratio_ylong_over_libcurl": 1.192587,
+    "errors_sum_total": 0,
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/nested-tls-variant-candidate.json",
+    "finding": "The dedicated nested TLS stream variant is a rejected counterexample. It worsened throughput, CPU, p50/p95, and RSS, so ProxyStream enum dispatch is not sufficient to explain the SOTA gap."
+  },
+  "tokio_single_client_maxh1_candidate": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_tokio_single_client_maxh1_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tokio-single-client-maxh1-candidate --figure-dir docs/benchmarks/results/tokio-single-client-maxh1-candidate",
+    "result_files": [
+      "docs/benchmarks/results/tokio-single-client-maxh1-candidate/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/tokio-single-client-maxh1-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/tokio-single-client-maxh1-candidate/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/tokio-single-client-maxh1-candidate/https_proxy_bench_env.json",
+      "docs/benchmarks/results/tokio-single-client-maxh1-candidate/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/tokio-single-client-maxh1-candidate/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/tokio-single-client-maxh1-candidate/https_proxy_bench_performance.pdf"
+    ],
+    "hashes": {
+      "bench_binary_sha256": "b3a8dfa6094b3d1819d00d7f5f432f82f348a8487bbce50ba5a8b13dec01e746",
+      "results_csv_sha256": "37db6d8ab93fd3c6121b7fb948198b22a85eb85b3e0cea8739d5e48654e56d28",
+      "summary_csv_sha256": "43123e27b71f12f0d24897ee90d88b61d5b698f9fcb1cee5f727f7d13d561b39",
+      "comparison_csv_sha256": "1f77709c6eec95eb102421c180f135f1f60d7c71a2250929a6162a92b790521b",
+      "env_json_sha256": "b25719b26348976c7d789605e2dca3b94704b42586a0036737e132814cf242f1"
+    },
+    "baseline": "same-process libcurl multi API",
+    "ylong_client": "ylong_http_client",
+    "ylong_concurrency_model": "single-client",
+    "client_runtime": "tokio_base",
+    "concurrency": 8,
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "warmup_requests": 50,
+    "request_body_bytes": 0,
+    "response_body_bytes": 4096,
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.031416,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.790275,
+    "best_throughput_ratio_ylong_over_libcurl": 1.567746,
+    "p50_max_ratio_ylong_over_libcurl": 1.283613,
+    "p95_max_ratio_ylong_over_libcurl": 1.187354,
+    "cpu_geomean_ratio_ylong_over_libcurl": 0.840726,
+    "cpu_max_ratio_ylong_over_libcurl": 0.979447,
+    "rss_max_ratio_ylong_over_libcurl": 1.073826,
+    "errors_sum_total": 0,
+    "worst_cell": {
+      "scenario": "proxy-mtls-https-origin",
+      "requests": 1000,
+      "throughput_ratio_ylong_over_libcurl": 0.790275,
+      "p50_ratio_ylong_over_libcurl": 1.283613,
+      "p95_ratio_ylong_over_libcurl": 1.164913,
+      "cpu_ratio_ylong_over_libcurl": 0.979447,
+      "rss_ratio_ylong_over_libcurl": 1.055569
+    },
+    "per_cell": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.567746,
+        "p50_ratio_ylong_over_libcurl": 0.665399,
+        "p95_ratio_ylong_over_libcurl": 0.689448,
+        "cpu_ratio_ylong_over_libcurl": 0.691153,
+        "rss_ratio_ylong_over_libcurl": 1.069081
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.230953,
+        "p50_ratio_ylong_over_libcurl": 0.829368,
+        "p95_ratio_ylong_over_libcurl": 0.827429,
+        "cpu_ratio_ylong_over_libcurl": 0.844493,
+        "rss_ratio_ylong_over_libcurl": 1.073826
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.831515,
+        "p50_ratio_ylong_over_libcurl": 1.159962,
+        "p95_ratio_ylong_over_libcurl": 1.187354,
+        "cpu_ratio_ylong_over_libcurl": 0.879575,
+        "rss_ratio_ylong_over_libcurl": 1.056321
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.170048,
+        "p50_ratio_ylong_over_libcurl": 0.978229,
+        "p95_ratio_ylong_over_libcurl": 0.891484,
+        "cpu_ratio_ylong_over_libcurl": 0.75159,
+        "rss_ratio_ylong_over_libcurl": 1.052696
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.811398,
+        "p50_ratio_ylong_over_libcurl": 1.187317,
+        "p95_ratio_ylong_over_libcurl": 1.135424,
+        "cpu_ratio_ylong_over_libcurl": 0.934377,
+        "rss_ratio_ylong_over_libcurl": 1.05218
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.790275,
+        "p50_ratio_ylong_over_libcurl": 1.283613,
+        "p95_ratio_ylong_over_libcurl": 1.164913,
+        "cpu_ratio_ylong_over_libcurl": 0.979447,
+        "rss_ratio_ylong_over_libcurl": 1.055569
+      }
+    ],
+    "trace": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "client": "libcurl",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 0.0,
+        "origin_connections_mean": 0.0,
+        "origin_tls_connections_mean": 0.0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 0.0,
+        "origin_connections_mean": 0.0,
+        "origin_tls_connections_mean": 0.0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "client": "libcurl",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 0.0,
+        "origin_connections_mean": 0.0,
+        "origin_tls_connections_mean": 0.0
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 0.0,
+        "origin_connections_mean": 0.0,
+        "origin_tls_connections_mean": 0.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "client": "libcurl",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "client": "libcurl",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "client": "libcurl",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 200.0,
+        "body_bytes_mean": 819200.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "client": "libcurl",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "client": "ylong_http_client",
+        "body_chunks_mean": 1000.0,
+        "body_bytes_mean": 4096000.0,
+        "proxy_connections_mean": 8.0,
+        "proxy_connect_requests_mean": 8.0,
+        "origin_connections_mean": 8.0,
+        "origin_tls_connections_mean": 8.0
+      }
+    ],
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/tokio-single-client-maxh1-candidate.json",
+    "finding": "tokio_base materially improves CPU/request and some HTTPS-origin cells, but it still refutes SOTA. Throughput geomean is 1.031x, worst throughput is 0.790x in proxy-mTLS HTTPS-origin 1000 requests, p50/p95 still regress, and RSS remains above libcurl. Runtime substrate alone is not sufficient."
+  },
+  "response_preread_diagnostic": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200 --repeats 3 --warmup 50 --concurrency 1 --phase-timing --bench-bin /tmp/ylong_http_target_preread_diag_release/release/https_proxy_bench --result-dir docs/benchmarks/results/response-preread-diagnostic --figure-dir docs/benchmarks/results/response-preread-diagnostic",
+    "result_files": [
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "hashes": {
+      "/tmp/ylong_http_target_preread_diag_release/release/https_proxy_bench": "652e2476c097e5489ff6547395f2a5acedd7e7e445e639ed11cca357eff6d06f",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_results.csv": "21522813102fdb3f78655f8bbdfe06f2e2200840a1a56c0f825ecf343fb2c72b",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_summary.csv": "cc955e49d136e286069ab6a029ccb86d2bef03742ae065d2a6a12e8829139047",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_comparison.csv": "ffc05d9a0c07d7c252eb9a91caeabb5776a7339742abe6ecacbebce720b81a18",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_env.json": "be5058a62f2506bc994842a097304d735b9584bb700dcf02aa11b41eee803c1a",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_raw.txt": "ef957c2b2a3f536a71a1acb9af44c8d0ac721bfbee44442961a9d947052106a1"
+    },
+    "phase_timing": true,
+    "concurrency": 1,
+    "requests": [
+      200
+    ],
+    "repeats": 3,
+    "warmup": 50,
+    "response_body_bytes": 4096,
+    "scenario_summary": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "pre_read_bytes_per_request_mean": 4096.0,
+        "pre_read_events_per_request_mean": 1.0,
+        "body_bytes_per_request_mean": 4096.0,
+        "body_chunks_per_request_mean": 1.0,
+        "response_head_us_per_request_mean": 73.99166666666667,
+        "response_read_us_per_request_mean": 70.52666666666667,
+        "body_drain_us_per_request_mean": 0.9116666666666666
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "pre_read_bytes_per_request_mean": 4096.0,
+        "pre_read_events_per_request_mean": 1.0,
+        "body_bytes_per_request_mean": 4096.0,
+        "body_chunks_per_request_mean": 1.0,
+        "response_head_us_per_request_mean": 173.24666666666667,
+        "response_read_us_per_request_mean": 169.56833333333333,
+        "body_drain_us_per_request_mean": 0.945
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "pre_read_bytes_per_request_mean": 4096.0,
+        "pre_read_events_per_request_mean": 1.0,
+        "body_bytes_per_request_mean": 4096.0,
+        "body_chunks_per_request_mean": 1.0,
+        "response_head_us_per_request_mean": 171.4033333333333,
+        "response_read_us_per_request_mean": 167.70833333333331,
+        "body_drain_us_per_request_mean": 1.008333333333333
+      }
+    ],
+    "threshold_eval": {
+      "throughput_geomean_ratio": 0.90876154218275,
+      "throughput_min_ratio": 0.7408213136353603,
+      "throughput_max_ratio": 1.0321449641197646,
+      "elapsed_ms_geomean_ratio": 1.0647370515934744,
+      "p50_max_ratio": 1.136518771331058,
+      "p95_max_ratio": 1.1666666666666663,
+      "cpu_geomean_ratio": 1.0311044519249286,
+      "cpu_max_ratio": 1.1875989034256802,
+      "rss_max_ratio": 1.0691994572591588,
+      "errors_sum_total": 0
+    },
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/response-preread-diagnostic.json",
+    "finding": "Response-head pre-read diagnostics show ylong_http_client reads the full 4096-byte response body during response-head decoding in every measured request. This confirms full-body pre-read is real, but the same run shows body_drain is already about 1us/request and the diagnostic still fails SOTA only in HTTP-over-HTTPS-proxy while HTTPS-origin scenarios are near parity or faster, so full pre-read storage/copy is not sufficient as a SOTA-scale root cause.",
+    "verdict": "diagnostic_counterexample_to_preread_as_sota_scale_root_cause"
+  },
+  "known_counterexamples_or_limits": [
+    "Response-head pre-read is real but not sufficient for SOTA: ylong pre-reads the full 4096-byte body per request, yet body_drain is already roughly 1us/request and phase timing is single-concurrency-only.",
+    "Concurrent phase diagnostics at concurrency=8 remain a SOTA counterexample: throughput geomean is 0.960x, worst throughput is 0.670x, p50/p95/CPU/RSS gates fail, and response_read dominates the failing HTTPS-origin proxy cells.",
+    "OpenSSL SSL_MODE_RELEASE_BUFFERS is not a sufficient RSS or nested-TLS performance lever for this workload: the candidate failed with 0.968x throughput geomean, 0.652x worst throughput, p50/p95 regressions, 1.399x CPU geomean, and 1.182x max RSS, so it was rejected rather than retained.",
+    "The original concurrent bench_tls_io interpretation is superseded because global TLS counters were sampled once per worker and summed, inflating SSL_read and pending counts.",
+    "The corrected dynamic-budget no-diagnostic matrix is still a SOTA counterexample: throughput geomean is 0.988x, worst throughput is 0.657x, p50 max is 1.566x, p95 max is 1.371x, CPU geomean is 1.376x, and RSS max is 1.209x.",
+    "Server-side send/relay diagnostics are causal narrowing evidence, not a SOTA candidate: throughput geomean is 0.993x, worst throughput is 0.728x, p50/p95/CPU/RSS gates fail, and client response_read remains the larger cost.",
+    "tokio_base dynamic-budget is the best observed runtime-substrate candidate so far, but it remains a SOTA counterexample: 1.133x throughput geomean, 0.809x worst throughput, p50 max 1.270x, and p95 max 1.142x; RSS max 1.073x is above libcurl but within the hard threshold.",
+    "Explicit HTTP/1 flush before response read is rejected as a SOTA candidate: throughput geomean is 0.972x, worst throughput is 0.696x, p50 max is 1.466x, p95 max is 1.340x, CPU geomean is 1.330x, and RSS max is 1.180x.",
+    "ylong_base runtime worker=1 is rejected as a SOTA candidate: focused HTTPS-over-HTTPS-proxy throughput geomean is 0.985x, worst throughput is 0.863x, p50 max is 1.172x, and p95 max is 1.111x despite CPU/request geomean improving to 0.841x."
+  ],
+  "verification_steps": [
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_phase_output_is_parsed_and_summarized",
+      "observed": "red before parser implementation, green after response_pre_read fields were wired through the harness"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_preread_green cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_response_pre_read_bytes_accumulate",
+      "observed": "passed after TimeGroup response pre-read counters were implemented"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200 --repeats 3 --warmup 50 --concurrency 1 --phase-timing --bench-bin /tmp/ylong_http_target_preread_diag_release/release/https_proxy_bench --result-dir docs/benchmarks/results/response-preread-diagnostic --figure-dir docs/benchmarks/results/response-preread-diagnostic",
+      "observed": "passed; all three scenarios and both clients completed with zero errors under concurrency=1 phase timing"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --phase-timing --bench-bin /tmp/ylong_http_target_concurrent_phase_release/release/https_proxy_bench --result-dir docs/benchmarks/results/concurrent-phase-diagnostic --figure-dir docs/benchmarks/results/concurrent-phase-diagnostic",
+      "observed": "passed with zero errors; response_read dominates the failing HTTPS-origin proxy cells while pool_checkout and body_drain remain small"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_release_buffers_release/release/https_proxy_bench --result-dir docs/benchmarks/results/release-buffers-candidate --figure-dir docs/benchmarks/results/release-buffers-candidate",
+      "observed": "passed with zero errors, but rejected as a SOTA counterexample: throughput geomean 0.968x, worst throughput 0.652x, p50 max 1.529x, p95 max 1.441x, CPU geomean 1.399x, RSS max 1.182x"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_post_release_buffers_reject cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench && PATH=\"$HOME/.cargo/bin:$PATH\" python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "observed": "passed after removing the rejected release-buffers production change; ctx.rs contains no remaining release-buffers mode references"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_concurrent_tlsio_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed; release benchmark binary with bench_tls_io was built at /tmp/ylong_http_target_concurrent_tlsio_release/release/https_proxy_bench"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --phase-timing --bench-bin /tmp/ylong_http_target_concurrent_tlsio_release/release/https_proxy_bench --result-dir docs/benchmarks/results/concurrent-tlsio-diagnostic --figure-dir docs/benchmarks/results/concurrent-tlsio-diagnostic",
+      "observed": "passed with zero errors, but its TLS I/O counter interpretation is superseded because single-client workers summed multiple global TLS counter deltas"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_dynamic_budget_red cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_shared_request_budget_issues_one_request_at_a_time_until_empty",
+      "observed": "red before implementation with E0433 because SharedRequestBudget did not exist"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_dynamic_budget_tests cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench,bench_tls_io",
+      "observed": "passed 7 benchmark binary unit tests after dynamic request budget and single-client global TLS counter aggregation fix"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_dynamic_release/release/https_proxy_bench --result-dir docs/benchmarks/results/dynamic-budget-candidate --figure-dir docs/benchmarks/results/dynamic-budget-candidate",
+      "observed": "passed with zero errors, but failed SOTA: throughput geomean 0.988x, worst throughput 0.657x, p50 max 1.566x, p95 max 1.371x, CPU geomean 1.376x, RSS max 1.209x"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --phase-timing --bench-bin /tmp/ylong_http_target_dynamic_tlsio_release/release/https_proxy_bench --result-dir docs/benchmarks/results/dynamic-budget-tlsio-candidate --figure-dir docs/benchmarks/results/dynamic-budget-tlsio-candidate",
+      "observed": "passed with zero errors and corrected TLS I/O counts: HTTP-over-HTTPS-proxy 1000 averages 2 SSL_read calls and 1 pending per request; HTTPS-origin proxy cells average 5 SSL_read calls and 2 pendings per request"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_trace_output_is_parsed_and_summarized && python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "observed": "server-side timing parser regression passed after the red trace parsing assertion was implemented; full harness suite passed 17 tests"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --phase-timing --bench-bin /tmp/ylong_http_target_dynamic_release/release/https_proxy_bench --result-dir docs/benchmarks/results/server-timing-diagnostic --figure-dir docs/benchmarks/results/server-timing-diagnostic",
+      "observed": "passed with zero errors; refuted server send/relay as sufficient cause but remained a SOTA counterexample with 0.993x throughput geomean and 0.728x worst throughput"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_tokio_dynamic_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tokio-dynamic-candidate --figure-dir docs/benchmarks/results/tokio-dynamic-candidate",
+      "observed": "passed with zero errors; tokio_base improved CPU and throughput but remained a SOTA counterexample with 0.809x worst throughput and tail regressions; RSS was above libcurl but inside the hard threshold"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_flush_red cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_request_flushes_before_response_read",
+      "observed": "red after test construction fix: panic \"HTTP/1 request path read the response before flushing the request\""
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_flush_green cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_request_flushes_before_response_read",
+      "observed": "passed after adding explicit flush; initial broad non---lib attempt was invalidated by /tmp no-space and then rerun narrowly after cleaning generated cargo targets"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_flush_release/release/https_proxy_bench --result-dir docs/benchmarks/results/flush-candidate --figure-dir docs/benchmarks/results/flush-candidate",
+      "observed": "passed with zero errors, but rejected as a SOTA counterexample: throughput geomean 0.972x, worst throughput 0.696x, p50 max 1.466x, p95 max 1.340x, CPU geomean 1.330x, RSS max 1.180x"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_red cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_runtime_workers_defaults_and_requires_positive_count",
+      "observed": "red: E0425 missing ylong_runtime_workers_from_value before implementing the benchmark-only runtime-worker parser"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_green cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_runtime_workers_defaults_and_requires_positive_count",
+      "observed": "passed after adding the parser and ylong_base global runtime setup candidate"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" YLONG_BENCH_YLONG_RUNTIME_WORKERS=8 python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_runtime_workers_release/release/https_proxy_bench --result-dir docs/benchmarks/results/runtime-workers-candidate --figure-dir docs/benchmarks/results/runtime-workers-candidate",
+      "observed": "passed with zero errors, but rejected as a SOTA counterexample: throughput geomean 1.006x, worst throughput 0.686x, p50 max 1.486x, p95 max 1.354x, CPU geomean 1.269x, RSS max 1.165x"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario https-over-https-proxy --requests 200 --repeats 1 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_strace_wrapper.sh --result-dir docs/benchmarks/results/strace-diagnostic-f --figure-dir docs/benchmarks/results/strace-diagnostic-f",
+      "observed": "passed with zero errors under strace -f wrapper; timings are diagnostic-only, but syscall shape shows ylong recvfrom/sendto counts are comparable to libcurl while futex/clock_nanosleep/epoll_wait/sched_yield activity is much higher"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_one_test cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_runtime_workers_defaults_and_requires_positive_count",
+      "observed": "passed while the temporary worker=1 benchmark-only parser was present"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" YLONG_BENCH_YLONG_RUNTIME_WORKERS=1 python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_runtime_workers_one_release/release/https_proxy_bench --result-dir docs/benchmarks/results/runtime-workers-one-candidate --figure-dir docs/benchmarks/results/runtime-workers-one-candidate",
+      "observed": "passed with zero errors, but rejected and removed: focused throughput geomean 0.985x, worst throughput 0.863x at 1000 requests, p50 max 1.172x, p95 max 1.111x"
+    },
+        {
+            "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_runtime_workers_one_postremove cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value",
+            "observed": "passed after removing the rejected worker=1 benchmark switch"
+        },
+        {
+            "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_driver_red cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value",
+            "observed": "red: single-driver was unsupported before implementing the benchmark-only parent-future polling candidate"
+        },
+        {
+            "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_driver_tests cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench && python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+            "observed": "candidate unit and harness tests passed while the single-driver candidate was present"
+        },
+        {
+            "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-driver --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_single_driver_release/release/https_proxy_bench --result-dir docs/benchmarks/results/single-driver-candidate --figure-dir docs/benchmarks/results/single-driver-candidate",
+            "observed": "passed with zero errors, but rejected and removed: focused throughput geomean 0.951x, worst throughput 0.823x at 1000 requests, p50 max 1.212x, p95 max 1.098x, CPU geomean 0.709x"
+        },
+        {
+            "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_driver_postremove cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value && python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_ylong_concurrency_model_is_explicit_result_dimension",
+            "observed": "post-removal Rust and Python regression tests passed after removing the rejected single-driver benchmark switch"
+        }
+    ],
+  "release_buffers_candidate_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/release-buffers-candidate.json",
+    "result_dir": "docs/benchmarks/results/release-buffers-candidate",
+    "throughput_geomean_ratio": 0.9683811453508115,
+    "throughput_min_ratio": 0.6518086474926296,
+    "p50_max_ratio": 1.5293139293139293,
+    "p95_max_ratio": 1.4409112482202182,
+    "cpu_geomean_ratio": 1.3986709918459992,
+    "rss_max_ratio": 1.1823132780082988,
+    "errors_sum_total": 0,
+    "verdict": "candidate_rejected_not_retained"
+  },
+  "concurrent_phase_diagnostic_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/concurrent-phase-diagnostic.json",
+    "result_dir": "docs/benchmarks/results/concurrent-phase-diagnostic",
+    "throughput_geomean_ratio": 0.9603678539887224,
+    "throughput_min_ratio": 0.6698230734413737,
+    "p50_max_ratio": 1.513285533530156,
+    "p95_max_ratio": 1.3529672276350755,
+    "cpu_geomean_ratio": 1.3883441396582206,
+    "rss_max_ratio": 1.195134575569358,
+    "https_over_https_proxy_1000_response_read_us_per_request": 1214.2326666666668,
+    "proxy_mtls_https_origin_1000_response_read_us_per_request": 1175.744,
+    "verdict": "diagnostic_counterexample_nested_tls_response_read_dominates"
+  },
+  "concurrent_tlsio_diagnostic_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/concurrent-tlsio-diagnostic.json",
+    "result_dir": "docs/benchmarks/results/concurrent-tlsio-diagnostic",
+    "throughput_geomean_ratio": 0.9834875708076662,
+    "throughput_min_ratio": 0.6853441965755698,
+    "p50_max_ratio": 1.4725755166931638,
+    "p95_max_ratio": 1.374663677130045,
+    "cpu_geomean_ratio": 1.4057672414478688,
+    "rss_max_ratio": 1.1773556980759743,
+    "https_over_https_proxy_1000_response_read_us_per_request": 1206.0993333333333,
+    "https_over_https_proxy_1000_response_read_polls_per_request": 2.0,
+    "https_over_https_proxy_1000_response_read_pending_per_request": 1.0,
+    "https_over_https_proxy_1000_tls_ssl_read_calls_per_request": 38.688,
+    "https_over_https_proxy_1000_tls_ssl_read_pending_per_request": 15.521333333333333,
+    "proxy_mtls_https_origin_1000_response_read_us_per_request": 1209.1603333333335,
+    "proxy_mtls_https_origin_1000_response_read_polls_per_request": 2.0,
+    "proxy_mtls_https_origin_1000_response_read_pending_per_request": 1.0,
+    "proxy_mtls_https_origin_1000_tls_ssl_read_calls_per_request": 38.813,
+    "proxy_mtls_https_origin_1000_tls_ssl_read_pending_per_request": 15.57,
+    "http_over_https_proxy_1000_tls_ssl_read_calls_per_request": 15.169666666666666,
+    "http_over_https_proxy_1000_tls_ssl_read_pending_per_request": 7.602666666666667,
+    "verdict": "superseded_tlsio_interpretation_due_to_global_counter_aggregation_bug",
+    "superseded_by": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/dynamic-budget-candidate.json"
+  },
+  "dynamic_budget_candidate_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/dynamic-budget-candidate.json",
+    "result_dir": "docs/benchmarks/results/dynamic-budget-candidate",
+    "corrected_tlsio_result_dir": "docs/benchmarks/results/dynamic-budget-tlsio-candidate",
+    "throughput_geomean_ratio": 0.9883403969375312,
+    "throughput_min_ratio": 0.6572881581262932,
+    "p50_max_ratio": 1.5655905190028607,
+    "p95_max_ratio": 1.3710357063650476,
+    "cpu_geomean_ratio": 1.3758457391072858,
+    "rss_max_ratio": 1.2089475045254718,
+    "corrected_http_over_https_proxy_1000_tls_ssl_read_calls_per_request": 2.0,
+    "corrected_http_over_https_proxy_1000_tls_ssl_read_pending_per_request": 1.0,
+    "corrected_https_over_https_proxy_1000_tls_ssl_read_calls_per_request": 5.0,
+    "corrected_https_over_https_proxy_1000_tls_ssl_read_pending_per_request": 2.0,
+    "corrected_proxy_mtls_https_origin_1000_tls_ssl_read_calls_per_request": 5.0,
+    "corrected_proxy_mtls_https_origin_1000_tls_ssl_read_pending_per_request": 2.0,
+    "verdict": "fairness_correction_retained_but_sota_counterexample"
+  },
+  "server_timing_diagnostic_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/server-timing-diagnostic.json",
+    "result_dir": "docs/benchmarks/results/server-timing-diagnostic",
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9932649581673899,
+      "throughput_min_ratio_ylong_over_libcurl": 0.7283313246293097,
+      "throughput_max_ratio_ylong_over_libcurl": 1.6808586105580468,
+      "p50_max_ratio_ylong_over_libcurl": 1.4122869318181819,
+      "p95_max_ratio_ylong_over_libcurl": 1.2613390928725703,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.3041143353493292,
+      "cpu_max_ratio_ylong_over_libcurl": 1.7661040669947439,
+      "rss_max_ratio_ylong_over_libcurl": 1.2103359173126615,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "server_timing_1000_requests_per_request_us": {
+      "http-over-https-proxy:libcurl": {
+        "proxy_response_send_us_per_request": 31.33533333333333,
+        "proxy_tunnel_send_to_client_us_per_request": 0.0,
+        "proxy_tunnel_send_to_origin_us_per_request": 0.0,
+        "origin_response_send_us_per_request": 0.0,
+        "phase_response_read_us_per_request": 0.0
+      },
+      "http-over-https-proxy:ylong_http_client": {
+        "proxy_response_send_us_per_request": 130.959,
+        "proxy_tunnel_send_to_client_us_per_request": 0.0,
+        "proxy_tunnel_send_to_origin_us_per_request": 0.0,
+        "origin_response_send_us_per_request": 0.0,
+        "phase_response_read_us_per_request": 265.9446666666667
+      },
+      "https-over-https-proxy:libcurl": {
+        "proxy_response_send_us_per_request": 0.0,
+        "proxy_tunnel_send_to_client_us_per_request": 140.80433333333335,
+        "proxy_tunnel_send_to_origin_us_per_request": 144.538,
+        "origin_response_send_us_per_request": 138.77366666666666,
+        "phase_response_read_us_per_request": 0.0
+      },
+      "https-over-https-proxy:ylong_http_client": {
+        "proxy_response_send_us_per_request": 0.0,
+        "proxy_tunnel_send_to_client_us_per_request": 215.40366666666665,
+        "proxy_tunnel_send_to_origin_us_per_request": 233.02066666666667,
+        "origin_response_send_us_per_request": 206.378,
+        "phase_response_read_us_per_request": 1259.0083333333332
+      },
+      "proxy-mtls-https-origin:libcurl": {
+        "proxy_response_send_us_per_request": 0.0,
+        "proxy_tunnel_send_to_client_us_per_request": 135.20366666666666,
+        "proxy_tunnel_send_to_origin_us_per_request": 138.28133333333335,
+        "origin_response_send_us_per_request": 128.02233333333334,
+        "phase_response_read_us_per_request": 0.0
+      },
+      "proxy-mtls-https-origin:ylong_http_client": {
+        "proxy_response_send_us_per_request": 0.0,
+        "proxy_tunnel_send_to_client_us_per_request": 232.48966666666666,
+        "proxy_tunnel_send_to_origin_us_per_request": 238.01333333333335,
+        "origin_response_send_us_per_request": 213.41333333333336,
+        "phase_response_read_us_per_request": 1312.755
+      }
+    },
+    "verdict": "diagnostic_counterexample_client_runtime_wait_path_remaining"
+  },
+  "tokio_dynamic_candidate_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/tokio-dynamic-candidate.json",
+    "result_dir": "docs/benchmarks/results/tokio-dynamic-candidate",
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.1330784654917987,
+      "throughput_min_ratio_ylong_over_libcurl": 0.8090742221009196,
+      "throughput_max_ratio_ylong_over_libcurl": 1.8263773040103848,
+      "p50_max_ratio_ylong_over_libcurl": 1.26994301994302,
+      "p95_max_ratio_ylong_over_libcurl": 1.1417081577939485,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.7791098777418566,
+      "cpu_max_ratio_ylong_over_libcurl": 0.9638943108493684,
+      "rss_max_ratio_ylong_over_libcurl": 1.0729193506828136,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "verdict": "runtime_substrate_candidate_improves_cpu_but_not_sota"
+  },
+  "flush_candidate_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/flush-candidate.json",
+    "result_dir": "docs/benchmarks/results/flush-candidate",
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9720500311903029,
+      "throughput_min_ratio_ylong_over_libcurl": 0.6956540890788073,
+      "throughput_max_ratio_ylong_over_libcurl": 1.4218438401565314,
+      "p50_max_ratio_ylong_over_libcurl": 1.4661383285302594,
+      "p95_max_ratio_ylong_over_libcurl": 1.3401025236593058,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.3303496874429535,
+      "cpu_max_ratio_ylong_over_libcurl": 1.56276339411517,
+      "rss_max_ratio_ylong_over_libcurl": 1.180383022774327,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "verdict": "candidate_rejected_not_retained"
+  },
+  "runtime_workers_candidate_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/runtime-workers-candidate.json",
+    "result_dir": "docs/benchmarks/results/runtime-workers-candidate",
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.0065519096488307,
+      "throughput_min_ratio_ylong_over_libcurl": 0.686407049326516,
+      "throughput_max_ratio_ylong_over_libcurl": 1.526417637874424,
+      "p50_geomean_ratio_ylong_over_libcurl": 0.9570321673760123,
+      "p50_max_ratio_ylong_over_libcurl": 1.48594674556213,
+      "p95_geomean_ratio_ylong_over_libcurl": 1.0749995353453443,
+      "p95_max_ratio_ylong_over_libcurl": 1.3542682926829268,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.2686913679812568,
+      "cpu_max_ratio_ylong_over_libcurl": 1.5426935174945742,
+      "rss_geomean_ratio_ylong_over_libcurl": 1.144900841894378,
+      "rss_max_ratio_ylong_over_libcurl": 1.1646068892979227,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "hashes": {
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_results.csv": "9d3b8068e02e4fe86a6f529cddd4202ef46b6da9cdd3736aa205b81f8c4688fe",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_summary.csv": "4075532c4a267fa0328b4e7f2f30ae5ae3ba1949a2485aa76e5e42eb03173a9d",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_comparison.csv": "c5ba1586550b2f77f60b21a600aa002b43fb2399fcc56b720a8ea9f3bc65d152",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_env.json": "9008f4a4a405dba5b7216e8cd64a7512d73cd843ca05f059d6f4970e8f0a250b",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_raw.txt": "24004ff7685104fb66575fa7d467fb57c1239f766244b286dea0cce0d7b8ecab",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_performance.png": "c2dc79601c676b900f79a20e3eb520ee3e72bc29e4948e4902fd0d5f9cfbb349",
+      "docs/benchmarks/results/runtime-workers-candidate/https_proxy_bench_performance.pdf": "af362c92bfdf39d6145915716ab766e756058fc573f5d5ce1c8b0bc265d81f4e",
+      "/tmp/ylong_http_target_runtime_workers_release/release/https_proxy_bench": "e95212165d9eb168e0a594216c8efe0630bfff986e8425984e4867a21dd4b485"
+    },
+    "verdict": "benchmark_runtime_candidate_rejected_not_retained"
+  },
+    "runtime_workers_one_candidate_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/runtime-workers-one-candidate.json",
+    "result_dir": "docs/benchmarks/results/runtime-workers-one-candidate",
+    "scenario": "https-over-https-proxy",
+    "requests": [
+      200,
+      1000
+    ],
+    "concurrency": 8,
+    "ylong_concurrency_model": "single-client",
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9846802871860821,
+      "throughput_min_ratio_ylong_over_libcurl": 0.8632329245818292,
+      "p50_geomean_ratio_ylong_over_libcurl": 1.0248006563002854,
+      "p50_max_ratio_ylong_over_libcurl": 1.1723566456745111,
+      "p95_geomean_ratio_ylong_over_libcurl": 1.0193507531069061,
+      "p95_max_ratio_ylong_over_libcurl": 1.1107363687464868,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.8410579623575849,
+      "rss_max_ratio_ylong_over_libcurl": 1.0737951807228916,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "hashes": {
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_results.csv": "766d2f82f824aaaa0274ea78d33e9634c60bf3c6f9dbdf844bc5500a22a31347",
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_summary.csv": "a838536510ceb82c084c4610eae51cf638a579c753054d120c19884793228b0b",
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_comparison.csv": "daf39eed18dd731b25a788439015baee87a7d4ebdc1bf1499277bbcfb94687d2",
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_env.json": "082c88761af3ef6922a54853bc3b0c55211de4c8cc314c16703665bd41b44c29",
+      "docs/benchmarks/results/runtime-workers-one-candidate/https_proxy_bench_raw.txt": "637111abc49a8bf0e5f5ea51fe51bb352dbb689d502828d640e886d340198192",
+      "/tmp/ylong_http_target_runtime_workers_one_release/release/https_proxy_bench": "a8505b6904300fcc8319f77766d7283cce5b399663fc5e5af66cdf06f8d08c2f"
+        },
+        "verdict": "focused_runtime_worker_one_candidate_rejected_not_retained"
+    },
+    "single_driver_candidate_dataset": {
+        "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/single-driver-candidate.json",
+        "result_dir": "docs/benchmarks/results/single-driver-candidate",
+        "scenario": "https-over-https-proxy",
+        "requests": [
+            200,
+            1000
+        ],
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-driver",
+        "threshold_eval": {
+            "throughput_geomean_ratio_ylong_over_libcurl": 0.9510120079327155,
+            "throughput_min_ratio_ylong_over_libcurl": 0.8229392522060857,
+            "p50_geomean_ratio_ylong_over_libcurl": 1.02720136244039,
+            "p50_max_ratio_ylong_over_libcurl": 1.2121751512993948,
+            "p95_geomean_ratio_ylong_over_libcurl": 1.0003101719306349,
+            "p95_max_ratio_ylong_over_libcurl": 1.0981690689520842,
+            "cpu_geomean_ratio_ylong_over_libcurl": 0.7092263234552487,
+            "rss_max_ratio_ylong_over_libcurl": 1.0537873180360229,
+            "errors_sum_total": 0,
+            "sota_verified": false
+        },
+        "hashes": {
+            "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_results.csv": "9d86ed809beda5000a2f7c98311da25e5ccb90794a11aee6a0a28f61b5007c72",
+            "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_summary.csv": "a519e054d1398cd2ccba5c1ebf55acfbe62b6c8bf22742717c6320289e29d438",
+            "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_comparison.csv": "6ce189fb4324f25bb0aa2eddf7ffc40621a370f9ac10b2ec63581941e6b52556",
+            "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_env.json": "3f6a5510cf697cecf8f326ff247c53b8e7a2aa8baa7d5832211307cceb719fed",
+            "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_raw.txt": "c12920b33e71680b80bcc67226bd01ba009a8d59d3b319dc9c9ea07e4104b18c",
+            "/tmp/ylong_http_target_single_driver_release/release/https_proxy_bench": "fe3874d3cdd67c4549a70311478e79bb0acb1a0e905f7cf184ee802230aac3e8"
+        },
+        "verdict": "focused_single_driver_candidate_rejected_not_retained"
+    },
+    "strace_diagnostic_dataset": {
+    "evidence_ref": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/strace-diagnostic.json",
+    "result_dir": "docs/benchmarks/results/strace-diagnostic-f",
+    "scenario": "https-over-https-proxy",
+    "requests": 200,
+    "repeats": 1,
+    "concurrency": 8,
+    "ylong_concurrency_model": "single-client",
+    "diagnostic_only": true,
+    "hashes": {
+      "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_results.csv": "3e27276a80f5b699d9729be6b607e1ae6ff7572987828d0a645d4641beaa7710",
+      "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_summary.csv": "884741cd631bb2cb94b1c8f37a7e1e90593af4c47449c4282aa4918ef8ec837a",
+      "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_comparison.csv": "02591d4f152733052d31784cf6453e3508864bca008132924299296db76330ec",
+      "docs/benchmarks/results/strace-diagnostic-f/https_proxy_bench_env.json": "b99c61b2e7720a06ec8f12ed19848a63bf89a8af122322469fb80188ed499724",
+      "/tmp/ylong-strace-ylong_http_client-https___127.0.0.1_42255_bench-2637666.summary": "cbf8a458b8f1307006c52b5983f7bb8291344e68f3aa8d85764017bf61b6a67c",
+      "/tmp/ylong-strace-libcurl-https___127.0.0.1_42255_bench-2637712.summary": "0a9c1f85de5712ec25ab2d0876f4e156643e9b6592e093adfbe0345935118a55"
+    },
+    "syscall_counts": {
+      "ylong_http_client": {
+        "total_calls": 6369,
+        "recvfrom": 966,
+        "sendto": 290,
+        "read": 694,
+        "futex": 489,
+        "clock_nanosleep": 624,
+        "epoll_wait": 338,
+        "sched_yield": 930
+      },
+      "libcurl": {
+        "total_calls": 4786,
+        "recvfrom": 1006,
+        "sendto": 300,
+        "read": 602,
+        "futex": 25,
+        "clock_nanosleep": 38,
+        "epoll_wait": 3,
+        "sched_yield": 60
+      }
+    },
+    "verdict": "diagnostic_counterexample_network_syscall_count_not_root_cause"
+  }
+}

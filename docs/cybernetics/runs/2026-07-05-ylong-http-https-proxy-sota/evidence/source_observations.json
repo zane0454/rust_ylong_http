@@ -1,0 +1,96 @@
+{
+  "artifact_type": "requirements.source_observations",
+  "facts": {
+    "F-repo-current-proxy-shape": {
+      "status": "satisfied",
+      "observations": [
+        "Workspace is a two-crate Cargo workspace with ylong_http and ylong_http_client.",
+        "ylong_http_client contains util::proxy, async_impl/connector, sync_impl/connector, HTTPS proxy benchmark binary, README benchmark claims, and proxy tests.",
+        "Recent git history includes HTTPS proxy support, tunnel validation hardening, and HTTPS proxy hot-path optimization commits."
+      ],
+      "evidence_paths": [
+        "Cargo.toml",
+        "ylong_http_client/src/util/proxy.rs",
+        "ylong_http_client/src/async_impl/connector/mod.rs",
+        "ylong_http_client/src/sync_impl/connector.rs",
+        "ylong_http_client/src/bin/https_proxy_bench.rs",
+        "README.md"
+      ]
+    },
+    "F-connect-parser-200-only": {
+      "status": "satisfied",
+      "observations": [
+        "parse_tunnel_response obtains the three-digit status code and currently matches b\"200\" as the only successful tunnel response.",
+        "Current unit tests cover 200 success, 407 auth failure, 500 failure, malformed status, and incomplete headers, but do not cover 201 or 204 success."
+      ],
+      "evidence_paths": [
+        "ylong_http_client/src/util/proxy.rs"
+      ],
+      "relevant_lines": [
+        "parse_tunnel_response match code arm currently treats b\"200\" as success and b\"407\" as authentication failure."
+      ]
+    },
+    "F-proxy-mtls-evidence-gap": {
+      "status": "satisfied",
+      "observations": [
+        "Proxy::tls_config stores a TlsConfig on proxy endpoint configuration.",
+        "https_proxy_bench reads YLONG_PROXY_CA_FILE, YLONG_PROXY_CERT_FILE, YLONG_PROXY_KEY_FILE, YLONG_PROXY_CIPHER_LIST, and YLONG_PROXY_INSECURE for the proxy TLS hop.",
+        "The inspected proxy tests include a unit test that a TlsConfig can be attached to an HTTPS proxy, but no hard endpoint test proving proxy mTLS positive and negative behavior was found in this pass."
+      ],
+      "evidence_paths": [
+        "ylong_http_client/src/util/config/settings.rs",
+        "ylong_http_client/src/util/proxy.rs",
+        "ylong_http_client/src/bin/https_proxy_bench.rs",
+        "ylong_http_client/tests"
+      ]
+    },
+    "F-benchmark-labeling-gap": {
+      "status": "satisfied",
+      "observations": [
+        "README says the benchmark compares ylong_http_client with curl/libcurl and presents 95%+ local improvements.",
+        "https_proxy_bench invokes a curl executable from YLONG_CURL and writes repeated URL entries to a curl config file, which is curl CLI/process baseline evidence unless a libcurl library harness is separately implemented.",
+        "The Python benchmark driver starts a local HTTPS proxy and uses a local HTTP target URL by default."
+      ],
+      "evidence_paths": [
+        "README.md",
+        "ylong_http_client/src/bin/https_proxy_bench.rs",
+        "docs/benchmarks/run_https_proxy_bench.py"
+      ]
+    },
+    "F-libcurl-library-baseline-gap": {
+      "status": "satisfied",
+      "observations": [
+        "https_proxy_bench reads YLONG_CURL as an executable path and invokes it through std::process::Command.",
+        "The benchmark writes a curl config file with repeated URL entries and measures the spawned curl process elapsed time.",
+        "No same-process libcurl-library benchmark path, libcurl Rust binding, or C libcurl harness is present in the inspected benchmark files."
+      ],
+      "evidence_paths": [
+        "ylong_http_client/src/bin/https_proxy_bench.rs",
+        "docs/benchmarks/run_https_proxy_bench.py",
+        "ylong_http_client/Cargo.toml"
+      ]
+    },
+    "F-causal-performance-evidence-gap": {
+      "status": "satisfied",
+      "observations": [
+        "Current benchmark output parses only total elapsed time for ylong_http_client and curl.",
+        "Current benchmark summaries derive latency/request, throughput, and improvement versus curl, but do not collect p50, p95, CPU/request, RSS, confidence intervals, profiling, tracing, or ablation data.",
+        "Current benchmark source uses the public ylong_http_client async ClientBuilder and request path for ylong traffic, but no evidence artifact yet proves real-client-path coverage or rules out benchmark-only shortcuts after future benchmark changes."
+      ],
+      "evidence_paths": [
+        "ylong_http_client/src/bin/https_proxy_bench.rs",
+        "docs/benchmarks/run_https_proxy_bench.py"
+      ]
+    }
+  },
+  "commands_used": [
+    "rg -n \"https proxy|HTTPS proxy|proxy TLS|mTLS|CONNECT|parse_tunnel_response|Proxy::.*https|tls_config|curl|libcurl|95|Improvement|benchmark\" README.md README_zh.md docs/user_guide.md ylong_http_client/src ylong_http_client/tests -g '*.rs' -g '*.md'",
+    "sed -n '520,630p' ylong_http_client/src/util/proxy.rs",
+    "sed -n '1,220p' ylong_http_client/src/bin/https_proxy_bench.rs",
+    "sed -n '1,220p' docs/benchmarks/run_https_proxy_bench.py",
+    "git status --short --branch && git log --oneline -5 --decorate",
+    "rg -n \"curl|libcurl|YLONG_CURL|Command|benchmark|Bench|Client|request|Proxy|https_proxy\" ylong_http_client/src/bin/https_proxy_bench.rs docs/benchmarks/run_https_proxy_bench.py README.md Cargo.toml ylong_http_client/Cargo.toml",
+    "sed -n '1,260p' ylong_http_client/src/bin/https_proxy_bench.rs",
+    "sed -n '1,280p' docs/benchmarks/run_https_proxy_bench.py"
+  ]
+}

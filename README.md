@@ -87,42 +87,79 @@ async fn request_via_https_proxy() -> Result<(), Box<dyn std::error::Error + Sen
 
 ## Benchmark
 
-The `https_proxy_bench` binary compares `ylong_http_client` with curl/libcurl in
-the same HTTPS proxy topology. The checked-in benchmark driver starts a local TLS
-target and TLS proxy, runs paired ylong/curl batches from a Conda Python
-environment, writes CSV output, and regenerates publication-style PNG/PDF
-figures.
+The `https_proxy_bench` binary measures `ylong_http_client` in a local HTTPS
+proxy topology. It supports two separately named baselines:
+
+- `curl_cli`: a curl executable process baseline, enabled with `YLONG_CURL`.
+- `libcurl`: a same-process libcurl library baseline, enabled with
+  `YLONG_LIBCURL=1` and the Cargo feature `libcurl_bench`.
+
+Do not combine these labels in reports. A curl CLI batch includes process and
+command-line mechanics; a libcurl batch is the required baseline for SOTA
+performance claims.
 
 ```powershell
 cargo build -p ylong_http_client --no-default-features `
-  --features "async,http1_1,ylong_base,c_openssl_3_0" `
+  --features "async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench" `
   --release --bin https_proxy_bench
 
 conda run -n base python docs\benchmarks\run_https_proxy_bench.py `
-  --requests "200,1000,3000" --repeats 5 --warmup 50
+  --baseline libcurl --scenario all --requests "200,1000,3000" --repeats 5 --warmup 50
 ```
 
 ![HTTPS proxy benchmark](docs/figures/https_proxy_bench_performance.png)
 
-Local reproducible setup:
+Checked-in fair-matrix setup:
 
 - response body: 4096 bytes
+- request body: 0 bytes
 - warmup: 50 requests
-- repeats: 5 paired runs per request count
+- repeats: 5 paired runs
+- request counts: 200, 1000, 3000
+- baseline: same-process libcurl
+- scenarios: HTTP over HTTPS proxy, HTTPS origin over HTTPS proxy, proxy mTLS
+  with HTTPS origin
+- proxy TLS: local CA verified
+- origin TLS: local CA verified for HTTPS-origin scenarios
+- connection reuse trace: ylong and libcurl both reuse one proxy connection per
+  repeat; HTTPS-origin scenarios also use one CONNECT tunnel and one origin TLS
+  connection per repeat
 - raw output: `docs/benchmarks/results/https_proxy_bench_results.csv`
 - summary output: `docs/benchmarks/results/https_proxy_bench_summary.csv`
+- ratio output: `docs/benchmarks/results/https_proxy_bench_comparison.csv`
 
-Latest local results:
+Latest checked-in fair-matrix results:
 
-| Requests | ylong latency/request | curl latency/request | Improvement vs curl | ylong throughput | curl throughput |
-| ---: | ---: | ---: | ---: | ---: | ---: |
-| 200 | 0.0750 ms | 1.7625 ms | 95.74% | 13,399 req/s | 569 req/s |
-| 1000 | 0.0932 ms | 1.8933 ms | 95.08% | 11,078 req/s | 529 req/s |
-| 3000 | 0.1191 ms | 2.8613 ms | 95.84% | 8,510 req/s | 350 req/s |
+| Scenario | Requests | ylong latency/request | libcurl latency/request | ylong/libcurl elapsed | ylong/libcurl p50 | ylong/libcurl p95 | Throughput ratio |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| HTTP over HTTPS proxy | 200 | 0.1309 ms | 0.1527 ms | 0.857 | 0.855 | 0.879 | 1.14x |
+| HTTP over HTTPS proxy | 1000 | 0.1028 ms | 0.1191 ms | 0.863 | 0.852 | 0.924 | 1.20x |
+| HTTP over HTTPS proxy | 3000 | 0.0954 ms | 0.1098 ms | 0.869 | 0.868 | 1.045 | 1.12x |
+| HTTPS origin over HTTPS proxy | 200 | 0.2273 ms | 0.2174 ms | 1.045 | 1.035 | 1.022 | 0.86x |
+| HTTPS origin over HTTPS proxy | 1000 | 0.2185 ms | 0.1841 ms | 1.187 | 1.249 | 1.070 | 0.77x |
+| HTTPS origin over HTTPS proxy | 3000 | 0.2103 ms | 0.2170 ms | 0.969 | 0.907 | 1.035 | 1.06x |
+| proxy mTLS with HTTPS origin | 200 | 0.2258 ms | 0.2010 ms | 1.124 | 1.110 | 0.922 | 0.82x |
+| proxy mTLS with HTTPS origin | 1000 | 0.2163 ms | 0.2229 ms | 0.970 | 0.966 | 0.972 | 1.03x |
+| proxy mTLS with HTTPS origin | 3000 | 0.2070 ms | 0.2101 ms | 0.985 | 0.969 | 0.992 | 1.02x |
+
+This fair matrix proves the libcurl baseline path, verified proxy TLS,
+HTTPS-origin tunneling, proxy mTLS, metric columns, scenario-ratio output, and
+connection-reuse trace are executable. It is not a SOTA performance claim:
+after fixing libcurl Easy-handle reuse across warmup and measurement and
+removing a per-request ylong benchmark drain-buffer allocation, the checked-in
+results still fail the hard SOTA thresholds. The all-scenario/all-count
+geometric throughput ratio is about 0.99x, the worst cell is 0.77x, the
+CPU/request geomean is about 0.93x libcurl, and no confidence bound can satisfy
+the predeclared 2.00x geomean or 1.50x per-scenario SOTA requirements.
+
+The same benchmark path can also be built with `tokio_base`; that candidate
+matrix is stored under `docs/benchmarks/results/tokio-full/`. It improves the
+observed throughput geomean to about 1.07x and the worst cell to 0.86x, but it
+still fails the same SOTA thresholds and is tracked as candidate counterexample
+evidence rather than the checked-in canonical table above.
 
 For a contest or production proxy environment, reuse the same release binary and
-replace only the target/proxy variables. This keeps the benchmark harness,
-metrics, and curl baseline consistent with the local reproducibility run.
+replace only the target/proxy variables.
 
 ```powershell
 $env:NO_PROXY = ""
@@ -131,7 +168,7 @@ $env:YLONG_BENCH_URL = "https://target.example.com/path"
 $env:YLONG_HTTPS_PROXY = "https://proxy.example.com:8443"
 $env:YLONG_BENCH_REQUESTS = "1000"
 $env:YLONG_BENCH_WARMUP = "50"
-$env:YLONG_CURL = "D:\msys64\mingw64\bin\curl.exe"
+$env:YLONG_LIBCURL = "1"
 
 # Optional proxy TLS verification and mutual TLS:
 $env:YLONG_PROXY_CA_FILE = "D:\certs\proxy-ca.pem"
@@ -152,13 +189,20 @@ across the OpenSSL, non-TLS, sync, and async code paths.
 
 ```powershell
 cargo test -p ylong_http_client --no-default-features `
-  --features "async,http1_1,ylong_base,c_openssl_3_0" proxy -- --test-threads=1
+  --features "async,http1_1,tokio_base,c_openssl_3_0" `
+  --test sdv_async_https_proxy_tls -- --test-threads=1
 
 cargo test -p ylong_http_client --no-default-features `
-  --features "async,http1_1,ylong_base,c_openssl_3_0" tunnel -- --test-threads=1
+  --features "sync,async,http1_1,tokio_base,c_openssl_3_0" `
+  --test sdv_sync_https_proxy_tls -- --test-threads=1
 
 cargo test -p ylong_http_client --no-default-features `
-  --features "async,http1_1,ylong_base" proxy -- --test-threads=1
+  --features "sync,async,http1_1,tokio_base" `
+  --test sdv_https_proxy_no_tls -- --test-threads=1
+
+cargo test -p ylong_http_client --no-default-features `
+  --features "async,http1_1,tokio_base" `
+  ut_tunnel_request_and_response
 ```
 
 ## Build

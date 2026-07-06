@@ -1,0 +1,152 @@
+{
+  "evidence_id": "evidence.response-preread-diagnostic",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "diagnostic_counterexample_to_preread_as_sota_scale_root_cause",
+  "verified_at": "2026-07-06T07:23:26+08:00",
+  "summary": "Response-head pre-read diagnostics show ylong_http_client reads the full 4096-byte response body during response-head decoding in every measured request. This confirms full-body pre-read is real, but the same run shows body_drain is already about 1us/request and the diagnostic still fails SOTA only in HTTP-over-HTTPS-proxy while HTTPS-origin scenarios are near parity or faster, so full pre-read storage/copy is not sufficient as a SOTA-scale root cause.",
+  "red_green_tests": [
+    {
+      "test": "docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_phase_output_is_parsed_and_summarized",
+      "red_command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_phase_output_is_parsed_and_summarized",
+      "red_result": "failed before implementation because PHASE_RE did not parse response_pre_read_bytes/events and phase fields stayed at 0",
+      "green_result": "passed after parser, BenchResult, write_results, and summarize_results were updated"
+    },
+    {
+      "test": "util::monitor::time_group::tests::ut_response_pre_read_bytes_accumulate",
+      "red_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_preread_red cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_response_pre_read_bytes_accumulate",
+      "red_result": "failed before implementation with missing add_response_pre_read/response_pre_read_* methods",
+      "green_result": "passed after TimeGroup added libcurl_bench-only pre-read counters"
+    }
+  ],
+  "source_changes": [
+    {
+      "file": "ylong_http_client/src/util/monitor/time_group.rs",
+      "summary": "Adds libcurl_bench-only response_pre_read_bytes and response_pre_read_events counters with accumulation and getters."
+    },
+    {
+      "file": "ylong_http_client/src/async_impl/conn/http1.rs",
+      "summary": "Records rem.len() when HTTP/1 response-head decode succeeds while phase timing is enabled."
+    },
+    {
+      "file": "ylong_http_client/src/bin/https_proxy_bench.rs",
+      "summary": "Aggregates and prints response pre-read byte/event counters in _phase_us output."
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Parses, writes, and summarizes response_pre_read_bytes/events phase fields."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds regression coverage for response pre-read phase parsing and summary columns."
+    }
+  ],
+  "build_and_test_commands": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all",
+      "result": "passed with existing stable rustfmt warnings about ignored nightly-only rustfmt options"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "result": "passed 17 tests"
+    },
+    {
+      "command": "python3 -m py_compile docs/benchmarks/run_https_proxy_bench.py docs/benchmarks/test_run_https_proxy_bench.py",
+      "result": "passed"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_preread_diag_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "result": "passed with existing warnings"
+    }
+  ],
+  "diagnostic_dataset": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200 --repeats 3 --warmup 50 --concurrency 1 --phase-timing --bench-bin /tmp/ylong_http_target_preread_diag_release/release/https_proxy_bench --result-dir docs/benchmarks/results/response-preread-diagnostic --figure-dir docs/benchmarks/results/response-preread-diagnostic",
+    "result_files": [
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_raw.txt"
+    ],
+    "hashes": {
+      "/tmp/ylong_http_target_preread_diag_release/release/https_proxy_bench": "652e2476c097e5489ff6547395f2a5acedd7e7e445e639ed11cca357eff6d06f",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_results.csv": "21522813102fdb3f78655f8bbdfe06f2e2200840a1a56c0f825ecf343fb2c72b",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_summary.csv": "cc955e49d136e286069ab6a029ccb86d2bef03742ae065d2a6a12e8829139047",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_comparison.csv": "ffc05d9a0c07d7c252eb9a91caeabb5776a7339742abe6ecacbebce720b81a18",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_env.json": "be5058a62f2506bc994842a097304d735b9584bb700dcf02aa11b41eee803c1a",
+      "docs/benchmarks/results/response-preread-diagnostic/https_proxy_bench_raw.txt": "ef957c2b2a3f536a71a1acb9af44c8d0ac721bfbee44442961a9d947052106a1"
+    },
+    "phase_timing": true,
+    "concurrency": 1,
+    "requests": [
+      200
+    ],
+    "repeats": 3,
+    "warmup": 50,
+    "response_body_bytes": 4096,
+    "scenario_summary": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "pre_read_bytes_per_request_mean": 4096.0,
+        "pre_read_events_per_request_mean": 1.0,
+        "body_bytes_per_request_mean": 4096.0,
+        "body_chunks_per_request_mean": 1.0,
+        "response_head_us_per_request_mean": 73.99166666666667,
+        "response_read_us_per_request_mean": 70.52666666666667,
+        "body_drain_us_per_request_mean": 0.9116666666666666
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "pre_read_bytes_per_request_mean": 4096.0,
+        "pre_read_events_per_request_mean": 1.0,
+        "body_bytes_per_request_mean": 4096.0,
+        "body_chunks_per_request_mean": 1.0,
+        "response_head_us_per_request_mean": 173.24666666666667,
+        "response_read_us_per_request_mean": 169.56833333333333,
+        "body_drain_us_per_request_mean": 0.945
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "pre_read_bytes_per_request_mean": 4096.0,
+        "pre_read_events_per_request_mean": 1.0,
+        "body_bytes_per_request_mean": 4096.0,
+        "body_chunks_per_request_mean": 1.0,
+        "response_head_us_per_request_mean": 171.4033333333333,
+        "response_read_us_per_request_mean": 167.70833333333331,
+        "body_drain_us_per_request_mean": 1.008333333333333
+      }
+    ],
+    "threshold_eval": {
+      "throughput_geomean_ratio": 0.90876154218275,
+      "throughput_min_ratio": 0.7408213136353603,
+      "throughput_max_ratio": 1.0321449641197646,
+      "elapsed_ms_geomean_ratio": 1.0647370515934744,
+      "p50_max_ratio": 1.136518771331058,
+      "p95_max_ratio": 1.1666666666666663,
+      "cpu_geomean_ratio": 1.0311044519249286,
+      "cpu_max_ratio": 1.1875989034256802,
+      "rss_max_ratio": 1.0691994572591588,
+      "errors_sum_total": 0
+    }
+  },
+  "interpretation": {
+    "confirmed": [
+      "HTTP/1 response-head read pre-reads the entire 4096-byte response body in every measured ylong request.",
+      "ylong body drain sees one 4096-byte chunk/request because the body is already in PreRead.",
+      "The diagnostic has zero client errors and preserves local HTTPS proxy/origin fixture semantics."
+    ],
+    "refuted_or_limited": [
+      "Full-body pre-read storage/copy alone is not sufficient to explain the remaining SOTA gap: body_drain is about 0.9-1.0us/request, and HTTPS-over-HTTPS-proxy/proxy-mTLS scenarios are near parity or faster in this single-concurrency diagnostic.",
+      "This does not replace the fair concurrency=8 SOTA matrix because phase timing is restricted to concurrency=1 by the benchmark binary."
+    ],
+    "next_hypothesis": "If S9 continues, the next candidate should target the lower-level response-read wait/TLS BIO/runtime interaction or a protocol-level flagship scenario rather than PreRead storage alone."
+  },
+  "verdict": {
+    "sota_verified": false,
+    "reason": "The diagnostic is causal narrowing evidence, not a SOTA completion run. It confirms full response pre-read but does not produce or justify a SOTA-satisfying implementation; S9 remains active and S10 must not run as a completion gate."
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "artifact_type": "run.control",
+  "schema_version": "1.0.0",
+  "status": "active",
+  "run_id": "2026-07-05-ylong-http-https-proxy-sota",
+  "control_level": 4,
+  "target_model": {
+    "result_orientation": [
+      "state_change",
+      "knowledge_production",
+      "judgment"
+    ],
+    "result_content": "partially_specified",
+    "path": "partially_known",
+    "result_placement": "multi_place",
+    "impact_scope": "persistent_internal"
+  },
+  "strategy_policy": "reviewed_replanning",
+  "gate_mode": "human_gate",
+  "phase_structure": "adaptive_loop",
+  "current_generation": "gen-000",
+  "max_auto_amendment_rounds": 4,
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+  },
+  "amendment_policy": {
+    "may_change": [
+      "work package ordering",
+      "exact local test commands",
+      "benchmark harness implementation details",
+      "report wording needed to match produced evidence"
+    ],
+    "must_not_change_without_human": [
+      "semantic base",
+      "SOTA fixed target",
+      "required outcomes",
+      "numeric hard-threshold policy",
+      "no intermediate terminal status policy",
+      "authority for live external resources"
+    ]
+  },
+  "generations": [
+    {
+      "id": "gen-000",
+      "strategy_kind": "execution",
+      "status": "active",
+      "runtime": "gen-000/runtime.control.json",
+      "review": "review.control.json",
+      "writable_evidence_paths": [
+        "evidence/",
+        "ylong_http_client/",
+        "benches/",
+        "README.md",
+        "docs/"
+      ],
+      "verifier": {
+        "required_before_goal_achieved": true,
+        "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py",
+        "required_outcomes": [
+          "O-current-audit",
+          "O-protocol-correctness",
+          "O-proxy-tls-mtls",
+          "O-sync-async-proxy-semantics",
+          "O-test-matrix",
+          "O-benchmark-fairness",
+          "O-report-evidence-chain",
+          "O-sota-threshold-matrix",
+          "O-causal-performance-evidence",
+          "O-final-counterexample-gate"
+        ],
+        "output_schema": "final-report.schema.json"
+      },
+      "imported_evidence": [
+        "evidence/sota_no_terminal_counterexample.json",
+        "evidence/information_sufficiency_counterexample_no_terminal_rerun.json"
+      ],
+      "invalidated_evidence": [],
+      "required_steps": [
+        {
+          "step_id": "S1-current-audit",
+          "transition": "Current HTTPS proxy implementation is audited before patches are applied.",
+          "evidence": [
+            "evidence.current-audit"
+          ],
+          "satisfies_outcomes": [
+            "O-current-audit"
+          ]
+        },
+        {
+          "step_id": "S2-protocol-correctness",
+          "transition": "HTTPS proxy CONNECT handling follows required protocol semantics and fails closed on invalid responses.",
+          "evidence": [
+            "evidence.connect-2xx-tests"
+          ],
+          "satisfies_outcomes": [
+            "O-protocol-correctness"
+          ]
+        },
+        {
+          "step_id": "S3-proxy-tls-mtls",
+          "transition": "Proxy TLS and proxy mutual TLS are verified end to end and kept distinct from origin TLS.",
+          "evidence": [
+            "evidence.proxy-tls-mtls-tests"
+          ],
+          "satisfies_outcomes": [
+            "O-proxy-tls-mtls"
+          ]
+        },
+        {
+          "step_id": "S4-sync-async-proxy-semantics",
+          "transition": "Sync and async proxy semantics are verified and accurately represented.",
+          "evidence": [
+            "evidence.sync-async-proxy-tests"
+          ],
+          "satisfies_outcomes": [
+            "O-sync-async-proxy-semantics"
+          ]
+        },
+        {
+          "step_id": "S5-test-matrix",
+          "transition": "A contest-critical HTTPS proxy test matrix is implemented and run.",
+          "evidence": [
+            "evidence.test-matrix-run"
+          ],
+          "satisfies_outcomes": [
+            "O-test-matrix"
+          ]
+        },
+        {
+          "step_id": "S6-benchmark-fairness",
+          "transition": "Benchmark methodology and claims are fair, reproducible, and correctly labeled.",
+          "evidence": [
+            "evidence.benchmark-fairness"
+          ],
+          "satisfies_outcomes": [
+            "O-benchmark-fairness"
+          ]
+        },
+        {
+          "step_id": "S7-report-evidence-chain",
+          "transition": "README/report narrative is revised to match verified implementation and benchmark evidence.",
+          "evidence": [
+            "evidence.report-diff"
+          ],
+          "satisfies_outcomes": [
+            "O-report-evidence-chain"
+          ]
+        },
+        {
+          "step_id": "S8-sota-threshold-matrix",
+          "transition": "SOTA performance status is evaluated against the predeclared numeric hard-threshold matrix.",
+          "evidence": [
+            "evidence.sota-threshold-matrix"
+          ],
+          "satisfies_outcomes": [
+            "O-sota-threshold-matrix"
+          ]
+        },
+        {
+          "step_id": "S9-causal-performance-evidence",
+          "transition": "SOTA performance advantage is causally tied to the real ylong_http_client HTTPS proxy implementation and not to benchmark-only shortcuts or mismatched baseline mechanics.",
+          "evidence": [
+            "evidence.real-client-path",
+            "evidence.performance-causality"
+          ],
+          "satisfies_outcomes": [
+            "O-causal-performance-evidence"
+          ]
+        },
+        {
+          "step_id": "S10-final-counterexample-gate",
+          "transition": "Final SOTA completion claim survives counterexample review.",
+          "evidence": [
+            "evidence.final-counterexample-review"
+          ],
+          "satisfies_outcomes": [
+            "O-final-counterexample-gate"
+          ]
+        }
+      ]
+    }
+  ]
+}

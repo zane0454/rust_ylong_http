@@ -43,9 +43,50 @@ pub struct TimeGroup {
     // received first byte from peer.
     transfer_end: Option<Instant>,
     transfer_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    request_format_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    pool_checkout_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    send_on_conn_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    http1_write_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    http1_encode_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    http1_write_io_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    response_head_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    response_read_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    response_read_poll_count: u64,
+    #[cfg(feature = "libcurl_bench")]
+    response_read_pending_count: u64,
+    #[cfg(feature = "libcurl_bench")]
+    response_pre_read_bytes: u64,
+    #[cfg(feature = "libcurl_bench")]
+    response_pre_read_events: u64,
+    #[cfg(feature = "libcurl_bench")]
+    response_intercept_duration: Option<Duration>,
+    #[cfg(feature = "libcurl_bench")]
+    response_decode_duration: Option<Duration>,
 }
 
 impl TimeGroup {
+    #[cfg(feature = "libcurl_bench")]
+    pub(crate) fn bench_phase_enabled() -> bool {
+        use std::sync::OnceLock;
+
+        static ENABLED: OnceLock<bool> = OnceLock::new();
+        *ENABLED.get_or_init(|| std::env::var("YLONG_BENCH_PHASES").ok().as_deref() == Some("1"))
+    }
+
+    #[cfg(not(feature = "libcurl_bench"))]
+    pub(crate) fn bench_phase_enabled() -> bool {
+        false
+    }
+
     pub(crate) fn set_dns_start(&mut self, start: Instant) {
         self.dns_start = Some(start)
     }
@@ -114,6 +155,122 @@ impl TimeGroup {
             self.conn_duration = end.checked_duration_since(start)
         }
         self.conn_end = Some(end)
+    }
+
+    pub(crate) fn add_request_format_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.request_format_duration = add_duration(self.request_format_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_pool_checkout_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.pool_checkout_duration = add_duration(self.pool_checkout_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_send_on_conn_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.send_on_conn_duration = add_duration(self.send_on_conn_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_http1_write_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.http1_write_duration = add_duration(self.http1_write_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_http1_encode_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.http1_encode_duration = add_duration(self.http1_encode_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_http1_write_io_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.http1_write_io_duration = add_duration(self.http1_write_io_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_response_head_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.response_head_duration = add_duration(self.response_head_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_response_read_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.response_read_duration = add_duration(self.response_read_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_response_read_poll_counts(&mut self, polls: u64, pending: u64) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = (polls, pending);
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.response_read_poll_count = self.response_read_poll_count.saturating_add(polls);
+            self.response_read_pending_count =
+                self.response_read_pending_count.saturating_add(pending);
+        }
+    }
+
+    pub(crate) fn add_response_pre_read(&mut self, bytes: usize) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = bytes;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            if bytes == 0 {
+                return;
+            }
+            self.response_pre_read_bytes =
+                self.response_pre_read_bytes.saturating_add(bytes as u64);
+            self.response_pre_read_events = self.response_pre_read_events.saturating_add(1);
+        }
+    }
+
+    pub(crate) fn add_response_intercept_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.response_intercept_duration =
+                add_duration(self.response_intercept_duration, duration);
+        }
+    }
+
+    pub(crate) fn add_response_decode_duration(&mut self, duration: Duration) {
+        #[cfg(not(feature = "libcurl_bench"))]
+        let _ = duration;
+        #[cfg(feature = "libcurl_bench")]
+        {
+            self.response_decode_duration = add_duration(self.response_decode_duration, duration);
+        }
     }
 
     #[cfg(feature = "http3")]
@@ -313,5 +470,192 @@ impl TimeGroup {
     /// Gets the time it took to establish the requested connection.
     pub fn connect_duration(&self) -> Option<Duration> {
         self.conn_duration
+    }
+
+    pub fn request_format_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.request_format_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn pool_checkout_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.pool_checkout_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn send_on_conn_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.send_on_conn_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn http1_write_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.http1_write_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn http1_encode_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.http1_encode_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn http1_write_io_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.http1_write_io_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn response_head_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.response_head_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn response_read_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.response_read_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn response_read_poll_count(&self) -> u64 {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.response_read_poll_count;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            0
+        }
+    }
+
+    pub fn response_read_pending_count(&self) -> u64 {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.response_read_pending_count;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            0
+        }
+    }
+
+    pub fn response_pre_read_bytes(&self) -> u64 {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.response_pre_read_bytes;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            0
+        }
+    }
+
+    pub fn response_pre_read_events(&self) -> u64 {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.response_pre_read_events;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            0
+        }
+    }
+
+    pub fn response_intercept_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.response_intercept_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+
+    pub fn response_decode_duration(&self) -> Option<Duration> {
+        #[cfg(feature = "libcurl_bench")]
+        {
+            return self.response_decode_duration;
+        }
+        #[cfg(not(feature = "libcurl_bench"))]
+        {
+            None
+        }
+    }
+}
+
+#[cfg(feature = "libcurl_bench")]
+fn add_duration(current: Option<Duration>, duration: Duration) -> Option<Duration> {
+    Some(current.unwrap_or(Duration::ZERO).saturating_add(duration))
+}
+
+#[cfg(all(test, feature = "libcurl_bench"))]
+mod tests {
+    use super::TimeGroup;
+
+    #[test]
+    fn ut_response_read_poll_counts_accumulate() {
+        let mut group = TimeGroup::default();
+
+        group.add_response_read_poll_counts(2, 1);
+        group.add_response_read_poll_counts(3, 2);
+
+        assert_eq!(group.response_read_poll_count(), 5);
+        assert_eq!(group.response_read_pending_count(), 3);
+    }
+
+    #[test]
+    fn ut_response_pre_read_bytes_accumulate() {
+        let mut group = TimeGroup::default();
+
+        group.add_response_pre_read(0);
+        group.add_response_pre_read(17);
+        group.add_response_pre_read(23);
+
+        assert_eq!(group.response_pre_read_bytes(), 40);
+        assert_eq!(group.response_pre_read_events(), 2);
     }
 }

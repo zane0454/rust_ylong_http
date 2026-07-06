@@ -17,4 +17,4 @@
 
 mod encoder;
 
-pub use encoder::RequestEncoder;
+pub use encoder::{RequestEncoder, RequestRefEncoder};

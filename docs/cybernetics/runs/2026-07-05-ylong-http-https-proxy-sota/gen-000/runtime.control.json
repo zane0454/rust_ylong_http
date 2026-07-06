@@ -1,0 +1,196 @@
+{
+  "artifact_type": "runtime.control",
+  "schema_version": "1.0.0",
+  "status": "compiled",
+  "generation": {
+    "id": "gen-000"
+  },
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+  },
+  "approved_control": {
+    "objective": "Perform implementation-level SOTA convergence for the HTTPS proxy contest task: audit the existing implementation, repair protocol and safety issues, add hard tests, fair benchmark evidence, and report revisions.",
+    "what_counts_as_done": "All required outcomes and result paths have direct evidence, every numeric SOTA hard threshold passes under fair libcurl-library benchmark conditions, causal real-client-path performance evidence exists, report claims match evidence, final independent counterexample review passes, and the verifier permits goal_achieved true."
+  },
+  "approved_control_hashes": {
+    "requirements.control.json": "sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc",
+    "run.control.json": "sha256:0416ee4a2f69c343ab244f8a8723e1b76e7e75e7428bbea7248f06837e183bce",
+    "review.control.json": "sha256:41e1842dff4b335a46b50a86efc5dcc9837c05805bbe00e4ea1989cec99094ef",
+    "gen-000/runtime.control.json": "sha256:de27499d29081e616c88d4df369ea30191b8eaf444b0dde24c92b60673d49048"
+  },
+  "control_chain": {
+    "requirements": "requirements.control.json",
+    "design": "design.control.json",
+    "goal": "goal.control.json",
+    "plan": "plan.control.json",
+    "review": "review.control.json"
+  },
+  "registry_bindings": {
+    "selected_agent_workflow": "superpowers-dispatching-parallel-agents"
+  },
+  "runtime": {
+    "readonly_files": [
+      "requirements.control.json",
+      "run.control.json",
+      "review.control.json",
+      "gen-000/runtime.control.json"
+    ],
+    "writable_files": [
+      "progress.jsonl",
+      "runtime-status.json",
+      "final-report.json"
+    ],
+    "writable_evidence_paths": [
+      "evidence/",
+      "ylong_http_client/",
+      "benches/",
+      "README.md",
+      "docs/"
+    ]
+  },
+  "required_steps": [
+    {
+      "step_id": "S1-current-audit",
+      "transition": "Current HTTPS proxy implementation is audited before patches are applied.",
+      "evidence": [
+        "evidence.current-audit"
+      ],
+      "satisfies_outcomes": [
+        "O-current-audit"
+      ]
+    },
+    {
+      "step_id": "S2-protocol-correctness",
+      "transition": "HTTPS proxy CONNECT handling follows required protocol semantics and fails closed on invalid responses.",
+      "evidence": [
+        "evidence.connect-2xx-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-protocol-correctness"
+      ]
+    },
+    {
+      "step_id": "S3-proxy-tls-mtls",
+      "transition": "Proxy TLS and proxy mutual TLS are verified end to end and kept distinct from origin TLS.",
+      "evidence": [
+        "evidence.proxy-tls-mtls-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-proxy-tls-mtls"
+      ]
+    },
+    {
+      "step_id": "S4-sync-async-proxy-semantics",
+      "transition": "Sync and async proxy semantics are verified and accurately represented.",
+      "evidence": [
+        "evidence.sync-async-proxy-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-sync-async-proxy-semantics"
+      ]
+    },
+    {
+      "step_id": "S5-test-matrix",
+      "transition": "A contest-critical HTTPS proxy test matrix is implemented and run.",
+      "evidence": [
+        "evidence.test-matrix-run"
+      ],
+      "satisfies_outcomes": [
+        "O-test-matrix"
+      ]
+    },
+    {
+      "step_id": "S6-benchmark-fairness",
+      "transition": "Benchmark methodology and claims are fair, reproducible, and correctly labeled.",
+      "evidence": [
+        "evidence.benchmark-fairness"
+      ],
+      "satisfies_outcomes": [
+        "O-benchmark-fairness"
+      ]
+    },
+    {
+      "step_id": "S7-report-evidence-chain",
+      "transition": "README/report narrative is revised to match verified implementation and benchmark evidence.",
+      "evidence": [
+        "evidence.report-diff"
+      ],
+      "satisfies_outcomes": [
+        "O-report-evidence-chain"
+      ]
+    },
+    {
+      "step_id": "S8-sota-threshold-matrix",
+      "transition": "SOTA performance status is evaluated against the predeclared numeric hard-threshold matrix.",
+      "evidence": [
+        "evidence.sota-threshold-matrix"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ]
+    },
+    {
+      "step_id": "S9-causal-performance-evidence",
+      "transition": "SOTA performance advantage is causally tied to the real ylong_http_client HTTPS proxy implementation and not to benchmark-only shortcuts or mismatched baseline mechanics.",
+      "evidence": [
+        "evidence.real-client-path",
+        "evidence.performance-causality"
+      ],
+      "satisfies_outcomes": [
+        "O-causal-performance-evidence"
+      ]
+    },
+    {
+      "step_id": "S10-final-counterexample-gate",
+      "transition": "Final SOTA completion claim survives counterexample review.",
+      "evidence": [
+        "evidence.final-counterexample-review"
+      ],
+      "satisfies_outcomes": [
+        "O-final-counterexample-gate"
+      ]
+    }
+  ],
+  "progress": {
+    "event_schema": "progress-event.schema.json",
+    "append_only": true
+  },
+  "verifier": {
+    "required_before_goal_achieved": true,
+    "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py",
+    "required_outcomes": [
+      "O-current-audit",
+      "O-protocol-correctness",
+      "O-proxy-tls-mtls",
+      "O-sync-async-proxy-semantics",
+      "O-test-matrix",
+      "O-benchmark-fairness",
+      "O-report-evidence-chain",
+      "O-sota-threshold-matrix",
+      "O-causal-performance-evidence",
+      "O-final-counterexample-gate"
+    ],
+    "output_schema": "final-report.schema.json"
+  },
+  "imported_evidence": [
+    "evidence/sota_no_terminal_counterexample.json",
+    "evidence/information_sufficiency_counterexample_no_terminal_rerun.json"
+  ],
+  "invalidated_evidence": [],
+  "control_level": 4,
+  "target_model": {
+    "result_orientation": [
+      "state_change",
+      "knowledge_production",
+      "judgment"
+    ],
+    "result_content": "partially_specified",
+    "path": "partially_known",
+    "result_placement": "multi_place",
+    "impact_scope": "persistent_internal"
+  },
+  "strategy_policy": "reviewed_replanning",
+  "gate_mode": "human_gate",
+  "phase_structure": "adaptive_loop"
+}

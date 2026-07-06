@@ -1,0 +1,111 @@
+{
+  "evidence_id": "evidence.ylong-client-production-lever-hard-negative",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "hard_negative_for_remaining_ylong_http_client_internal_lever",
+  "reviewed_at": "2026-07-06T10:03:35+08:00",
+  "reviewers": [
+    "main-agent-local-source-review",
+    "subagent:019f3527-6bb2-7a83-8342-305ef38b61f6"
+  ],
+  "scope": {
+    "included": [
+      "ylong_http_client async HTTP/1 response-head read loop",
+      "MixStream and ProxyStream nested TLS layering",
+      "AsyncSslStream and OpenSSL wrapper read path",
+      "SpeedController receive path",
+      "HTTP/1 pool checkout and dispatcher occupancy",
+      "request build/format and response body drain path"
+    ],
+    "excluded": [
+      "benchmark-only runtime tuning as SOTA evidence",
+      "modifying ylong_runtime dependency internals outside the allowed ylong_http_client source scope",
+      "changing HTTP proxy or TLS protocol semantics",
+      "claiming S9/S10 completion"
+    ]
+  },
+  "verdict": {
+    "classification": "no_remaining_production_grade_client_internal_candidate",
+    "summary": "No production-grade change inside ylong_http_client was found that plausibly reduces the failing nested HTTPS-over-HTTPS-proxy response_read latency by >=30% without changing protocol semantics. The remaining high-leverage causal pointer is ylong_runtime readiness/parking behavior around nested TLS I/O, not request formatting, pool dispatch, response-head parsing, stream enum layering, or OpenSSL wrapper call count.",
+    "not_a_completion_claim": true,
+    "s9_status_after_review": "active"
+  },
+  "supporting_evidence": [
+    {
+      "claim": "HTTP/1 response-head loop is already one poll_fn around one raw poll_read attempt per poll; measured response-read churn is not high.",
+      "code_refs": [
+        "ylong_http_client/src/async_impl/conn/http1.rs: response-head loop",
+        "ylong_http_client/src/async_impl/conn/http1.rs: read_status_line"
+      ],
+      "evidence_refs": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/performance-causality.json",
+        "docs/benchmarks/results/concurrent-phase-diagnostic/https_proxy_bench_summary.csv"
+      ],
+      "observed": "Nested HTTPS-origin proxy cells show about 2 response_read polls and 1 pending per request while response_read remains about 1.0-1.3ms/request."
+    },
+    {
+      "claim": "Nested stream layering is not an untested high-leverage candidate.",
+      "code_refs": [
+        "ylong_http_client/src/async_impl/connector/mod.rs: HTTPS-over-HTTPS-proxy creates AsyncSslStream<ProxyStream>",
+        "ylong_http_client/src/async_impl/mix.rs: ProxyStream and MixStream read/write delegation"
+      ],
+      "evidence_refs": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/nested-tls-variant-candidate.json"
+      ],
+      "observed": "The dedicated nested TLS stream variant was already tested and rejected."
+    },
+    {
+      "claim": "TLS wrapper call amplification is not the measured root cause.",
+      "code_refs": [
+        "ylong_http_client/src/async_impl/ssl_stream/c_ssl_stream.rs: AsyncSslStream::poll_read",
+        "ylong_http_client/src/async_impl/ssl_stream/wrapper.rs: Wrapper::read"
+      ],
+      "evidence_refs": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/progress-retry-candidate.json",
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/performance-causality.json"
+      ],
+      "observed": "Corrected diagnostics show nested HTTPS-origin cells around 5 SSL_read calls and 2 SSL-read pendings per request; the progress-aware retry candidate saw zero pending-after-progress events and was rejected."
+    },
+    {
+      "claim": "Pool, request build/format, and body drain are too small to explain a SOTA-scale change.",
+      "code_refs": [
+        "ylong_http_client/src/async_impl/pool.rs: Conns::conn_h1 and exist_h1_conn",
+        "ylong_http_client/src/async_impl/client.rs: RequestFormatter and pool checkout timing",
+        "ylong_http_client/src/async_impl/http_body.rs: body drain support"
+      ],
+      "evidence_refs": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/h1-semaphore-fastpath-review.json",
+        "docs/benchmarks/results/concurrent-phase-diagnostic/https_proxy_bench_summary.csv"
+      ],
+      "observed": "H1 pool checkout is about 3us/request, request build/format are microsecond scale, and body_drain is about 1.5us/request in the failing concurrency diagnostic, versus response_read about 1.0-1.3ms/request."
+    },
+    {
+      "claim": "Server/proxy send and relay timings are insufficient root cause.",
+      "code_refs": [
+        "docs/benchmarks/run_https_proxy_bench.py: server-side send/relay timing diagnostic"
+      ],
+      "evidence_refs": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/server-timing-diagnostic.json"
+      ],
+      "observed": "Extra server-side send/relay work is tens to low hundreds of microseconds per request, while ylong response_read is about 1.26-1.31ms/request in failing nested cells."
+    },
+    {
+      "claim": "The strongest remaining causal pointer is runtime readiness/parking, outside ylong_http_client internals.",
+      "code_refs": [
+        "ylong_runtime/src/net/async_source.rs: AsyncSource::poll_io readiness loop",
+        "ylong_runtime/src/net/schedule_io.rs: ScheduleIO::poll_readiness",
+        "ylong_runtime/src/executor/parker.rs: Parker::park"
+      ],
+      "evidence_refs": [
+        "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/evidence/strace-diagnostic.json"
+      ],
+      "observed": "strace diagnostic shows comparable recvfrom/sendto counts versus libcurl but much higher futex, clock_nanosleep, epoll_wait, and sched_yield activity for ylong."
+    }
+  ],
+  "decision": {
+    "enter_implementation": false,
+    "reason": "A new ylong_http_client production patch would not be evidence-led under the fixed SOTA target. Remaining investigation must either produce reviewed permission to work below ylong_http_client in runtime/readiness behavior, or produce a new predeclared S9 hypothesis with evidence that contradicts this hard-negative review.",
+    "next_action": "Record this as S9 causal narrowing evidence, keep S9 active, and do not run S10 or final goal_achieved gate."
+  }
+}

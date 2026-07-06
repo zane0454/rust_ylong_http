@@ -1,0 +1,130 @@
+{
+  "evidence_id": "evidence.tls-fingerprint-diagnostic",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "created_at": "2026-07-06T07:04:35+08:00",
+  "status": "diagnostic_counterexample",
+  "hypothesis": "The remaining HTTPS-origin-over-HTTPS-proxy regression might be caused by ylong_http_client and libcurl negotiating different TLS versions or cipher suites on the proxy TLS leg or origin TLS leg.",
+  "source_changes": [
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Records server-observed TLS fingerprints from LocalHttpsProxy and LocalOriginServer after successful handshakes, propagates them through trace output, result CSVs, and summary CSVs, and preserves repeated same-fingerprint counts across before/after trace deltas."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds regression tests for TLS fingerprint trace parsing, attachment, summary aggregation, and repeated-fingerprint delta counting."
+    }
+  ],
+  "tdd": {
+    "red": [
+      {
+        "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_trace_output_records_tls_fingerprints",
+        "observed": "failed before implementation because parse_trace_output returned zero rows for trace lines containing tls_fingerprints"
+      },
+      {
+        "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_trace_delta_preserves_repeated_tls_fingerprint_counts",
+        "observed": "failed before implementation because TraceResult had no proxy_tls_fingerprints/origin_tls_fingerprints fields"
+      }
+    ],
+    "green": [
+      {
+        "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_trace_output_records_tls_fingerprints",
+        "observed": "passed"
+      },
+      {
+        "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_trace_delta_preserves_repeated_tls_fingerprint_counts",
+        "observed": "passed"
+      }
+    ]
+  },
+  "verification_commands": [
+    {
+      "command": "python3 -m py_compile docs/benchmarks/run_https_proxy_bench.py docs/benchmarks/test_run_https_proxy_bench.py",
+      "result": "pass",
+      "observed": "passed"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "result": "pass",
+      "observed": "17 harness tests passed"
+    }
+  ],
+  "benchmark": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200 --repeats 1 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_body_stats_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tls-fingerprint-diagnostic --figure-dir docs/benchmarks/results/tls-fingerprint-diagnostic",
+    "result_files": [
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_env.json",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/tls-fingerprint-diagnostic/https_proxy_bench_performance.pdf"
+    ],
+    "hashes": {
+      "bench_binary_sha256": "7caf4890bba573dc751fd9785db99b87458aceec8c01f02463ba07a84c338dbc",
+      "results_csv_sha256": "5300dd2be6d7116768834e6033624dcdb6de9daff6c8d3cefb719342ec6f5d93",
+      "summary_csv_sha256": "4dd90f249ccb4a7d3f0df45f18e3cf712fad4bc7a2ddf763b36310d100aa66a6",
+      "comparison_csv_sha256": "9a9d20bef27902c343e7ca915e1d033cf29e7ad899a4b070658b8e4cfdd15dee",
+      "env_json_sha256": "df1dd32a861db51fc11664e73640d2d27bff4b076d0b316604a3fc4adf8663df",
+      "raw_txt_sha256": "10efde001d357c4d0f0032e4503f7f2bfee04346807fa61c60d12b870d6ff282"
+    },
+    "baseline": "same-process libcurl multi API",
+    "ylong_client": "ylong_http_client",
+    "ylong_concurrency_model": "single-client",
+    "client_runtime": "ylong_base",
+    "concurrency": 8,
+    "request_counts": [
+      200
+    ],
+    "repetitions": 1,
+    "warmup_requests": 50,
+    "throughput_geomean_ratio_ylong_over_libcurl": 1.150005,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.903166,
+    "best_throughput_ratio_ylong_over_libcurl": 1.702785,
+    "p50_max_ratio_ylong_over_libcurl": 1.059432,
+    "p95_max_ratio_ylong_over_libcurl": 1.171038,
+    "cpu_geomean_ratio_ylong_over_libcurl": 1.173977,
+    "rss_max_ratio_ylong_over_libcurl": 1.172612,
+    "errors_sum_total": 0,
+    "tls_fingerprints": [
+      {
+        "scenario": "http-over-https-proxy",
+        "client": "ylong_http_client",
+        "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+        "origin_tls_fingerprints": "-"
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "client": "libcurl",
+        "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+        "origin_tls_fingerprints": "-"
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "client": "ylong_http_client",
+        "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+        "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "client": "libcurl",
+        "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+        "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "client": "ylong_http_client",
+        "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+        "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "client": "libcurl",
+        "proxy_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8",
+        "origin_tls_fingerprints": "TLSv1.3:TLS_AES_256_GCM_SHA384:256=8"
+      }
+    ]
+  },
+  "diagnostic_conclusion": "Server-observed TLS fingerprints are identical for ylong_http_client and libcurl on the proxy TLS leg and origin TLS leg: TLSv1.3:TLS_AES_256_GCM_SHA384:256 in every TLS connection. This refutes TLS version/cipher mismatch as the main nested TLS performance cause. The run still fails SOTA gates, so S9 remains active."
+}

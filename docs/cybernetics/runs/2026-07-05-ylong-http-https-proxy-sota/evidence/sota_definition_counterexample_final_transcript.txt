@@ -1,0 +1,19 @@
+{
+  "status": "fail",
+  "verdict": "needs_revision",
+  "findings": [
+    {
+      "severity": "blocking",
+      "claim": "The third review is bound to the reviewed canonical requirements.control.json artifact named by the prompt.",
+      "counterexample": "The prompt declares requirements.control.json sha256:5fa57f719bff641b053c559535ab00f3bdce0deaf63ed74d3b574348f5a10beb, but the current reviewed file hashes to sha256:97718595b7ffc398484233ac083c1c998b2cd94ceb31c0231e836dab4d15713e, so approval would not be bound to the declared canonical artifact.",
+      "affected_paths": [
+        "evidence/sota_definition_counterexample_final_prompt.txt",
+        "requirements.control.json"
+      ],
+      "suggested_repair": "Regenerate the final review prompt with the current artifact hash or restore requirements.control.json to the declared canonical hash, then rerun this review."
+    }
+  ],
+  "smallest_counterexample": "All listed evidence/subgoals can be true while the reviewed canonical artifact identity remains false.",
+  "approval_readiness": "needs_requirements_revision",
+  "summary": "The current requirements content appears to close both previous semantic counterexamples: numeric hard thresholds are now executable through O-sota-threshold-matrix/RP-sota-threshold-verdict/completion logic, and causal/no-benchmark-only evidence is now executable through O-causal-performance-evidence/RP-real-client-causal-performance/no-offset/counterexample checks. However the prompt's canonical artifact hash does not match the file actually present, so this review cannot approve the declared artifact for user approval."
+}

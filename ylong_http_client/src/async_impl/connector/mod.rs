@@ -76,6 +76,35 @@ impl HttpConnector {
     }
 }
 
+#[cfg(feature = "http3")]
+fn http3_proxy_rejection(is_proxy: bool) -> Option<HttpClientError> {
+    is_proxy.then(|| {
+        HttpClientError::from_str(
+            crate::ErrorKind::Connect,
+            "HTTP/3 over proxy is not supported",
+        )
+    })
+}
+
+#[cfg(all(test, feature = "http3"))]
+mod ut_http3_proxy_rejection {
+    use super::http3_proxy_rejection;
+
+    #[test]
+    fn ut_http3_over_proxy_is_rejected() {
+        let err = http3_proxy_rejection(true).expect("HTTP/3 proxy must be rejected");
+        assert!(
+            format!("{err:?}").contains("HTTP/3 over proxy is not supported"),
+            "unexpected error: {err:?}"
+        );
+    }
+
+    #[test]
+    fn ut_http3_without_proxy_is_not_rejected() {
+        assert!(http3_proxy_rejection(false).is_none());
+    }
+}
+
 impl Default for HttpConnector {
     fn default() -> Self {
         Self {
@@ -322,13 +351,8 @@ mod tls {
                     let config = self.config.tls.clone();
                     #[cfg(feature = "http3")]
                     if _http_version == HttpVersion::Http3 {
-                        if is_proxy {
-                            return Box::pin(async {
-                                Err(HttpClientError::from_str(
-                                    crate::ErrorKind::Connect,
-                                    "HTTP/3 over proxy is not supported",
-                                ))
-                            });
+                        if let Some(err) = super::http3_proxy_rejection(is_proxy) {
+                            return Box::pin(async { Err(err) });
                         }
                         return Box::pin(async move {
                             let mut time_group = TimeGroup::default();

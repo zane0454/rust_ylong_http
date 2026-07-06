@@ -1,0 +1,97 @@
+{
+  "evidence_id": "evidence.tokio-dynamic-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "counterexample_runtime_substrate_candidate_not_sota",
+  "verified_at": "2026-07-06T08:18:25+08:00",
+  "intent": "Run the retained dynamic request-budget fairness benchmark under tokio_base to test whether ylong_base runtime substrate is the remaining SOTA-scale bottleneck.",
+  "performance_matrix": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_tokio_dynamic_release/release/https_proxy_bench --result-dir docs/benchmarks/results/tokio-dynamic-candidate --figure-dir docs/benchmarks/results/tokio-dynamic-candidate",
+    "build_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_tokio_dynamic_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0,libcurl_bench",
+    "bench_binary": "/tmp/ylong_http_target_tokio_dynamic_release/release/https_proxy_bench",
+    "result_dir": "docs/benchmarks/results/tokio-dynamic-candidate",
+    "hashes": {
+      "docs/benchmarks/results/tokio-dynamic-candidate/https_proxy_bench_results.csv": "4fdddc911d822a64a101af9bbe5b2879bb76f8983acbea695b4dec6e6c76d25a",
+      "docs/benchmarks/results/tokio-dynamic-candidate/https_proxy_bench_summary.csv": "0479fa288474703e25acfde74120465cf3da8bd5afdee31b53016faea789418b",
+      "docs/benchmarks/results/tokio-dynamic-candidate/https_proxy_bench_comparison.csv": "4092b0a10cb5e79abd2868ee0cd9f7b5b272497bcddabec7f1ceb4ec50e4a20d",
+      "docs/benchmarks/results/tokio-dynamic-candidate/https_proxy_bench_env.json": "e4ba8735ccdfd3b2576697ad540fa525baeee1facd0cbafb03a80be88d11e29f",
+      "docs/benchmarks/results/tokio-dynamic-candidate/https_proxy_bench_raw.txt": "58315d906f8d51ff2dca831535f3b11cedbd8ea819d6dcf5044c38cbad3b1079",
+      "docs/benchmarks/results/tokio-dynamic-candidate/https_proxy_bench_performance.png": "2e1bd25ffe2ea5c7c9d81bea56744c1c6817f066766d0f249a2e8bbf9fa458bb",
+      "docs/benchmarks/results/tokio-dynamic-candidate/https_proxy_bench_performance.pdf": "de18a3a2457c1c6ea8e55f82c54f81b68f1f88fe3cb8568f6ebce70fdccb72b6",
+      "/tmp/ylong_http_target_tokio_dynamic_release/release/https_proxy_bench": "bbfa2e763fae06242504ac6da64db8595c3aa4610b30b99b58b19e177bc72b9d"
+    },
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 1.1330784654917987,
+      "throughput_min_ratio_ylong_over_libcurl": 0.8090742221009196,
+      "throughput_max_ratio_ylong_over_libcurl": 1.8263773040103848,
+      "p50_max_ratio_ylong_over_libcurl": 1.26994301994302,
+      "p95_max_ratio_ylong_over_libcurl": 1.1417081577939485,
+      "cpu_geomean_ratio_ylong_over_libcurl": 0.7791098777418566,
+      "cpu_max_ratio_ylong_over_libcurl": 0.9638943108493684,
+      "rss_max_ratio_ylong_over_libcurl": 1.0729193506828136,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "ylong_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.8263773040103848,
+        "p50_ratio_ylong_over_libcurl": 0.5822222222222222,
+        "p95_ratio_ylong_over_libcurl": 0.4927536231884058,
+        "cpu_ratio_ylong_over_libcurl": 0.5895956228092673,
+        "rss_ratio_ylong_over_libcurl": 1.0729193506828136
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.4412529630562156,
+        "p50_ratio_ylong_over_libcurl": 0.7082132564841499,
+        "p95_ratio_ylong_over_libcurl": 0.7540574282147317,
+        "cpu_ratio_ylong_over_libcurl": 0.7357921109363165,
+        "rss_ratio_ylong_over_libcurl": 1.0688854489164086
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.1218377325937727,
+        "p50_ratio_ylong_over_libcurl": 0.887218045112782,
+        "p95_ratio_ylong_over_libcurl": 0.9042488619119878,
+        "cpu_ratio_ylong_over_libcurl": 0.7366987410171517,
+        "rss_ratio_ylong_over_libcurl": 1.0558162509261546
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.8239664554072051,
+        "p50_ratio_ylong_over_libcurl": 1.2331588132635254,
+        "p95_ratio_ylong_over_libcurl": 1.0971277399848829,
+        "cpu_ratio_ylong_over_libcurl": 0.9638943108493684,
+        "rss_ratio_ylong_over_libcurl": 1.0589832181638696
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.0749821688651726,
+        "p50_ratio_ylong_over_libcurl": 0.9750242483026187,
+        "p95_ratio_ylong_over_libcurl": 0.8268149882903981,
+        "cpu_ratio_ylong_over_libcurl": 0.7636028603436181,
+        "rss_ratio_ylong_over_libcurl": 1.0437849671612747
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.8090742221009196,
+        "p50_ratio_ylong_over_libcurl": 1.26994301994302,
+        "p95_ratio_ylong_over_libcurl": 1.1417081577939485,
+        "cpu_ratio_ylong_over_libcurl": 0.9508149331394223,
+        "rss_ratio_ylong_over_libcurl": 1.047665607430946
+      }
+    ]
+  },
+  "finding": "tokio_base materially improves the fair dynamic-budget matrix: throughput geomean rises to 1.133x and CPU/request geomean drops to 0.779x of libcurl. It still fails the fixed SOTA threshold because worst throughput remains 0.809x and nested HTTPS-origin p50/p95 regress; max RSS is 1.073x, which is above libcurl but still inside the <=1.10x hard threshold. Runtime substrate is a useful lead but not sufficient as the final retained SOTA result.",
+  "retained_in_benchmark_harness": true,
+  "retained_in_production_client": false,
+  "sota_verified": false
+}

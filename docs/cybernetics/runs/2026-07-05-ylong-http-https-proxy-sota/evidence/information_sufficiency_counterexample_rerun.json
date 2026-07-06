@@ -1,0 +1,43 @@
+{
+  "artifact_type": "information_sufficiency.counterexample_review.evidence",
+  "independent_review": true,
+  "status": "pass",
+  "verdict": "approved",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "requirements-information-sufficiency-counterexample-reviewer-v2"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "id": "requirements-information-sufficiency-counterexample-reviewer-v2",
+    "agent_id": "019f330f-78c8-7770-a3e1-4c854dffda40",
+    "transcript_ref": "evidence/information_sufficiency_rerun_transcript.txt",
+    "transcript_hash": "sha256:d0f539034b034cc07360244d8e3dd28c88a7844fdd5920872126ec3613a66e2c"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/information_sufficiency_rerun_prompt.txt",
+    "prompt_hash": "sha256:335dee0e2c0356a42d2f2d2c219f57f7002f5811e9c3b05ed09a5eb79ac2cbdf",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json": "sha256:bd110b6fc3f49f974bb7c7ff60358fb339df3265dbbc407ad7d8a9878d5a8e98"
+    }
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json": "sha256:bd110b6fc3f49f974bb7c7ff60358fb339df3265dbbc407ad7d8a9878d5a8e98"
+  },
+  "checked_facts": [
+    "F-benchmark-labeling-gap",
+    "F-causal-performance-evidence-gap",
+    "F-connect-parser-200-only",
+    "F-libcurl-library-baseline-gap",
+    "F-proxy-mtls-evidence-gap",
+    "F-repo-current-proxy-shape"
+  ],
+  "checked_transformations": [
+    "source_requirements->information_sufficiency_facts",
+    "required_outcomes->information_sufficiency_facts",
+    "information_sufficiency_facts->design_plan_entry"
+  ],
+  "findings": [],
+  "smallest_counterexample": null,
+  "review_summary": "No blocking information-sufficiency counterexample was found. The requirements now carry explicit pre-design facts for the curl CLI versus libcurl-library baseline gap, unavailable/blocked SOTA classification, causal-performance evidence requirements, CONNECT 2xx protocol repair, proxy mTLS endpoint evidence, and current repo shape."
+}

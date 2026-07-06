@@ -1,0 +1,158 @@
+{
+  "evidence_id": "evidence.server-timing-diagnostic",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "diagnostic_counterexample_client_runtime_wait_path_remaining",
+  "verified_at": "2026-07-06T08:18:25+08:00",
+  "intent": "Instrument local proxy/origin server send and tunnel relay timings to test whether the concurrency=8 nested HTTPS-over-HTTPS-proxy gap is mainly caused by Python proxy/origin sendall or relay cost rather than ylong_http_client response-read behavior.",
+  "source_changes": [
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "summary": "Records proxy direct-response send time, proxy tunnel send-to-client/send-to-origin relay time, and origin response send time, then propagates them through raw, summary, and comparison CSVs."
+    },
+    {
+      "file": "docs/benchmarks/test_run_https_proxy_bench.py",
+      "summary": "Adds regression coverage for parsing and summarizing proxy/origin server-side timing fields."
+    }
+  ],
+  "tests": [
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_trace_output_is_parsed_and_summarized",
+      "observed": "red before parser support for response_send/tunnel_send fields, green after server-timing fields were wired through the harness"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "observed": "passed 17 benchmark harness unit tests"
+    }
+  ],
+  "performance_matrix": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-client --scenario all --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --phase-timing --bench-bin /tmp/ylong_http_target_dynamic_release/release/https_proxy_bench --result-dir docs/benchmarks/results/server-timing-diagnostic --figure-dir docs/benchmarks/results/server-timing-diagnostic",
+    "bench_binary": "/tmp/ylong_http_target_dynamic_release/release/https_proxy_bench",
+    "result_dir": "docs/benchmarks/results/server-timing-diagnostic",
+    "hashes": {
+      "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_results.csv": "8aa6223aa5afb1d01362a909b79dcca0c991790962b2bdad10f4e62702ed25aa",
+      "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_summary.csv": "25a590d9fb276ad4c421062bf5fb6f976bf6bba46450c555869456f5e6a3e37e",
+      "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_comparison.csv": "c1e868efbef06ec8b62b83a2883d4bd81800271601e2c57c3d1591ba4a5bb7f7",
+      "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_env.json": "57c08638839b30412c1f4f25eff5c7d59f242843870b077791366a256f70db4e",
+      "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_raw.txt": "ab10be2f483b39e16ced860cff289ead529cf62a70411b0a1e5c68525b1f8933",
+      "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_performance.png": "f795d88e8dbb674258add1ab4d474dd565d62bd0a6806149581aa24677f974fb",
+      "docs/benchmarks/results/server-timing-diagnostic/https_proxy_bench_performance.pdf": "2a0d6044e2909e98522998dd19dd25eb9dae1b14f87b6170c1e3734e76143707",
+      "/tmp/ylong_http_target_dynamic_release/release/https_proxy_bench": "3cf9cb45532f1e0276013b5596810c18bff77eb3cf0c45f929b9e333747fb651"
+    },
+    "threshold_eval": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.9932649581673899,
+      "throughput_min_ratio_ylong_over_libcurl": 0.7283313246293097,
+      "throughput_max_ratio_ylong_over_libcurl": 1.6808586105580468,
+      "p50_max_ratio_ylong_over_libcurl": 1.4122869318181819,
+      "p95_max_ratio_ylong_over_libcurl": 1.2613390928725703,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.3041143353493292,
+      "cpu_max_ratio_ylong_over_libcurl": 1.7661040669947439,
+      "rss_max_ratio_ylong_over_libcurl": 1.2103359173126615,
+      "errors_sum_total": 0,
+      "sota_verified": false
+    },
+    "ylong_rows": [
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.6808586105580468,
+        "p50_ratio_ylong_over_libcurl": 0.5222614840989399,
+        "p95_ratio_ylong_over_libcurl": 0.8009876543209876,
+        "cpu_ratio_ylong_over_libcurl": 1.1070138509913983,
+        "rss_ratio_ylong_over_libcurl": 1.2103359173126615
+      },
+      {
+        "scenario": "http-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 1.0839697279157878,
+        "p50_ratio_ylong_over_libcurl": 0.8128128128128129,
+        "p95_ratio_ylong_over_libcurl": 1.2613390928725703,
+        "cpu_ratio_ylong_over_libcurl": 1.7661040669947439,
+        "rss_ratio_ylong_over_libcurl": 1.188435725348477
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.8632696563656479,
+        "p50_ratio_ylong_over_libcurl": 1.1685166498486377,
+        "p95_ratio_ylong_over_libcurl": 1.1870762711864409,
+        "cpu_ratio_ylong_over_libcurl": 1.156087450162385,
+        "rss_ratio_ylong_over_libcurl": 1.166133398966281
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.7649210392729148,
+        "p50_ratio_ylong_over_libcurl": 1.3295059151009048,
+        "p95_ratio_ylong_over_libcurl": 1.2269408147578786,
+        "cpu_ratio_ylong_over_libcurl": 1.4634311822863342,
+        "rss_ratio_ylong_over_libcurl": 1.1699088894360994
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.0958478912859422,
+        "p50_ratio_ylong_over_libcurl": 0.9539759652262848,
+        "p95_ratio_ylong_over_libcurl": 0.8612881355932204,
+        "cpu_ratio_ylong_over_libcurl": 1.0023600155179102,
+        "rss_ratio_ylong_over_libcurl": 1.165525672371638
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.7283313246293097,
+        "p50_ratio_ylong_over_libcurl": 1.4122869318181819,
+        "p95_ratio_ylong_over_libcurl": 1.2269847185985836,
+        "cpu_ratio_ylong_over_libcurl": 1.4836721420112533,
+        "rss_ratio_ylong_over_libcurl": 1.1570974835084291
+      }
+    ],
+    "server_timing_1000_requests_per_request_us": {
+      "http-over-https-proxy:libcurl": {
+        "proxy_response_send_us_per_request": 31.33533333333333,
+        "proxy_tunnel_send_to_client_us_per_request": 0.0,
+        "proxy_tunnel_send_to_origin_us_per_request": 0.0,
+        "origin_response_send_us_per_request": 0.0,
+        "phase_response_read_us_per_request": 0.0
+      },
+      "http-over-https-proxy:ylong_http_client": {
+        "proxy_response_send_us_per_request": 130.959,
+        "proxy_tunnel_send_to_client_us_per_request": 0.0,
+        "proxy_tunnel_send_to_origin_us_per_request": 0.0,
+        "origin_response_send_us_per_request": 0.0,
+        "phase_response_read_us_per_request": 265.9446666666667
+      },
+      "https-over-https-proxy:libcurl": {
+        "proxy_response_send_us_per_request": 0.0,
+        "proxy_tunnel_send_to_client_us_per_request": 140.80433333333335,
+        "proxy_tunnel_send_to_origin_us_per_request": 144.538,
+        "origin_response_send_us_per_request": 138.77366666666666,
+        "phase_response_read_us_per_request": 0.0
+      },
+      "https-over-https-proxy:ylong_http_client": {
+        "proxy_response_send_us_per_request": 0.0,
+        "proxy_tunnel_send_to_client_us_per_request": 215.40366666666665,
+        "proxy_tunnel_send_to_origin_us_per_request": 233.02066666666667,
+        "origin_response_send_us_per_request": 206.378,
+        "phase_response_read_us_per_request": 1259.0083333333332
+      },
+      "proxy-mtls-https-origin:libcurl": {
+        "proxy_response_send_us_per_request": 0.0,
+        "proxy_tunnel_send_to_client_us_per_request": 135.20366666666666,
+        "proxy_tunnel_send_to_origin_us_per_request": 138.28133333333335,
+        "origin_response_send_us_per_request": 128.02233333333334,
+        "phase_response_read_us_per_request": 0.0
+      },
+      "proxy-mtls-https-origin:ylong_http_client": {
+        "proxy_response_send_us_per_request": 0.0,
+        "proxy_tunnel_send_to_client_us_per_request": 232.48966666666666,
+        "proxy_tunnel_send_to_origin_us_per_request": 238.01333333333335,
+        "origin_response_send_us_per_request": 213.41333333333336,
+        "phase_response_read_us_per_request": 1312.755
+      }
+    }
+  },
+  "finding": "Server/proxy send and relay work is measurably slower on ylong request timing in the failing nested HTTPS-origin cells, but the extra server-side work is roughly tens to low hundreds of microseconds per request, while ylong response_read is about 1.26-1.31 ms/request. This refutes Python proxy/origin sendall/relay as a sufficient root cause and keeps the remaining target in client/runtime response-read wait behavior.",
+  "sota_verified": false
+}

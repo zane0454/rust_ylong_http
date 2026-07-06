@@ -1,0 +1,128 @@
+{
+  "artifact_type": "goal.control",
+  "schema_version": "1.0.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json",
+    "design": "design.control.json"
+  },
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+  },
+  "approved_control": {
+    "objective": "Execute implementation-level convergence for rust_ylong_http HTTPS proxy SOTA under the approved requirements.",
+    "success_condition": "All ten blocking outcomes and all required result paths have direct evidence, numeric SOTA thresholds pass under fair libcurl-library benchmark conditions, causal real-client-path performance evidence exists, report claims match evidence, and the final independent counterexample gate approves the completion claim.",
+    "what_counts_as_done": "The runtime verifier permits goal_achieved true after code/test/benchmark/report evidence and final counterexample review are recorded. Missing local resources, unavailable external feedback, failed tests, failed numeric thresholds, or missing causal evidence remain unfinished required work rather than a terminal success state.",
+    "rules_that_must_not_change": [
+      "SOTA verified is the only successful terminal state.",
+      "curl CLI evidence cannot satisfy libcurl-library hard thresholds.",
+      "Correctness, TLS tests, benchmark fairness, or documentation cannot offset a missing SOTA threshold matrix or missing causal performance evidence.",
+      "Proxy TLS/mTLS claims require endpoint positive and negative evidence.",
+      "Approved requirements and semantic base remain read-only during runtime execution."
+    ]
+  },
+  "required_steps": [
+    {
+      "step_id": "S1-current-audit",
+      "transition": "Current HTTPS proxy implementation is audited before patches are applied.",
+      "evidence": [
+        "evidence.current-audit"
+      ],
+      "satisfies_outcomes": [
+        "O-current-audit"
+      ]
+    },
+    {
+      "step_id": "S2-protocol-correctness",
+      "transition": "HTTPS proxy CONNECT handling follows required protocol semantics and fails closed on invalid responses.",
+      "evidence": [
+        "evidence.connect-2xx-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-protocol-correctness"
+      ]
+    },
+    {
+      "step_id": "S3-proxy-tls-mtls",
+      "transition": "Proxy TLS and proxy mutual TLS are verified end to end and kept distinct from origin TLS.",
+      "evidence": [
+        "evidence.proxy-tls-mtls-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-proxy-tls-mtls"
+      ]
+    },
+    {
+      "step_id": "S4-sync-async-proxy-semantics",
+      "transition": "Sync and async proxy semantics are verified and accurately represented.",
+      "evidence": [
+        "evidence.sync-async-proxy-tests"
+      ],
+      "satisfies_outcomes": [
+        "O-sync-async-proxy-semantics"
+      ]
+    },
+    {
+      "step_id": "S5-test-matrix",
+      "transition": "A contest-critical HTTPS proxy test matrix is implemented and run.",
+      "evidence": [
+        "evidence.test-matrix-run"
+      ],
+      "satisfies_outcomes": [
+        "O-test-matrix"
+      ]
+    },
+    {
+      "step_id": "S6-benchmark-fairness",
+      "transition": "Benchmark methodology and claims are fair, reproducible, and correctly labeled.",
+      "evidence": [
+        "evidence.benchmark-fairness"
+      ],
+      "satisfies_outcomes": [
+        "O-benchmark-fairness"
+      ]
+    },
+    {
+      "step_id": "S7-report-evidence-chain",
+      "transition": "README/report narrative is revised to match verified implementation and benchmark evidence.",
+      "evidence": [
+        "evidence.report-diff"
+      ],
+      "satisfies_outcomes": [
+        "O-report-evidence-chain"
+      ]
+    },
+    {
+      "step_id": "S8-sota-threshold-matrix",
+      "transition": "SOTA performance status is evaluated against the predeclared numeric hard-threshold matrix.",
+      "evidence": [
+        "evidence.sota-threshold-matrix"
+      ],
+      "satisfies_outcomes": [
+        "O-sota-threshold-matrix"
+      ]
+    },
+    {
+      "step_id": "S9-causal-performance-evidence",
+      "transition": "SOTA performance advantage is causally tied to the real ylong_http_client HTTPS proxy implementation and not to benchmark-only shortcuts or mismatched baseline mechanics.",
+      "evidence": [
+        "evidence.real-client-path",
+        "evidence.performance-causality"
+      ],
+      "satisfies_outcomes": [
+        "O-causal-performance-evidence"
+      ]
+    },
+    {
+      "step_id": "S10-final-counterexample-gate",
+      "transition": "Final SOTA completion claim survives counterexample review.",
+      "evidence": [
+        "evidence.final-counterexample-review"
+      ],
+      "satisfies_outcomes": [
+        "O-final-counterexample-gate"
+      ]
+    }
+  ]
+}

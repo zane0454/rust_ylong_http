@@ -1,0 +1,59 @@
+{
+  "artifact_type": "sota_definition.counterexample_review.evidence",
+  "independent_review": true,
+  "status": "fail",
+  "verdict": "needs_revision",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "sota-definition-counterexample-reviewer"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "agent_id": "019f32fc-2d51-7032-a423-ed7069bd32e7",
+    "transcript_ref": "evidence/sota_definition_counterexample_review_transcript.txt"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/sota_definition_counterexample_review_prompt.txt",
+    "prompt_hash": "sha256:2e46e9552e214a4b2e4dcbb039dccfb6b815f1ccb43a9c3a4a7ac434c8e69ac4",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json": "sha256:34c15f088fc292b79d493f567524ce7d9956e9860d4f8a6d0d5bc371f8a30453"
+    }
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json": "sha256:34c15f088fc292b79d493f567524ce7d9956e9860d4f8a6d0d5bc371f8a30453"
+  },
+  "checked_transformations": [
+    "user_feedback->source_requirements",
+    "source_requirements->sota_definition",
+    "source_requirements->claim_levels",
+    "source_requirements->counterexample_gate_contract",
+    "performance_thresholds->benchmark_methodology",
+    "benchmark_methodology->final_sota_claim",
+    "required_outcomes/result_paths/completion_logic->new SOTA definition"
+  ],
+  "findings": [
+    {
+      "severity": "blocking",
+      "claim": "SOTA verified is blocked unless every numeric hard threshold over the predeclared core matrix is met.",
+      "counterexample": "A run can satisfy audit, protocol, TLS/mTLS, sync/async, test matrix, benchmark fairness, report evidence, and final counterexample evidence while its fair libcurl-library benchmark reports only correctly scoped first-tier/partial results that fail one or more hard thresholds; completion_logic still lists no required outcome/result path for threshold pass/fail classification.",
+      "affected_paths": [
+        "approved_control.source_requirements[2]",
+        "approved_control.source_requirements[3]",
+        "approved_control.sota_definition.performance_thresholds.sota_verified_hard_thresholds",
+        "approved_control.required_outcomes[5]",
+        "approved_control.required_result_paths[4]",
+        "approved_control.completion_logic.all_required",
+        "approved_control.counterexample_gate_contract.required_checked_transformations"
+      ],
+      "suggested_repair": "Add a required outcome/result path such as O-sota-threshold-matrix requiring measured libcurl-library evidence for every predeclared core scenario and explicit pass/fail evaluation of every numeric hard threshold; add it to completion_logic and counterexample_gate_contract, with downgrade-to-partial/unverifiable when unavailable or failed."
+    }
+  ],
+  "smallest_counterexample": "All listed evidence/subgoals can be true while SOTA verified remains false.",
+  "approval_readiness": "needs_requirements_revision",
+  "repair_applied": {
+    "status": "applied",
+    "new_requirements_hash": "sha256:c1d982cb60df8b67b0cbc25efe17066e9834e87115e043e5fbb1b27283f1829d",
+    "summary": "Added O-sota-threshold-matrix, RP-sota-threshold-verdict, completion_logic.sota_verified_requires, no-offset rules, and counterexample contract checks for numeric SOTA threshold verdicts."
+  },
+  "review_summary": "The first SOTA-definition counterexample gate failed. The executable completion contract did not require numeric SOTA threshold pass/fail evaluation even though the definition contained hard metrics. The repair adds that missing outcome/path and blocks SOTA verified when thresholds are failed or unavailable."
+}

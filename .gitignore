@@ -3,6 +3,7 @@ target
 /.cargo/
 /.rustup/
 /.tools/
+__pycache__/
 /docs/benchmarks/results/*_env.json
 /docs/benchmarks/results/*_raw.txt
 /output/pdf/

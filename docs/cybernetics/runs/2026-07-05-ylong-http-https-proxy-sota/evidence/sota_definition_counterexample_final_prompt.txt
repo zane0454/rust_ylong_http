@@ -1,0 +1,54 @@
+Run a third independent SOTA-definition counterexample review after the causal-performance repair for:
+docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/requirements.control.json
+
+Reviewed canonical artifact hash:
+requirements.control.json = sha256:5fa57f719bff641b053c559535ab00f3bdce0deaf63ed74d3b574348f5a10beb
+
+Previous gate results:
+1. First review failed because numeric SOTA hard thresholds existed in the definition but were not represented as required outcomes/result paths/completion logic.
+2. Second review found that numeric threshold evaluation was mostly fixed, but causal performance and no-benchmark-only-path evidence were still not executable requirements.
+
+Repairs to check:
+- O-sota-threshold-matrix is required and blocks SOTA verified unless every numeric threshold has a pass/fail/unavailable verdict.
+- RP-sota-threshold-verdict makes final status traceable to per-threshold verdicts.
+- O-causal-performance-evidence is required and demands real-client-path evidence plus profiling/tracing/ablation evidence.
+- RP-real-client-causal-performance makes final status no stronger than causal evidence allows.
+- completion_logic.all_required includes both O-sota-threshold-matrix and O-causal-performance-evidence.
+- completion_logic.sota_verified_requires includes both new outcomes, both new result paths, every numeric threshold passing, and no unresolved counterexample.
+- no_offset blocks numeric and causal SOTA claims from being offset by correctness, TLS, tests, benchmark fairness, or report wording.
+- counterexample_gate_contract checks numeric threshold verdicts, real client path, same-model libcurl semantics, causal evidence, and final SOTA status.
+
+Try to disprove that the repaired requirements are ready for user approval before orchestration.
+
+Required checked transformations:
+- user_feedback->source_requirements
+- source_requirements->sota_definition
+- source_requirements->required_outcomes
+- source_requirements->required_result_paths
+- performance_thresholds->benchmark_methodology
+- benchmark_methodology->numeric_SOTA_threshold_verdict
+- benchmark_harness->real_client_path
+- libcurl_baseline->same_model_semantics
+- numeric_SOTA_threshold_verdict->causal_performance_evidence
+- causal_performance_evidence->final_SOTA_status
+- completion_logic->SOTA_verified_claim
+- counterexample_gate_contract->final_counterexample_review
+
+Reject if any of these are true:
+- Correctness/security/test coverage can still be mistaken for SOTA verified.
+- 20%+ contest-floor performance can still be mistaken for SOTA verified.
+- SOTA verified can be claimed without satisfying every numeric hard threshold.
+- SOTA verified can be claimed without real-client-path evidence and causal profiling/tracing/ablation evidence.
+- Either previous smallest counterexample remains possible.
+- The benchmark matrix omits a contest-critical HTTPS proxy path needed to judge SOTA.
+- The thresholds can be gamed by mismatched TLS verification, mTLS omission, curl CLI startup overhead, connection reuse differences, response validation differences, confidence-bound omission, or benchmark-only code paths.
+- The thresholds are so arbitrary or infeasible that the controlled run cannot proceed without explicit user review beyond the existing SOTA-metric approval request.
+- The definition requires evidence that cannot plausibly be generated or classified in this local repo without an explicit external/live gate.
+
+Return a concise JSON object with:
+- status: pass | fail
+- verdict: approved | needs_revision
+- findings: array of objects with severity, claim, counterexample, affected_paths, suggested_repair
+- smallest_counterexample: string or null, using the form "All listed evidence/subgoals can be true while <required claim or result path> remains false."
+- approval_readiness: ready_for_user_approval | needs_requirements_revision
+- summary: one paragraph

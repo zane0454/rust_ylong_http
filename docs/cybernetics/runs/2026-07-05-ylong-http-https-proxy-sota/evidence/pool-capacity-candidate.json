@@ -1,0 +1,88 @@
+{
+  "evidence_id": "evidence.pool-capacity-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "created_at": "2026-07-06T05:52:08+08:00",
+  "status": "counterexample",
+  "hypothesis": "The HTTP/1 connection-pool checkout path loses Vec capacity on every reuse because Conns::exist_h1_conn replaces the dispatcher list with std::mem::take; preserving the list in place may reduce allocation churn and improve canonical HTTPS proxy performance.",
+  "source_change": {
+    "file": "ylong_http_client/src/async_impl/pool.rs",
+    "summary": "Conns::exist_h1_conn now scans the dispatcher list in place, removing shutdown dispatchers without replacing the Vec, so retained capacity survives hot-path HTTP/1 checkout. A regression test covers the previous capacity-loss behavior."
+  },
+  "tdd": {
+    "red": {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_capacity_red cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_exist_h1_conn_preserves_list_capacity -- --nocapture",
+      "observed": "failed before implementation: h1 list capacity dropped from 65 to 4 after exist_h1_conn reuse"
+    },
+    "green": {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_capacity_green cargo test -p ylong_http_client --lib --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_exist_h1_conn_preserves_list_capacity -- --nocapture",
+      "observed": "passed after in-place scan implementation"
+    }
+  },
+  "build_verification": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_tokio_check cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_pool_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "observed": "passed with existing warnings"
+    }
+  ],
+  "benchmark": {
+    "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000 --repeats 3 --warmup 50 --bench-bin /tmp/ylong_http_target_pool_release/release/https_proxy_bench --result-dir docs/benchmarks/results/pool-capacity-candidate --figure-dir docs/benchmarks/results/pool-capacity-candidate",
+    "result_files": [
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_results.csv",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_summary.csv",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_comparison.csv",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_env.json",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_raw.txt",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_performance.png",
+      "docs/benchmarks/results/pool-capacity-candidate/https_proxy_bench_performance.pdf"
+    ],
+    "scenario_count": 3,
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repetitions": 3,
+    "concurrency": 1,
+    "baseline": "libcurl",
+    "ylong_error_count": 0,
+    "baseline_error_count": 0,
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.92132,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.631649,
+    "latency_geomean_ratio_ylong_over_libcurl": 1.063011,
+    "p50_geomean_ratio_ylong_over_libcurl": 1.095616,
+    "p95_geomean_ratio_ylong_over_libcurl": 0.99026,
+    "cpu_geomean_ratio_ylong_over_libcurl": 0.984888,
+    "rss_geomean_ratio_ylong_over_libcurl": 1.063353,
+    "rss_max_ratio_ylong_over_libcurl": 1.070726,
+    "worst_cells": [
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.631649,
+        "p50_ratio_ylong_over_libcurl": 1.495238,
+        "p95_ratio_ylong_over_libcurl": 1.209677,
+        "cpu_ratio_ylong_over_libcurl": 1.336743,
+        "rss_ratio_ylong_over_libcurl": 1.070726
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 0.687907,
+        "p50_ratio_ylong_over_libcurl": 1.526961,
+        "p95_ratio_ylong_over_libcurl": 0.984786,
+        "cpu_ratio_ylong_over_libcurl": 1.309986,
+        "rss_ratio_ylong_over_libcurl": 1.057651
+      }
+    ]
+  },
+  "verdict": "The capacity-preservation fix is a real HTTP/1 pool hot-path correction, but the candidate benchmark is a SOTA counterexample: throughput geomean is 0.921x, worst cell is 0.632x, p50/p95 gates fail, and CPU/RSS do not satisfy the fixed thresholds. This rules out H1 dispatcher Vec capacity loss as a SOTA-scale lever."
+}

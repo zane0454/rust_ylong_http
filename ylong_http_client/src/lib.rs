@@ -64,6 +64,39 @@ pub use error::{ErrorKind, HttpClientError};
 ))]
 pub use util::*;
 
+#[cfg(feature = "bench_tls_io")]
+pub use async_impl::ssl_stream::bench_tls_stats::{
+    set_enabled as set_tls_bench_stats_enabled, snapshot as tls_bench_stats_snapshot, BenchTlsStats,
+};
+
+#[cfg(not(feature = "bench_tls_io"))]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct BenchTlsStats {
+    pub ssl_read_calls: u64,
+    pub ssl_read_pending: u64,
+    pub ssl_write_calls: u64,
+    pub ssl_write_pending: u64,
+    pub underlying_read_calls: u64,
+    pub underlying_read_pending: u64,
+    pub underlying_write_calls: u64,
+    pub underlying_write_pending: u64,
+}
+
+#[cfg(not(feature = "bench_tls_io"))]
+impl BenchTlsStats {
+    pub fn saturating_sub(self, _earlier: Self) -> Self {
+        self
+    }
+}
+
+#[cfg(not(feature = "bench_tls_io"))]
+pub fn tls_bench_stats_snapshot() -> BenchTlsStats {
+    BenchTlsStats::default()
+}
+
+#[cfg(not(feature = "bench_tls_io"))]
+pub fn set_tls_bench_stats_enabled(_enabled: bool) {}
+
 // Runtime components import adapter.
 #[cfg(any(feature = "tokio_base", feature = "ylong_base"))]
 pub(crate) mod runtime {

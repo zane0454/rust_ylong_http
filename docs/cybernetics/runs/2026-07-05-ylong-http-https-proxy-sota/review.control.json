@@ -1,0 +1,261 @@
+{
+  "artifact_type": "review.control",
+  "schema_version": "1.0.0",
+  "status": "approved",
+  "source_contracts": {
+    "requirements": "requirements.control.json",
+    "design": "design.control.json",
+    "goal": "goal.control.json",
+    "plan": "plan.control.json"
+  },
+  "semantic_base_ref": {
+    "id": "semantic-base:ylong-http-https-proxy-sota",
+    "hash": "sha256:f749c391a819405522774ec43be2ebb6fad69554cec2e122e6efc7f51c107a82"
+  },
+  "registry_bindings": {
+    "selected_agent_workflow": "superpowers-dispatching-parallel-agents"
+  },
+  "approved_control_hashes": {
+    "requirements.control.json": "sha256:0b460ff268e3e98fc570c7903d9b2c9b2e8871f44b53a08a7d98d58c44b01afc",
+    "design.control.json": "sha256:74817f5180c8b91f0501b0ec656d4998d5b49abf5f204d7734cdf3bc80dc10b8",
+    "goal.control.json": "sha256:3a9e3b60be653ce6c2aa20cd77eac0ece2159bf4c84d429fe57cd10e23eb0362",
+    "plan.control.json": "sha256:85ced42738513f7b56c203b1c027363e2032c5884df7769e4c220aa4dababbf1"
+  },
+  "review_checks": [
+    {
+      "check_id": "required-answer-path",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.required-answer-path.maps-to-runtime"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "requirements.required_answer_path->design.required_answer_path",
+        "design.required_answer_path->plan.step_action_alignment",
+        "plan.step_action_alignment->runtime.required_steps"
+      ]
+    },
+    {
+      "check_id": "intent-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.intent-preservation.fixed-sota-target"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "user_fixed_goal->requirements.requested_transformation",
+        "requirements.requested_transformation->goal.objective",
+        "goal.objective->runtime.approved_control.objective"
+      ]
+    },
+    {
+      "check_id": "obligation-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.obligation-preservation.no-offset"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "required_outcomes->required_steps",
+        "required_result_paths->required_steps",
+        "completion_logic.no_offset->goal.rules_that_must_not_change",
+        "forbidden_terminal_statuses->runtime.verifier"
+      ]
+    },
+    {
+      "check_id": "required-outcome-coverage",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.required-outcome-coverage.ten-runtime-steps"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "O-current-audit->S1-current-audit",
+        "O-protocol-correctness->S2-protocol-correctness",
+        "O-proxy-tls-mtls->S3-proxy-tls-mtls",
+        "O-sync-async-proxy-semantics->S4-sync-async-proxy-semantics",
+        "O-test-matrix->S5-test-matrix",
+        "O-benchmark-fairness->S6-benchmark-fairness",
+        "O-report-evidence-chain->S7-report-evidence-chain",
+        "O-sota-threshold-matrix->S8-sota-threshold-matrix",
+        "O-causal-performance-evidence->S9-causal-performance-evidence",
+        "O-final-counterexample-gate->S10-final-counterexample-gate"
+      ]
+    },
+    {
+      "check_id": "source-requirement-preservation",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.source-requirement-preservation.no-weakening"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "source_requirements->required_outcomes",
+        "source_requirements->required_result_paths",
+        "source_requirements->required_evidence",
+        "source_requirements->counterexample_gate_contract"
+      ]
+    },
+    {
+      "check_id": "counterexample-gate",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.counterexample-gate.reviewed-chain",
+        "review.counterexample-gate.no-counterexample-found"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "CONNECT_RFC_semantics->parser_tests",
+        "all_outcomes->SOTA_claim",
+        "all_result_paths->SOTA_claim",
+        "benchmark_harness->real_client_path",
+        "benchmark_matrix->numeric_threshold_verdict",
+        "benchmark_result->numeric_SOTA_threshold_verdict",
+        "benchmark_result->performance_claim",
+        "blocked_or_goal_achieved",
+        "causal_explanation->final_SOTA_status",
+        "causal_performance_evidence->final_SOTA_status",
+        "completion_or_remaining_required_work",
+        "evidence->report_claims",
+        "forbidden_terminal_statuses->final_answer",
+        "libcurl_baseline->same_model_semantics",
+        "numeric_SOTA_threshold_verdict->causal_performance_evidence",
+        "numeric_SOTA_threshold_verdict->final_SOTA_status",
+        "numeric_threshold_result->causal_explanation",
+        "numeric_threshold_verdict->final_SOTA_status",
+        "numeric_threshold_verdict->goal_achieved_status",
+        "numeric_threshold_verdict->report_claims",
+        "pre_runtime_compile",
+        "proxy_tls_config->endpoint_evidence",
+        "real_client_path_evidence->numeric_threshold_verdict",
+        "remaining_required_work->next_required_action",
+        "report_claims->SOTA_claim",
+        "result_path:RP-current-audit-to-workplan->completion_gate",
+        "result_path:RP-current-audit-to-workplan->required_steps",
+        "required_outcome:O-benchmark-fairness->completion_gate",
+        "required_outcome:O-causal-performance-evidence->completion_gate",
+        "required_outcome:O-current-audit->completion_gate",
+        "required_outcome:O-final-counterexample-gate->completion_gate",
+        "required_outcome:O-protocol-correctness->completion_gate",
+        "required_outcome:O-proxy-tls-mtls->completion_gate",
+        "required_outcome:O-report-evidence-chain->completion_gate",
+        "required_outcome:O-sota-threshold-matrix->completion_gate",
+        "required_outcome:O-sync-async-proxy-semantics->completion_gate",
+        "required_outcome:O-test-matrix->completion_gate",
+        "required_outcomes->required_steps",
+        "required_result_paths->required_steps",
+        "required_steps->runtime_steps",
+        "required_steps->work_packages",
+        "result_path:RP-fair-benchmark-to-report->completion_gate",
+        "result_path:RP-fair-benchmark-to-report->required_steps",
+        "result_path:RP-final-counterexample-to-sota-claim->completion_gate",
+        "result_path:RP-final-counterexample-to-sota-claim->required_steps",
+        "result_path:RP-http-over-https-proxy->completion_gate",
+        "result_path:RP-http-over-https-proxy->required_steps",
+        "result_path:RP-https-over-https-proxy->completion_gate",
+        "result_path:RP-https-over-https-proxy->required_steps",
+        "result_path:RP-proxy-tls-fail-closed->completion_gate",
+        "result_path:RP-proxy-tls-fail-closed->required_steps",
+        "result_path:RP-real-client-causal-performance->completion_gate",
+        "result_path:RP-real-client-causal-performance->required_steps",
+        "result_path:RP-shared-proxy-semantics->completion_gate",
+        "result_path:RP-shared-proxy-semantics->required_steps",
+        "result_path:RP-sota-threshold-verdict->completion_gate",
+        "result_path:RP-sota-threshold-verdict->required_steps",
+        "source_audit->work_packages",
+        "source_requirements->required_outcomes",
+        "source_requirements->required_result_paths",
+        "source_requirements:SOTA_metrics->benchmark_matrix",
+        "test_matrix->SOTA_claim"
+      ],
+      "reviewer": {
+        "kind": "subagent",
+        "id": "pregoal-counterexample-gate-reviewer-v1",
+        "evidence_ref": "evidence/pregoal_counterexample_gate.json",
+        "summary": "Independent pre-runtime review is bound in evidence/pregoal_counterexample_gate.json."
+      }
+    },
+    {
+      "check_id": "producing-action-alignment",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.producing-action-alignment.step-action-map"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "required_steps->plan.step_action_alignment",
+        "plan.step_action_alignment->work_packages",
+        "step_action_alignment->evidence_after_action"
+      ]
+    },
+    {
+      "check_id": "work-assignment",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.work-assignment.disjoint-work-packages"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "plan.work_packages->allowed_write_paths",
+        "maximum_parallel_agents->registry_bindings",
+        "subagent_authority->main_agent_integration"
+      ]
+    },
+    {
+      "check_id": "horizon-authority",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.horizon-authority.local-only-with-human-gate"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "forbidden_actions->run.gate_mode",
+        "live_external_resources->human_gate",
+        "approved_requirements->readonly_runtime_files"
+      ]
+    },
+    {
+      "check_id": "final-observer",
+      "status": "pass",
+      "verdict": "approved",
+      "return_to_stage": null,
+      "evidence": [
+        "review.final-observer.verifier-required"
+      ],
+      "findings": [],
+      "required_changes": [],
+      "checked_transformations": [
+        "runtime.progress->verifier",
+        "verifier.required_outcomes->goal_achieved",
+        "final_counterexample_review->final_report"
+      ]
+    }
+  ]
+}

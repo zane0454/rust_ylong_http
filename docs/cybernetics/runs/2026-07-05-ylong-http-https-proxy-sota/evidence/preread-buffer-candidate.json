@@ -1,0 +1,70 @@
+{
+  "evidence_id": "evidence.preread-buffer-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "real_path_micro_optimization_counterexample_to_sota",
+  "verified_at": "2026-07-06T04:57:13+08:00",
+  "summary": "Async HttpBody now stores response-head pre-read bytes in a lightweight PreRead helper instead of Cursor<Vec<u8>>. This removes Cursor overhead on a real response body path, but full same-process libcurl matrices still refute SOTA. The ylong_base candidate reaches 1.013x throughput geomean with 0.819x worst cell; the tokio_base candidate reaches 1.068x geomean but has a 0.691x worst cell.",
+  "source_change": {
+    "file": "ylong_http_client/src/async_impl/http_body.rs",
+    "summary": "Replaces Cursor<Vec<u8>> pre-read body storage with PreRead { Box<[u8]>, pos } for Text, Chunk, and UntilClose response body kinds."
+  },
+  "red_green_test": {
+    "test": "async_impl::http_body::ut_async_http_body::ut_pre_read_drains_without_overread",
+    "red_result": "failed before implementation with E0433: use of undeclared type PreRead",
+    "green_command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_preread_green cargo test -p ylong_http_client --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0 ut_pre_read_drains_without_overread",
+    "green_result": "passed"
+  },
+  "candidate_matrices": [
+    {
+      "runtime": "ylong_base",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_preread_ylong_release/release/https_proxy_bench --result-dir docs/benchmarks/results/preread-ylong-full --figure-dir docs/benchmarks/results/preread-ylong-full",
+      "result_files": [
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_results.csv",
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_summary.csv",
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_comparison.csv",
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_env.json",
+        "docs/benchmarks/results/preread-ylong-full/https_proxy_bench_raw.txt"
+      ],
+      "threshold_eval": {
+        "throughput_geomean_ratio": 1.0127711152548504,
+        "throughput_min_ratio": 0.8190408295527728,
+        "throughput_max_ratio": 1.180766716084299,
+        "p50_max_ratio": 1.0666666666666667,
+        "p95_max_ratio": 1.5928449744463373,
+        "cpu_geomean_ratio": 0.9286055197960377,
+        "cpu_max_ratio": 1.0341354735319792,
+        "rss_max_ratio": 1.0681198910081744,
+        "errors_sum_total": 0
+      }
+    },
+    {
+      "runtime": "tokio_base",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --scenario all --requests 200,1000,3000 --repeats 5 --warmup 50 --bench-bin /tmp/ylong_http_target_preread_tokio_release/release/https_proxy_bench --result-dir docs/benchmarks/results/preread-tokio-full --figure-dir docs/benchmarks/results/preread-tokio-full",
+      "result_files": [
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_results.csv",
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_summary.csv",
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_comparison.csv",
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_env.json",
+        "docs/benchmarks/results/preread-tokio-full/https_proxy_bench_raw.txt"
+      ],
+      "threshold_eval": {
+        "throughput_geomean_ratio": 1.0679818683073952,
+        "throughput_min_ratio": 0.6913703360632113,
+        "throughput_max_ratio": 1.5606101519212157,
+        "p50_max_ratio": 1.2042606516290726,
+        "p95_max_ratio": 1.1481865284974093,
+        "cpu_geomean_ratio": 0.8407423647973016,
+        "cpu_max_ratio": 1.0935274001167739,
+        "rss_max_ratio": 1.07390237251159,
+        "errors_sum_total": 0
+      }
+    }
+  ],
+  "verdict": {
+    "sota_verified": false,
+    "reason": "Both full matrices fail fixed SOTA gates. ylong_base remains near parity with severe p95 failure; tokio_base improves geomean slightly but worsens the worst cell below prior candidate evidence. This confirms the pre-read helper is at most a micro optimization and not a causal SOTA lever."
+  },
+  "completion_effect": "S9 remains active. This evidence narrows the causal search by ruling out pre-read buffer overhead as a SOTA-scale explanation."
+}

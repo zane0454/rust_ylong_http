@@ -1,0 +1,104 @@
+{
+  "artifact_type": "pregoal.compilation.current_recompile.evidence",
+  "created_at": "2026-07-06T09:07:23+08:00",
+  "runtime_generation": "gen-000",
+  "status": "compiled_and_executable_not_complete",
+  "pre_goal_compilation_verdict": "continue_runtime_from_s9",
+  "goal_achieved_permitted": false,
+  "blocking_counterexample_found": false,
+  "run_directory": "docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+  "runtime_control": "gen-000/runtime.control.json",
+  "compiled_goal_adapter": "/goal Execute the runtime control JSON at docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota/gen-000/runtime.control.json using .agents/skills/using-control-json. Read it first; approved control JSON remains read-only; continue S9-causal-performance-evidence and do not claim goal_achieved, blocked, S10 completion, or final-report success until verify_runtime_progress.py permits the final claim.",
+  "fresh_verification": [
+    {
+      "command": "python3 /home/ender/.agents/skills/compiling-cybernetic-runtime-goals/scripts/control_chain_guard.py --run-dir docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 0,
+      "result": "PASS; NEXT: CompileRuntimeGoal"
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 0,
+      "result": "ok true"
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "exit_code": 1,
+      "result": "goal_achieved_permitted false; S9 and S10 are still missing; final-report.json and runtime counterexample.review.completed are absent"
+    }
+  ],
+  "approved_control_boundary": {
+    "readonly_files": [
+      "requirements.control.json",
+      "run.control.json",
+      "review.control.json",
+      "gen-000/runtime.control.json"
+    ],
+    "writable_control_files": [
+      "progress.jsonl",
+      "runtime-status.json",
+      "final-report.json"
+    ],
+    "writable_evidence_paths": [
+      "evidence/",
+      "ylong_http_client/",
+      "benches/",
+      "README.md",
+      "docs/"
+    ],
+    "progress_append_rule": "progress.jsonl must be appended only through /home/ender/.agents/skills/using-control-json/scripts/append_progress_event.py"
+  },
+  "current_generation_consistency": {
+    "run_control_current_generation": "gen-000",
+    "runtime_generation_id": "gen-000",
+    "status": "consistent"
+  },
+  "current_progress_state": {
+    "completed_mainline_steps": [
+      "S1-current-audit",
+      "S2-protocol-correctness",
+      "S3-proxy-tls-mtls",
+      "S4-sync-async-proxy-semantics",
+      "S5-test-matrix",
+      "S6-benchmark-fairness",
+      "S7-report-evidence-chain",
+      "S8-sota-threshold-matrix"
+    ],
+    "active_step": "S9-causal-performance-evidence",
+    "pending_steps": [
+      "S9-causal-performance-evidence",
+      "S10-final-counterexample-gate"
+    ],
+    "latest_counterexample_evidence": "evidence/runtime-workers-one-candidate.json",
+    "latest_counterexample_summary": "ylong_base runtime worker=1 candidate was tested, rejected, and removed; focused HTTPS-over-HTTPS-proxy 1000-request cell still fails with 0.863x throughput, 1.172x p50, and 1.111x p95 ratios."
+  },
+  "completion_forbidden_now": [
+    "goal_achieved true",
+    "blocked terminal state",
+    "S10-final-counterexample-gate completion",
+    "final-report.json success claim",
+    "SOTA verified claim",
+    "treating rejected S9 diagnostics or candidates as completion evidence"
+  ],
+  "independent_current_review": {
+    "reviewer": {
+      "kind": "subagent",
+      "id": "019f34f6-b696-7213-aa4f-41c19cdde13b",
+      "nickname": "Faraday"
+    },
+    "verdict": "pre-goal compilation boundary is valid; no blocking counterexample found",
+    "findings": [
+      "run.control.json current_generation, runtime path, and gen-000 runtime generation are consistent.",
+      "approved JSON remains read-only and control outputs are limited to progress.jsonl, runtime-status.json, and final-report.json.",
+      "fresh verifier rejects completion because S9, S10, final-report.json, and runtime counterexample.review.completed are missing.",
+      "progress.jsonl has mainline step.completed/pass only for S1 through S8; S9 is started but not passed, and S10 is not complete.",
+      "runtime-status.json remains active and goal_achieved false; no intermediate terminal or blocked state is present.",
+      "no current evidence supports S10, final-report success, or goal_achieved."
+    ]
+  },
+  "next_required_action": [
+    "Continue executing gen-000/runtime.control.json at S9-causal-performance-evidence.",
+    "Produce a retained real-client-path implementation and fair same-process libcurl benchmark evidence that satisfies the hard SOTA threshold matrix.",
+    "Tie the performance result causally to the real ylong_http_client HTTPS proxy implementation rather than benchmark-only shortcuts.",
+    "Run S10 final counterexample review only after S9 has a mainline pass event and verifier no longer rejects S9 evidence."
+  ]
+}

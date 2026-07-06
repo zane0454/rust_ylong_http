@@ -1,0 +1,14 @@
+Independent reviewer: requirements-information-sufficiency-counterexample-reviewer
+Agent id: 019f32ec-23b5-7633-894b-187053a4a21e
+
+status: pass
+
+Missing pre-design fact that invalidates design/orchestration: no. I could not construct a blocking counterexample where the four recorded facts are true but design entry would be invalid or forced to invent the SOTA evidence model.
+
+Findings:
+- source_requirements -> information_sufficiency_facts is sufficient for design entry. The facts cover current repo shape, CONNECT parser defect, proxy mTLS evidence gap, and benchmark/report labeling gap.
+- required_outcomes -> information_sufficiency_facts is sufficient, with one caveat: sync/async and feature-boundary details are not standalone facts, but they are explicitly preserved as required outcomes/result paths, so design cannot legally drop them.
+- information_sufficiency_facts -> design_plan_entry is sufficient. The control already requires endpoint TLS/mTLS tests, CONNECT 2xx tests, sync/async scoping, benchmark fairness, report correction, and final counterexample review.
+- Process note: requirements.control.json references missing evidence/information_sufficiency_counterexample.json. That weakens the embedded prior-review evidence, but not this independent review.
+
+Smallest counterexample: none found. Closest attempted counterexample was "external contest/libcurl evidence is missing, so SOTA is invented," but the control explicitly downgrades or forbids unsupported external ranking/libcurl claims, so this does not block design entry.

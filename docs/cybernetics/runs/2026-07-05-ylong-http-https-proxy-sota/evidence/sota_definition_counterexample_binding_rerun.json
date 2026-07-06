@@ -1,0 +1,47 @@
+{
+  "artifact_type": "sota_definition.counterexample_review.evidence",
+  "independent_review": true,
+  "status": "pass",
+  "verdict": "approved",
+  "reviewer": {
+    "kind": "subagent",
+    "id": "sota-definition-counterexample-binding-rerun-reviewer"
+  },
+  "reviewer_session": {
+    "kind": "subagent",
+    "agent_id": "019f3309-d61d-7a13-906e-935cd33206a4",
+    "transcript_ref": "evidence/sota_definition_counterexample_binding_rerun_transcript.txt",
+    "transcript_hash": "sha256:f775d71087bf15562b4424b01f7a6b61b828fc9b1a8cf82b7011309b5ebe0d97"
+  },
+  "review_request": {
+    "prompt_ref": "evidence/sota_definition_counterexample_binding_rerun_prompt.txt",
+    "prompt_hash": "sha256:0184cec6715d3b3c949f1fdb428965c4bdbb4be91fed1623e686ef1181a99842",
+    "reviewed_artifact_hashes": {
+      "requirements.control.json.raw": "sha256:97718595b7ffc398484233ac083c1c998b2cd94ceb31c0231e836dab4d15713e",
+      "requirements.control.json.canonical_jq_s": "sha256:5fa57f719bff641b053c559535ab00f3bdce0deaf63ed74d3b574348f5a10beb"
+    }
+  },
+  "reviewed_artifact_hashes": {
+    "requirements.control.json.raw": "sha256:97718595b7ffc398484233ac083c1c998b2cd94ceb31c0231e836dab4d15713e",
+    "requirements.control.json.canonical_jq_s": "sha256:5fa57f719bff641b053c559535ab00f3bdce0deaf63ed74d3b574348f5a10beb"
+  },
+  "checked_transformations": [
+    "user_feedback->source_requirements",
+    "source_requirements->sota_definition",
+    "source_requirements->required_outcomes",
+    "source_requirements->required_result_paths",
+    "performance_thresholds->benchmark_methodology",
+    "benchmark_methodology->numeric_SOTA_threshold_verdict",
+    "benchmark_harness->real_client_path",
+    "libcurl_baseline->same_model_semantics",
+    "numeric_SOTA_threshold_verdict->causal_performance_evidence",
+    "causal_performance_evidence->final_SOTA_status",
+    "completion_logic->SOTA_verified_claim",
+    "counterexample_gate_contract->final_counterexample_review",
+    "artifact_hash_binding->reviewed_requirements_identity"
+  ],
+  "findings": [],
+  "smallest_counterexample": null,
+  "approval_readiness": "ready_for_user_approval",
+  "review_summary": "Raw and canonical jq -S hashes match the prompt, and the repaired requirements now make the numeric SOTA threshold matrix plus real-client causal performance evidence blocking, traceable requirements/result paths with no-offset and counterexample coverage. No remaining semantic counterexample was found."
+}

@@ -1,0 +1,65 @@
+{
+  "artifact_type": "s9.causal_performance_candidate.evidence",
+  "created_at": "2026-07-06T09:46:21+08:00",
+  "runtime_generation": "gen-000",
+  "candidate_id": "progress-aware-nested-tls-read-retry",
+  "status": "rejected_not_retained",
+  "hypothesis": "If an outer SSL_read over HTTPS-origin-over-HTTPS-proxy returns WouldBlock after the inner proxy TLS stream has consumed or written bytes, a small bounded immediate retry could avoid a runtime wake and reduce nested TLS response-read latency.",
+  "implementation_tested": [
+    "Wrapper progress marker for underlying async read/write byte movement.",
+    "AsyncSslStream::poll_read reset progress before each SSL_read and retried up to two times only after WouldBlock with observed underlying progress.",
+    "bench_tls_io counters and benchmark parser fields for ssl_read_pending_after_progress and ssl_read_progress_retries."
+  ],
+  "red_green_verification": [
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-sota-target cargo test -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0 wrapper_records_underlying_read_and_write_progress -- --nocapture",
+      "red_result": "failed before Wrapper::made_progress/reset_progress existed",
+      "green_result": "passed after Wrapper progress marker implementation"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-sota-target cargo test -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0 ssl_read_progress_retry_policy_requires_progress_and_caps_retries -- --nocapture",
+      "red_result": "failed before should_retry_ssl_read_after_progress existed",
+      "green_result": "passed after bounded retry policy implementation"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong-http-sota-target cargo test -p ylong_http_client --features async,http1_1,ylong_base,c_openssl_3_0,bench_tls_io ut_tls_bench_stats_delta_tracks_ssl_and_underlying_pending -- --nocapture",
+      "result": "passed with bench_tls_io build"
+    },
+    {
+      "command": "python3 -m pytest docs/benchmarks/test_run_https_proxy_bench.py -q",
+      "result": "17 passed"
+    }
+  ],
+  "benchmark": {
+    "command": "python3 docs/benchmarks/run_https_proxy_bench.py --bench-bin /tmp/ylong-http-sota-target/release/https_proxy_bench --scenario https-over-https-proxy --requests '200,1000' --repeats 3 --warmup 50 --concurrency 8 --ylong-concurrency-model single-client --baseline libcurl --phase-timing --result-dir docs/benchmarks/results/progress-retry-candidate-focused",
+    "result_dir": "docs/benchmarks/results/progress-retry-candidate-focused",
+    "scenario": "https-over-https-proxy",
+    "requests": [
+      200,
+      1000
+    ],
+    "concurrency": 8,
+    "repeats": 3,
+    "baseline": "same-process libcurl",
+    "errors_sum": 0,
+    "threshold_summary": {
+      "throughput_geomean_ratio_ylong_over_libcurl": 0.729120909873468,
+      "worst_throughput_ratio_ylong_over_libcurl": 0.7064408524382102,
+      "p50_max_ratio_ylong_over_libcurl": 1.4546128195628012,
+      "p95_max_ratio_ylong_over_libcurl": 1.3271383315733896,
+      "cpu_geomean_ratio_ylong_over_libcurl": 1.4600176275269006,
+      "rss_max_ratio_ylong_over_libcurl": 1.1796585003711952
+    },
+    "retry_observation": {
+      "tls_ssl_read_pending_after_progress_mean": 0.0,
+      "tls_ssl_read_progress_retries_mean": 0.0,
+      "interpretation": "The hypothesized condition did not occur in the measured real nested TLS client path."
+    }
+  },
+  "verdict": "The candidate is a SOTA counterexample and must not be retained. The focused matrix worsened throughput, tail latency, CPU/request, and RSS, and the new counters show zero pending-after-progress events and zero progress retries.",
+  "follow_up": [
+    "Remove progress-aware retry implementation and temporary parser/stat fields.",
+    "Keep this evidence and result directory as S9 causal narrowing evidence.",
+    "Continue S9 with a different root-cause hypothesis; this refutes OpenSSL/BIO progress-to-waker mismatch as the current nested TLS bottleneck."
+  ]
+}

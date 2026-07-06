@@ -1,0 +1,140 @@
+{
+  "evidence_id": "evidence.report-diff",
+  "required_step": "S7-report-evidence-chain",
+  "work_package_id": "WP3-benchmark-report-evidence",
+  "runtime_generation": "gen-000",
+  "status": "pass",
+  "verified_at": "2026-07-06T04:44:03+08:00",
+  "summary": "README/report wording now matches the canonical non-phase ylong_base 200/1000/3000 fair matrix after drain-buffer reuse, states that the current evidence refutes SOTA thresholds rather than proving a performance claim, and separately records the tokio_base candidate matrix as a stronger but still non-SOTA counterexample.",
+  "changed_files": [
+    {
+      "file": "README.md",
+      "claims_revised": [
+        "Benchmark description separates curl_cli and libcurl.",
+        "Checked-in setup is documented as non-phase 200/1000/3000 requests, five repeats, warmup 50, empty request body, and 4096-byte response body.",
+        "Result table reports the current nine scenario/request-count rows.",
+        "README explicitly says the full fair matrix is not a SOTA performance claim and records the 0.99x geomean / 0.77x worst-cell counterexample.",
+        "README separately records the tokio_base candidate matrix at about 1.07x geomean / 0.86x worst cell and keeps it out of the canonical table."
+      ]
+    },
+    {
+      "file": "docs/benchmarks/run_https_proxy_bench.py",
+      "claims_revised": [
+        "Parser and plot labels distinguish curl_cli from libcurl.",
+        "Driver exposes --baseline curl-cli|libcurl|both so reruns declare the baseline model.",
+        "Driver exposes --scenario including all, HTTPS origin, and proxy-mTLS HTTPS-origin topologies."
+      ]
+    },
+    {
+      "file": "docs/benchmarks/results/https_proxy_bench_summary.csv",
+      "claims_revised": [
+        "Checked-in summary now contains scenario, repeat_count, confidence half-width columns, and libcurl fair-matrix metrics."
+      ]
+    },
+    {
+      "file": "docs/benchmarks/results/https_proxy_bench_comparison.csv",
+      "claims_revised": [
+        "Checked-in comparison now contains per-scenario ylong/libcurl ratios for elapsed, latency, p50, p95, CPU, throughput, and RSS."
+      ]
+    },
+    {
+      "file": "docs/figures/https_proxy_bench_performance.png",
+      "claims_revised": [
+        "Regenerated figure uses libcurl baseline labeling for the checked-in fair matrix."
+      ]
+    }
+  ],
+  "diff_checks": [
+    {
+      "command": "git diff -- README.md",
+      "result": "reviewed",
+      "observed": "README benchmark section separates curl_cli and libcurl, documents --scenario all, reports all nine scenario/request-count rows, and scopes checked-in results as fair-matrix counterexample evidence."
+    },
+    {
+      "command": "rg -n \"Checked-in fair-matrix|SOTA performance claim|0\\.99x|0\\.77x|connection-reuse trace\" README.md",
+      "result": "pass",
+      "observed": "README identifies the fair matrix, current non-SOTA result, and reuse-trace boundary."
+    },
+    {
+      "command": "rg -n \"tokio_base|1\\.07x|0\\.86x|candidate counterexample\" README.md",
+      "result": "pass",
+      "observed": "README identifies the tokio_base candidate matrix as stronger than canonical ylong_base but still non-SOTA."
+    }
+  ],
+  "supported_claims_after_revision": [
+    "HTTPS proxy support includes proxy TLS and proxy mTLS endpoint tests.",
+    "CONNECT parser accepts complete 2xx responses and preserves fail-closed error handling.",
+    "sync and async share proxy semantics, not one connector implementation.",
+    "Benchmark harness can execute a same-process libcurl library baseline.",
+    "Benchmark harness can execute HTTP-over-HTTPS-proxy, HTTPS-origin-over-HTTPS-proxy, and proxy-mTLS HTTPS-origin scenarios.",
+    "Checked-in performance output is fair-matrix evidence that currently refutes SOTA threshold completion.",
+    "tokio_base candidate output is recorded separately as candidate counterexample evidence, not a checked-in canonical speedup claim."
+  ],
+  "intentionally_not_claimed": [
+    "No final SOTA performance status is claimed from the fair matrix.",
+    "No curl CLI process result is presented as libcurl-library evidence.",
+    "No micro-optimization is presented as the causal source of performance advantage.",
+    "The tokio_base candidate matrix is not presented as SOTA completion evidence."
+  ],
+  "claim_boundaries": [
+    "HTTPS proxy support includes proxy TLS and proxy mTLS endpoint tests.",
+    "Benchmark harness can execute a same-process libcurl library baseline.",
+    "Benchmark harness records server-side connection reuse traces and keeps phase diagnostics separate from threshold outputs.",
+    "Checked-in performance output is fair-matrix evidence and currently refutes, rather than proves, SOTA performance.",
+    "The tokio_base candidate matrix is tracked separately because it improves the point estimate but still fails hard SOTA gates.",
+    "No final SOTA performance status is claimed."
+  ],
+  "verification_commands": [
+    {
+      "command": "rg -n \"Checked-in fair-matrix|SOTA performance claim|0\\.99x|0\\.77x|tokio_base|1\\.07x|0\\.86x|connection-reuse trace\" README.md",
+      "result": "pass",
+      "observed": "README identifies the canonical fair matrix, tokio_base candidate, current non-SOTA results, and reuse-trace boundary."
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/validate_control_chain.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "result": "pass"
+    },
+    {
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench",
+      "result": "pass",
+      "observed": "10 tests passed."
+    },
+    {
+      "command": "python3 -m py_compile docs/benchmarks/run_https_proxy_bench.py docs/benchmarks/test_run_https_proxy_bench.py",
+      "result": "pass"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_s9_reuse_check CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/openharmony/commonlibrary_rust_ylong_runtime.git.insteadOf' GIT_CONFIG_VALUE_0='https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git' cargo check -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "result": "pass"
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_proxy_tests CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/openharmony/commonlibrary_rust_ylong_runtime.git.insteadOf' GIT_CONFIG_VALUE_0='https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git' cargo test -p ylong_http_client --test sdv_async_https_proxy_tls --no-default-features --features async,http1_1,tokio_base,c_openssl_3_0",
+      "result": "pass",
+      "observed": "5 tests passed."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_proxy_tests CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/openharmony/commonlibrary_rust_ylong_runtime.git.insteadOf' GIT_CONFIG_VALUE_0='https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git' cargo test -p ylong_http_client --test sdv_sync_https_proxy_tls --no-default-features --features sync,async,http1_1,tokio_base,c_openssl_3_0",
+      "result": "pass",
+      "observed": "2 tests passed. The sync-only tokio_base feature combination is not valid in this crate because runtime Semaphore/Sleep exports are gated by async; adding async is the valid test build."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_proxy_no_tls CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='url.https://github.com/openharmony/commonlibrary_rust_ylong_runtime.git.insteadOf' GIT_CONFIG_VALUE_0='https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git' cargo test -p ylong_http_client --test sdv_https_proxy_no_tls --no-default-features --features async,sync,http1_1,tokio_base",
+      "result": "pass",
+      "observed": "2 tests passed."
+    },
+    {
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" rustfmt --check ylong_http_client/src/bin/https_proxy_bench.rs ylong_http_client/src/util/proxy.rs ylong_http_client/src/async_impl/connector/mod.rs ylong_http_client/src/async_impl/pool.rs ylong_http_client/tests/sdv_async_https_proxy_tls.rs ylong_http_client/tests/sdv_sync_https_proxy_tls.rs ylong_http_client/tests/sdv_https_proxy_no_tls.rs",
+      "result": "pass",
+      "observed": "Only nightly-only rustfmt.toml option warnings were emitted."
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "python3 /home/ender/.agents/skills/using-control-json/scripts/verify_runtime_progress.py docs/cybernetics/runs/2026-07-05-ylong-http-https-proxy-sota",
+      "result": "expected_fail",
+      "observed": "goal_achieved_permitted=false; S9, S10, final-report.json, and runtime counterexample review remain incomplete."
+    }
+  ]
+}

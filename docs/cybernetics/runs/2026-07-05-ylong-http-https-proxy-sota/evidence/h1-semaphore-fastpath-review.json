@@ -1,0 +1,81 @@
+{
+  "evidence_id": "evidence.h1-semaphore-fastpath-review",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "low_leverage_candidate_rejected_before_code_change",
+  "reviewed_at": "2026-07-06T09:55:47+08:00",
+  "candidate": {
+    "name": "HTTP/1 pool WrappedSemaphore::try_acquire fast path",
+    "source": "subagent:019f350b-4991-7f60-94f2-5b6f6f14e684",
+    "candidate_summary": "Add WrappedSemaphore::try_acquire and use it before awaiting acquire in Conns::conn_h1 and HTTP/1 fallback inside conn_negotiate."
+  },
+  "code_refs": [
+    {
+      "file": "ylong_http_client/src/async_impl/pool.rs",
+      "refs": [
+        "Conns::conn_h1 currently awaits self.usable.acquire() before exist_h1_conn",
+        "conn_negotiate HTTPS fallback currently awaits self.usable.acquire() before exist_h1_conn",
+        "exist_h1_conn requires a WrappedSemPermit before it can return an occupied HTTP/1 Conn"
+      ]
+    },
+    {
+      "file": "ylong_http_client/src/util/dispatcher.rs",
+      "refs": [
+        "WrappedSemaphore wraps tokio::sync::Semaphore or ylong_runtime::sync::Semaphore",
+        "WrappedSemPermit releases the ylong_base semaphore permit on Drop"
+      ]
+    }
+  ],
+  "semantic_assessment": {
+    "behavior_preserving_shape": "A correct implementation would only try to acquire a permit synchronously and fall back to the existing async acquire path when no permit is available.",
+    "forbidden_shape": "Dispatching an HTTP/1 connection before acquiring a permit would weaken max_conn_num semantics and is not allowed.",
+    "risk": "Low correctness risk if implemented as a pure try_acquire fallback; low expected SOTA impact because the measured pool_checkout phase is already microsecond scale."
+  },
+  "quantitative_gate": {
+    "source_result": "docs/benchmarks/results/concurrent-phase-diagnostic/https_proxy_bench_summary.csv",
+    "phase_timing": true,
+    "measured_cells": [
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 200,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "pool_checkout_us_per_request": 3.251666666666667,
+        "response_read_us_per_request": 1151.2066666666667
+      },
+      {
+        "scenario": "https-over-https-proxy",
+        "requests": 1000,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "pool_checkout_us_per_request": 3.1996666666666664,
+        "response_read_us_per_request": 1214.2326666666668
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 200,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "pool_checkout_us_per_request": 2.895,
+        "response_read_us_per_request": 1015.91
+      },
+      {
+        "scenario": "proxy-mtls-https-origin",
+        "requests": 1000,
+        "concurrency": 8,
+        "ylong_concurrency_model": "single-client",
+        "pool_checkout_us_per_request": 3.1666666666666665,
+        "response_read_us_per_request": 1175.744
+      }
+    ],
+    "max_pool_checkout_share_of_response_read": 0.003198146701510961,
+    "interpretation": "Even an impossible 100% elimination of pool_checkout would explain less than 0.32% of nested response_read time in the measured failing cells. This is below the fixed SOTA target and below the threshold for a production change in S9."
+  },
+  "counterexample_gate": {
+    "classification": "candidate_does_not_meet_sota_entry_bar",
+    "decision": "Do not implement or retain this candidate as S9 production optimization evidence unless future profiling contradicts the current phase data.",
+    "not_a_completion_claim": true,
+    "s9_status_after_review": "active"
+  }
+}

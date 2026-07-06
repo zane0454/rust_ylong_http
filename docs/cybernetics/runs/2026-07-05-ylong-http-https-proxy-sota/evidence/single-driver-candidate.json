@@ -1,0 +1,120 @@
+{
+  "evidence_id": "evidence.single-driver-candidate",
+  "required_step": "S9-causal-performance-evidence",
+  "work_package_id": "WP4-sota-performance-evidence",
+  "runtime_generation": "gen-000",
+  "status": "counterexample_candidate_rejected_not_retained",
+  "verified_at": "2026-07-06T09:20:11+08:00",
+  "summary": "A benchmark-only single-driver async ylong concurrency model was tested to isolate runtime spawn scheduling cost by driving multiple in-flight public Client::request futures from one parent future. The focused HTTPS-over-HTTPS-proxy concurrency=8 matrix completed with zero errors, but the candidate failed SOTA gates and was removed: throughput geomean was 0.951x, worst throughput was 0.823x at 1000 requests, p50 max was 1.212x, p95 max was 1.098x, CPU/request geomean was 0.709x, and RSS max was 1.054x. This refutes parent-future single-driver polling as a SOTA-scale solution while preserving ylong_runtime scheduling as a causal narrowing area.",
+  "candidate_scope": {
+    "type": "benchmark-only runtime-interaction candidate",
+    "retained_in_source": false,
+    "real_client_path": "The candidate still used public ylong_http_client async ClientBuilder, Proxy, Request::builder, Client::request, and response body drain; it changed only how concurrent in-flight request futures were driven inside the benchmark binary.",
+    "reason_for_rejection": "Focused HTTPS-over-HTTPS-proxy 1000-request cell regressed relative to libcurl with 0.823x throughput, 1.212x p50, and 1.098x p95 ratios."
+  },
+  "commands": [
+    {
+      "name": "red_test",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_driver_red cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value",
+      "exit_code": 101,
+      "result": "Failed as expected before implementation because YlongConcurrencyModel::from_value(\"single-driver\") was unsupported."
+    },
+    {
+      "name": "green_test",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_driver_green2 cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value",
+      "exit_code": 0,
+      "result": "Single-driver parser test passed while the candidate implementation was present."
+    },
+    {
+      "name": "python_cli_green_test",
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_cli_accepts_single_driver_concurrency_model",
+      "exit_code": 0,
+      "result": "Python harness accepted --ylong-concurrency-model single-driver while the candidate was present."
+    },
+    {
+      "name": "candidate_release_build",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_driver_release cargo build -p ylong_http_client --release --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench",
+      "exit_code": 0,
+      "result": "Release benchmark binary built successfully for candidate measurement."
+    },
+    {
+      "name": "focused_benchmark",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" python3 docs/benchmarks/run_https_proxy_bench.py --baseline libcurl --ylong-client async --ylong-concurrency-model single-driver --scenario https-over-https-proxy --requests 200,1000 --repeats 3 --warmup 50 --concurrency 8 --bench-bin /tmp/ylong_http_target_single_driver_release/release/https_proxy_bench --result-dir docs/benchmarks/results/single-driver-candidate --figure-dir docs/benchmarks/results/single-driver-candidate",
+      "exit_code": 0,
+      "result": "Focused benchmark completed with zero errors for both ylong_http_client and libcurl."
+    },
+    {
+      "name": "post_removal_rust_test",
+      "command": "PATH=\"$HOME/.cargo/bin:$PATH\" CARGO_TARGET_DIR=/tmp/ylong_http_target_single_driver_postremove cargo test -p ylong_http_client --bin https_proxy_bench --no-default-features --features async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench ut_ylong_concurrency_model_defaults_to_threaded_and_requires_known_value",
+      "exit_code": 0,
+      "result": "Parser regression test passed after removing the rejected candidate from source."
+    },
+    {
+      "name": "post_removal_python_test",
+      "command": "python3 -m unittest docs.benchmarks.test_run_https_proxy_bench.HttpsProxyHarnessTest.test_ylong_concurrency_model_is_explicit_result_dimension",
+      "exit_code": 0,
+      "result": "Existing Python concurrency-model result-dimension test passed after removing the rejected candidate from source."
+    }
+  ],
+  "focused_benchmark_result": {
+    "scenario": "https-over-https-proxy",
+    "concurrency": 8,
+    "ylong_concurrency_model": "single-driver",
+    "request_counts": [
+      200,
+      1000
+    ],
+    "repeats": 3,
+    "warmup": 50,
+    "baseline": "same-process libcurl",
+    "errors_sum": 0,
+    "throughput_geomean_ratio_ylong_over_libcurl": 0.9510120079327155,
+    "worst_throughput_ratio_ylong_over_libcurl": 0.8229392522060857,
+    "p50_geomean_ratio_ylong_over_libcurl": 1.02720136244039,
+    "p50_max_ratio_ylong_over_libcurl": 1.2121751512993948,
+    "p95_geomean_ratio_ylong_over_libcurl": 1.0003101719306349,
+    "p95_max_ratio_ylong_over_libcurl": 1.0981690689520842,
+    "cpu_geomean_ratio_ylong_over_libcurl": 0.7092263234552487,
+    "rss_max_ratio_ylong_over_libcurl": 1.0537873180360229,
+    "cells": [
+      {
+        "requests": 200,
+        "throughput_ratio_ylong_over_libcurl": 1.099016527414011,
+        "p50_ratio_ylong_over_libcurl": 0.8704539421290151,
+        "p95_ratio_ylong_over_libcurl": 0.9111715749039694,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.5930018829014615,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0522940305870745
+      },
+      {
+        "requests": 1000,
+        "throughput_ratio_ylong_over_libcurl": 0.8229392522060857,
+        "p50_ratio_ylong_over_libcurl": 1.2121751512993948,
+        "p95_ratio_ylong_over_libcurl": 1.0981690689520842,
+        "cpu_us_per_request_ratio_ylong_over_libcurl": 0.8482299843986034,
+        "rss_peak_ratio_ylong_over_libcurl": 1.0537873180360229
+      }
+    ]
+  },
+  "artifacts": {
+    "candidate_binary": "/tmp/ylong_http_target_single_driver_release/release/https_proxy_bench",
+    "result_dir": "docs/benchmarks/results/single-driver-candidate",
+    "results_csv": "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_results.csv",
+    "summary_csv": "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_summary.csv",
+    "comparison_csv": "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_comparison.csv",
+    "env_json": "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_env.json",
+    "raw_output": "docs/benchmarks/results/single-driver-candidate/https_proxy_bench_raw.txt"
+  },
+  "hashes": {
+    "candidate_binary": "sha256:fe3874d3cdd67c4549a70311478e79bb0acb1a0e905f7cf184ee802230aac3e8",
+    "candidate_source_hash_while_present": "sha256:814cb560d49a2bf1922e65d5cfbff8c19b5b007cdbf27af3fc5b8fa8e82a7291",
+    "post_removal_source_hash": "sha256:9cee6a000b908b903076ccdcdbc8ab9dfde98f56b562a07579f4afb81cd49620",
+    "post_removal_harness_hash": "sha256:2d3de44c83ff1a879abd664c0feb51c0e5eb97e6cc071e64402020f211fec1fc",
+    "post_removal_harness_test_hash": "sha256:f857db9088b95eeb7daf62351b74dec377186b7a8f9540c0c694cc54c6957e09",
+    "results_csv": "sha256:9d86ed809beda5000a2f7c98311da25e5ccb90794a11aee6a0a28f61b5007c72",
+    "summary_csv": "sha256:a519e054d1398cd2ccba5c1ebf55acfbe62b6c8bf22742717c6320289e29d438",
+    "comparison_csv": "sha256:6ce189fb4324f25bb0aa2eddf7ffc40621a370f9ac10b2ec63581941e6b52556",
+    "env_json": "sha256:3f6a5510cf697cecf8f326ff247c53b8e7a2aa8baa7d5832211307cceb719fed",
+    "raw_output": "sha256:c12920b33e71680b80bcc67226bd01ba009a8d59d3b319dc9c9ea07e4104b18c"
+  },
+  "claim_boundary": "This evidence is a rejected S9 candidate and causal narrowing artifact. It must not be used as SOTA completion evidence, S9 pass evidence, or final-report success evidence."
+}

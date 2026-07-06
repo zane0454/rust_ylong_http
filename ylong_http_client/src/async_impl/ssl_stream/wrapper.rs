@@ -16,6 +16,8 @@ use core::pin::Pin;
 use core::task::{Context, Poll};
 use std::io::{self, Read, Write};
 
+#[cfg(feature = "bench_tls_io")]
+use crate::async_impl::ssl_stream::bench_tls_stats;
 use crate::runtime::{AsyncRead, AsyncWrite, ReadBuf};
 
 #[derive(Debug)]
@@ -46,9 +48,15 @@ where
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let (stream, cx) = unsafe { self.inner() };
         let mut buf = ReadBuf::new(buf);
+        #[cfg(feature = "bench_tls_io")]
+        bench_tls_stats::record_underlying_read_call();
         match stream.poll_read(cx, &mut buf)? {
             Poll::Ready(()) => Ok(buf.filled().len()),
-            Poll::Pending => Err(io::Error::from(io::ErrorKind::WouldBlock)),
+            Poll::Pending => {
+                #[cfg(feature = "bench_tls_io")]
+                bench_tls_stats::record_underlying_read_pending();
+                Err(io::Error::from(io::ErrorKind::WouldBlock))
+            }
         }
     }
 }
@@ -59,9 +67,15 @@ where
 {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let (stream, cx) = unsafe { self.inner() };
+        #[cfg(feature = "bench_tls_io")]
+        bench_tls_stats::record_underlying_write_call();
         match stream.poll_write(cx, buf) {
             Poll::Ready(r) => r,
-            Poll::Pending => Err(io::Error::from(io::ErrorKind::WouldBlock)),
+            Poll::Pending => {
+                #[cfg(feature = "bench_tls_io")]
+                bench_tls_stats::record_underlying_write_pending();
+                Err(io::Error::from(io::ErrorKind::WouldBlock))
+            }
         }
     }
 

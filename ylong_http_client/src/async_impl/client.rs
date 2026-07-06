@@ -216,15 +216,37 @@ impl<C: Connector> Client<C> {
         &self,
         mut request: RequestArc,
     ) -> Result<Response, HttpClientError> {
+        let phase_enabled = crate::TimeGroup::bench_phase_enabled();
+        let format_start = phase_enabled.then(std::time::Instant::now);
         RequestFormatter::new(request.ref_mut()).format()?;
+        if let Some(start) = format_start {
+            request
+                .ref_mut()
+                .time_group_mut()
+                .add_request_format_duration(start.elapsed());
+        }
+        let pool_start = phase_enabled.then(std::time::Instant::now);
         let mut info_conn = self.connect_to(request.ref_mut().uri()).await?;
+        if let Some(start) = pool_start {
+            request
+                .ref_mut()
+                .time_group_mut()
+                .add_pool_checkout_duration(start.elapsed());
+        }
         request
             .ref_mut()
             .time_group_mut()
             .update_transport_conn_time(info_conn.time_group());
         let mut conn = info_conn.connection();
         self.interceptors.intercept_connection(conn.get_detail())?;
-        self.send_request_on_conn(conn, request).await
+        let send_start = phase_enabled.then(std::time::Instant::now);
+        let mut response = self.send_request_on_conn(conn, request).await?;
+        if let Some(start) = send_start {
+            response
+                .time_group_mut()
+                .add_send_on_conn_duration(start.elapsed());
+        }
+        Ok(response)
     }
 
     async fn connect_to(&self, uri: &Uri) -> Result<TimeInfoConn<C::Stream>, HttpClientError> {
