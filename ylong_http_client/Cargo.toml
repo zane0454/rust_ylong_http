@@ -11,6 +11,7 @@ keywords = ["ylong", "http", "client"]
 ylong_http = { path = "../ylong_http" }
 quiche = { version = "0.22.0", features = ["ffi"], optional = true }
 libc = { version = "0.2.134", optional = true }
+openssl = { version = "0.10.29", optional = true }
 tokio = { version = "1.20.1", features = ["io-util", "net", "rt", "rt-multi-thread", "macros", "sync", "time"], optional = true }
 ylong_runtime = { git = "https://gitee.com/openharmony/commonlibrary_rust_ylong_runtime.git", features = ["net", "sync", "fs", "macros", "time"], optional = true }
 
@@ -46,6 +47,7 @@ c_openssl_3_0 = ["__c_openssl"]         # Uses TLS by FFI of C-openssl 3.0.
 c_boringssl = ["__tls", "libc"]
 libcurl_bench = ["libc"]                # Enables the same-process libcurl benchmark baseline.
 bench_tls_io = []                       # Enables benchmark-only TLS I/O diagnostic counters.
+bench_fixture = ["openssl", "libc"]     # Enables the native HTTPS proxy benchmark fixture.
 
 [[example]]
 name = "async_certs_adapter"
@@ -81,6 +83,11 @@ required-features = ["async", "http1_1", "__tls", "tokio_base"]
 name = "https_proxy_bench"
 path = "src/bin/https_proxy_bench.rs"
 required-features = ["async", "http1_1", "__c_openssl"]
+
+[[bin]]
+name = "https_proxy_fixture"
+path = "src/bin/https_proxy_fixture.rs"
+required-features = ["bench_fixture"]
 
 [[example]]
 name = "sync_https_outside"

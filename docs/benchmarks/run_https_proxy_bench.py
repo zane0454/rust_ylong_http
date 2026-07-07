@@ -12,6 +12,7 @@ import contextlib
 import json
 import os
 import platform
+import queue
 import random
 import re
 import select
@@ -30,6 +31,7 @@ from typing import Iterable
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 import numpy as np
 import pandas as pd
 
@@ -40,6 +42,9 @@ RESULT_DIR = ROOT / "docs" / "benchmarks" / "results"
 BENCH_BIN = ROOT / "target" / "release" / (
     "https_proxy_bench.exe" if os.name == "nt" else "https_proxy_bench"
 )
+FIXTURE_BIN = ROOT / "target" / "release" / (
+    "https_proxy_fixture.exe" if os.name == "nt" else "https_proxy_fixture"
+)
 TARGET_URL = "http://127.0.0.1:18080/bench"
 BODY = b"x" * 4096
 SCENARIOS = (
@@ -47,6 +52,7 @@ SCENARIOS = (
     "https-over-https-proxy",
     "proxy-mtls-https-origin",
 )
+FIXTURE_CHOICES = ("rust", "python-smoke")
 DURATION_RE = re.compile(
     r"^(ylong_http_client|ylong_http_client_sync|curl|curl_cli|libcurl): "
     r"([0-9.]+)([a-zA-Zµ]+) for (\d+) requests$"
@@ -88,6 +94,12 @@ PROXY_TRACE_RE = re.compile(
     r"(?: response_send_us=(\d+) response_send_events=(\d+) "
     r"tunnel_send_to_client_us=(\d+) tunnel_send_to_client_events=(\d+) "
     r"tunnel_send_to_origin_us=(\d+) tunnel_send_to_origin_events=(\d+))?"
+    r"(?: tunnel_poll_calls=(\d+) tunnel_poll_timeouts=(\d+) "
+    r"tunnel_client_read_would_block=(\d+) tunnel_origin_read_would_block=(\d+) "
+    r"tunnel_send_to_client_would_block=(\d+) "
+    r"tunnel_send_to_origin_would_block=(\d+) "
+    r"tunnel_client_to_origin_queue_bytes_max=(\d+) "
+    r"tunnel_origin_to_client_queue_bytes_max=(\d+))?"
     r"(?: tls_fingerprints=([^\s]+))?$"
 )
 ORIGIN_TRACE_RE = re.compile(
@@ -147,6 +159,11 @@ def unique_tls_fingerprint_values(values: Iterable[str]) -> str:
     return "|".join(sorted(unique)) if unique else "-"
 
 
+def unique_text_values(values: Iterable[str]) -> str:
+    unique = sorted({str(value) for value in values if value and str(value) != "-"})
+    return "|".join(unique) if unique else "-"
+
+
 @dataclass
 class BenchResult:
     scenario: str
@@ -154,6 +171,7 @@ class BenchResult:
     repeat: int
     client: str
     elapsed_ms: float
+    fixture_kind: str = "rust"
     concurrency: int = 1
     ylong_concurrency_model: str = "threaded"
     client_order_policy: str = "fixed"
@@ -179,6 +197,14 @@ class BenchResult:
     proxy_tunnel_send_to_client_events: int = 0
     proxy_tunnel_send_to_origin_us: int = 0
     proxy_tunnel_send_to_origin_events: int = 0
+    proxy_tunnel_poll_calls: int = 0
+    proxy_tunnel_poll_timeouts: int = 0
+    proxy_tunnel_client_read_would_block: int = 0
+    proxy_tunnel_origin_read_would_block: int = 0
+    proxy_tunnel_send_to_client_would_block: int = 0
+    proxy_tunnel_send_to_origin_would_block: int = 0
+    proxy_tunnel_client_to_origin_queue_bytes_max: int = 0
+    proxy_tunnel_origin_to_client_queue_bytes_max: int = 0
     origin_connections: int = 0
     origin_requests: int = 0
     origin_tls_connections: int = 0
@@ -263,6 +289,14 @@ class TraceResult:
     proxy_tunnel_send_to_client_events: int = 0
     proxy_tunnel_send_to_origin_us: int = 0
     proxy_tunnel_send_to_origin_events: int = 0
+    proxy_tunnel_poll_calls: int = 0
+    proxy_tunnel_poll_timeouts: int = 0
+    proxy_tunnel_client_read_would_block: int = 0
+    proxy_tunnel_origin_read_would_block: int = 0
+    proxy_tunnel_send_to_client_would_block: int = 0
+    proxy_tunnel_send_to_origin_would_block: int = 0
+    proxy_tunnel_client_to_origin_queue_bytes_max: int = 0
+    proxy_tunnel_origin_to_client_queue_bytes_max: int = 0
     origin_connections: int = 0
     origin_requests: int = 0
     origin_tls_connections: int = 0
@@ -321,6 +355,38 @@ class TraceResult:
                 self.proxy_tunnel_send_to_origin_events
                 - earlier.proxy_tunnel_send_to_origin_events
             ),
+            proxy_tunnel_poll_calls=(
+                self.proxy_tunnel_poll_calls - earlier.proxy_tunnel_poll_calls
+            ),
+            proxy_tunnel_poll_timeouts=(
+                self.proxy_tunnel_poll_timeouts - earlier.proxy_tunnel_poll_timeouts
+            ),
+            proxy_tunnel_client_read_would_block=(
+                self.proxy_tunnel_client_read_would_block
+                - earlier.proxy_tunnel_client_read_would_block
+            ),
+            proxy_tunnel_origin_read_would_block=(
+                self.proxy_tunnel_origin_read_would_block
+                - earlier.proxy_tunnel_origin_read_would_block
+            ),
+            proxy_tunnel_send_to_client_would_block=(
+                self.proxy_tunnel_send_to_client_would_block
+                - earlier.proxy_tunnel_send_to_client_would_block
+            ),
+            proxy_tunnel_send_to_origin_would_block=(
+                self.proxy_tunnel_send_to_origin_would_block
+                - earlier.proxy_tunnel_send_to_origin_would_block
+            ),
+            proxy_tunnel_client_to_origin_queue_bytes_max=max(
+                0,
+                self.proxy_tunnel_client_to_origin_queue_bytes_max
+                - earlier.proxy_tunnel_client_to_origin_queue_bytes_max,
+            ),
+            proxy_tunnel_origin_to_client_queue_bytes_max=max(
+                0,
+                self.proxy_tunnel_origin_to_client_queue_bytes_max
+                - earlier.proxy_tunnel_origin_to_client_queue_bytes_max,
+            ),
             origin_connections=self.origin_connections - earlier.origin_connections,
             origin_requests=self.origin_requests - earlier.origin_requests,
             origin_tls_connections=self.origin_tls_connections - earlier.origin_tls_connections,
@@ -363,6 +429,24 @@ class TraceResult:
         self.proxy_tunnel_send_to_client_events += other.proxy_tunnel_send_to_client_events
         self.proxy_tunnel_send_to_origin_us += other.proxy_tunnel_send_to_origin_us
         self.proxy_tunnel_send_to_origin_events += other.proxy_tunnel_send_to_origin_events
+        self.proxy_tunnel_poll_calls += other.proxy_tunnel_poll_calls
+        self.proxy_tunnel_poll_timeouts += other.proxy_tunnel_poll_timeouts
+        self.proxy_tunnel_client_read_would_block += other.proxy_tunnel_client_read_would_block
+        self.proxy_tunnel_origin_read_would_block += other.proxy_tunnel_origin_read_would_block
+        self.proxy_tunnel_send_to_client_would_block += (
+            other.proxy_tunnel_send_to_client_would_block
+        )
+        self.proxy_tunnel_send_to_origin_would_block += (
+            other.proxy_tunnel_send_to_origin_would_block
+        )
+        self.proxy_tunnel_client_to_origin_queue_bytes_max = max(
+            self.proxy_tunnel_client_to_origin_queue_bytes_max,
+            other.proxy_tunnel_client_to_origin_queue_bytes_max,
+        )
+        self.proxy_tunnel_origin_to_client_queue_bytes_max = max(
+            self.proxy_tunnel_origin_to_client_queue_bytes_max,
+            other.proxy_tunnel_origin_to_client_queue_bytes_max,
+        )
         add_tls_fingerprints(self.proxy_tls_fingerprints, other.proxy_tls_fingerprints)
 
     def add_origin(self, other: "TraceResult") -> None:
@@ -394,6 +478,14 @@ class TraceResult:
             f"tunnel_send_to_client_events={self.proxy_tunnel_send_to_client_events} "
             f"tunnel_send_to_origin_us={self.proxy_tunnel_send_to_origin_us} "
             f"tunnel_send_to_origin_events={self.proxy_tunnel_send_to_origin_events} "
+            f"tunnel_poll_calls={self.proxy_tunnel_poll_calls} "
+            f"tunnel_poll_timeouts={self.proxy_tunnel_poll_timeouts} "
+            f"tunnel_client_read_would_block={self.proxy_tunnel_client_read_would_block} "
+            f"tunnel_origin_read_would_block={self.proxy_tunnel_origin_read_would_block} "
+            f"tunnel_send_to_client_would_block={self.proxy_tunnel_send_to_client_would_block} "
+            f"tunnel_send_to_origin_would_block={self.proxy_tunnel_send_to_origin_would_block} "
+            f"tunnel_client_to_origin_queue_bytes_max={self.proxy_tunnel_client_to_origin_queue_bytes_max} "
+            f"tunnel_origin_to_client_queue_bytes_max={self.proxy_tunnel_origin_to_client_queue_bytes_max} "
             f"tls_fingerprints={format_tls_fingerprints(self.proxy_tls_fingerprints)}"
         )
 
@@ -764,6 +856,180 @@ class LocalHttpsProxy:
         return 0
 
 
+class RustHttpsProxyFixture:
+    def __init__(
+        self,
+        fixture_bin: Path,
+        certs: BenchmarkCertificates,
+        body: bytes,
+        *,
+        scenario: str,
+        proxy_mtls: bool,
+        origin_tls: bool,
+    ) -> None:
+        self.fixture_bin = fixture_bin
+        self.certs = certs
+        self.body = body
+        self.scenario = scenario
+        self.proxy_mtls = proxy_mtls
+        self.origin_tls = origin_tls
+        self.process: subprocess.Popen[str] | None = None
+        self.url = ""
+        self.target_url = ""
+        self.admin_addr: tuple[str, int] | None = None
+
+    def __enter__(self) -> "RustHttpsProxyFixture":
+        command = [
+            str(self.fixture_bin),
+            "--scenario",
+            self.scenario,
+            "--body-bytes",
+            str(len(self.body)),
+            "--proxy-cert",
+            str(self.certs.proxy_cert_file),
+            "--proxy-key",
+            str(self.certs.proxy_key_file),
+            "--origin-cert",
+            str(self.certs.origin_cert_file),
+            "--origin-key",
+            str(self.certs.origin_key_file),
+        ]
+        if self.proxy_mtls:
+            command.extend(["--client-ca", str(self.certs.ca_file)])
+        if self.origin_tls:
+            command.append("--origin-tls")
+        self.process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        assert self.process.stdout is not None
+        ready_queue: queue.Queue[str | BaseException] = queue.Queue(maxsize=1)
+
+        def read_ready_line() -> None:
+            try:
+                ready_queue.put(self.process.stdout.readline())
+            except BaseException as exc:  # pragma: no cover - defensive thread boundary.
+                ready_queue.put(exc)
+
+        threading.Thread(target=read_ready_line, daemon=True).start()
+        try:
+            ready_item = ready_queue.get(timeout=5.0)
+        except queue.Empty:
+            self.__exit__(None, None, None)
+            raise RuntimeError(f"fixture did not become ready: {self.fixture_bin}")
+        if isinstance(ready_item, BaseException):
+            self.__exit__(None, None, None)
+            raise RuntimeError(f"fixture ready read failed: {ready_item}") from ready_item
+        line = ready_item
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError as exc:
+            self.__exit__(None, None, None)
+            raise RuntimeError(f"fixture emitted malformed ready line: {line!r}") from exc
+        if payload.get("type") != "ready":
+            self.__exit__(None, None, None)
+            raise RuntimeError(f"fixture emitted unexpected ready payload: {payload!r}")
+        self.url = str(payload["proxy_url"])
+        self.target_url = str(payload["target_url"])
+        host, port = str(payload["admin_addr"]).rsplit(":", 1)
+        self.admin_addr = (host, int(port))
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        if self.process is None:
+            return
+        process = self.process
+        self.process = None
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=2.0)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=2.0)
+        if process.stdout is not None:
+            process.stdout.close()
+        if process.stderr is not None:
+            process.stderr.close()
+
+    def snapshot(self, scenario: str, client: str) -> TraceResult:
+        if self.admin_addr is None:
+            return empty_trace(scenario, client)
+        with socket.create_connection(self.admin_addr, timeout=2.0) as sock:
+            sock.sendall(f"snapshot {scenario} {client}\n".encode("ascii"))
+            data = bytearray()
+            while b"\n" not in data:
+                chunk = sock.recv(65536)
+                if not chunk:
+                    break
+                data.extend(chunk)
+        if not data:
+            return empty_trace(scenario, client)
+        payload = json.loads(bytes(data).decode("utf-8"))
+        return trace_from_fixture_payload(payload, scenario=scenario, client=client)
+
+
+def trace_from_fixture_payload(
+    payload: dict[str, object],
+    *,
+    scenario: str,
+    client: str,
+) -> TraceResult:
+    def int_field(name: str) -> int:
+        return int(payload.get(name, 0) or 0)
+
+    trace = TraceResult(
+        scenario=scenario,
+        client=client,
+        proxy_connections=int_field("proxy_connections"),
+        proxy_forward_requests=int_field("proxy_forward_requests"),
+        proxy_connect_requests=int_field("proxy_connect_requests"),
+        proxy_tunnel_bytes_from_client=int_field("proxy_tunnel_bytes_from_client"),
+        proxy_tunnel_bytes_from_origin=int_field("proxy_tunnel_bytes_from_origin"),
+        proxy_tls_client_auth_failures=int_field("proxy_tls_client_auth_failures"),
+        proxy_request_header_bytes=int_field("proxy_request_header_bytes"),
+        proxy_request_body_bytes=int_field("proxy_request_body_bytes"),
+        proxy_response_body_bytes=int_field("proxy_response_body_bytes"),
+        proxy_response_send_us=int_field("proxy_response_send_us"),
+        proxy_response_send_events=int_field("proxy_response_send_events"),
+        proxy_tunnel_send_to_client_us=int_field("proxy_tunnel_send_to_client_us"),
+        proxy_tunnel_send_to_client_events=int_field("proxy_tunnel_send_to_client_events"),
+        proxy_tunnel_send_to_origin_us=int_field("proxy_tunnel_send_to_origin_us"),
+        proxy_tunnel_send_to_origin_events=int_field("proxy_tunnel_send_to_origin_events"),
+        proxy_tunnel_poll_calls=int_field("proxy_tunnel_poll_calls"),
+        proxy_tunnel_poll_timeouts=int_field("proxy_tunnel_poll_timeouts"),
+        proxy_tunnel_client_read_would_block=int_field(
+            "proxy_tunnel_client_read_would_block"
+        ),
+        proxy_tunnel_origin_read_would_block=int_field(
+            "proxy_tunnel_origin_read_would_block"
+        ),
+        proxy_tunnel_send_to_client_would_block=int_field(
+            "proxy_tunnel_send_to_client_would_block"
+        ),
+        proxy_tunnel_send_to_origin_would_block=int_field(
+            "proxy_tunnel_send_to_origin_would_block"
+        ),
+        proxy_tunnel_client_to_origin_queue_bytes_max=int_field(
+            "proxy_tunnel_client_to_origin_queue_bytes_max"
+        ),
+        proxy_tunnel_origin_to_client_queue_bytes_max=int_field(
+            "proxy_tunnel_origin_to_client_queue_bytes_max"
+        ),
+        origin_connections=int_field("origin_connections"),
+        origin_requests=int_field("origin_requests"),
+        origin_tls_connections=int_field("origin_tls_connections"),
+        origin_request_header_bytes=int_field("origin_request_header_bytes"),
+        origin_request_body_bytes=int_field("origin_request_body_bytes"),
+        origin_response_body_bytes=int_field("origin_response_body_bytes"),
+        origin_response_send_us=int_field("origin_response_send_us"),
+        origin_response_send_events=int_field("origin_response_send_events"),
+    )
+    return trace
+
+
 def ensure_benchmark_certificates(work_dir: Path) -> BenchmarkCertificates:
     certs = BenchmarkCertificates(
         ca_file=work_dir / "https_proxy_bench_ca.crt",
@@ -928,7 +1194,7 @@ def duration_to_ms(value: str, unit: str) -> float:
 
 
 def client_label(client: str) -> str:
-    if client == "curl":
+    if client in {"curl", "curl-cli"}:
         return "curl_cli"
     return client
 
@@ -1155,6 +1421,14 @@ def parse_trace_output(stdout: str) -> list[TraceResult]:
                 tunnel_send_to_client_events,
                 tunnel_send_to_origin_us,
                 tunnel_send_to_origin_events,
+                tunnel_poll_calls,
+                tunnel_poll_timeouts,
+                tunnel_client_read_would_block,
+                tunnel_origin_read_would_block,
+                tunnel_send_to_client_would_block,
+                tunnel_send_to_origin_would_block,
+                tunnel_client_to_origin_queue_bytes_max,
+                tunnel_origin_to_client_queue_bytes_max,
                 tls_fingerprints,
             ) = proxy_match.groups()
             key = (scenario, client_label(client))
@@ -1177,6 +1451,26 @@ def parse_trace_output(stdout: str) -> list[TraceResult]:
             trace.proxy_tunnel_send_to_origin_us = int(tunnel_send_to_origin_us or 0)
             trace.proxy_tunnel_send_to_origin_events = int(
                 tunnel_send_to_origin_events or 0
+            )
+            trace.proxy_tunnel_poll_calls = int(tunnel_poll_calls or 0)
+            trace.proxy_tunnel_poll_timeouts = int(tunnel_poll_timeouts or 0)
+            trace.proxy_tunnel_client_read_would_block = int(
+                tunnel_client_read_would_block or 0
+            )
+            trace.proxy_tunnel_origin_read_would_block = int(
+                tunnel_origin_read_would_block or 0
+            )
+            trace.proxy_tunnel_send_to_client_would_block = int(
+                tunnel_send_to_client_would_block or 0
+            )
+            trace.proxy_tunnel_send_to_origin_would_block = int(
+                tunnel_send_to_origin_would_block or 0
+            )
+            trace.proxy_tunnel_client_to_origin_queue_bytes_max = int(
+                tunnel_client_to_origin_queue_bytes_max or 0
+            )
+            trace.proxy_tunnel_origin_to_client_queue_bytes_max = int(
+                tunnel_origin_to_client_queue_bytes_max or 0
             )
             trace.proxy_tls_fingerprints = parse_tls_fingerprints(tls_fingerprints)
             continue
@@ -1396,6 +1690,22 @@ def attach_trace(rows: list[BenchResult], trace: TraceResult) -> None:
         row.proxy_tunnel_send_to_client_events = trace.proxy_tunnel_send_to_client_events
         row.proxy_tunnel_send_to_origin_us = trace.proxy_tunnel_send_to_origin_us
         row.proxy_tunnel_send_to_origin_events = trace.proxy_tunnel_send_to_origin_events
+        row.proxy_tunnel_poll_calls = trace.proxy_tunnel_poll_calls
+        row.proxy_tunnel_poll_timeouts = trace.proxy_tunnel_poll_timeouts
+        row.proxy_tunnel_client_read_would_block = trace.proxy_tunnel_client_read_would_block
+        row.proxy_tunnel_origin_read_would_block = trace.proxy_tunnel_origin_read_would_block
+        row.proxy_tunnel_send_to_client_would_block = (
+            trace.proxy_tunnel_send_to_client_would_block
+        )
+        row.proxy_tunnel_send_to_origin_would_block = (
+            trace.proxy_tunnel_send_to_origin_would_block
+        )
+        row.proxy_tunnel_client_to_origin_queue_bytes_max = (
+            trace.proxy_tunnel_client_to_origin_queue_bytes_max
+        )
+        row.proxy_tunnel_origin_to_client_queue_bytes_max = (
+            trace.proxy_tunnel_origin_to_client_queue_bytes_max
+        )
         row.origin_connections = trace.origin_connections
         row.origin_requests = trace.origin_requests
         row.origin_tls_connections = trace.origin_tls_connections
@@ -1423,6 +1733,7 @@ def write_results(
             "scenario": row.scenario,
             "repeat": row.repeat,
             "client": row.client,
+            "fixture_kind": row.fixture_kind,
             "elapsed_ms": row.elapsed_ms,
             "latency_ms": row.latency_ms,
             "throughput_rps": row.throughput_rps,
@@ -1450,6 +1761,22 @@ def write_results(
             "proxy_tunnel_send_to_client_events": row.proxy_tunnel_send_to_client_events,
             "proxy_tunnel_send_to_origin_us": row.proxy_tunnel_send_to_origin_us,
             "proxy_tunnel_send_to_origin_events": row.proxy_tunnel_send_to_origin_events,
+            "proxy_tunnel_poll_calls": row.proxy_tunnel_poll_calls,
+            "proxy_tunnel_poll_timeouts": row.proxy_tunnel_poll_timeouts,
+            "proxy_tunnel_client_read_would_block": row.proxy_tunnel_client_read_would_block,
+            "proxy_tunnel_origin_read_would_block": row.proxy_tunnel_origin_read_would_block,
+            "proxy_tunnel_send_to_client_would_block": (
+                row.proxy_tunnel_send_to_client_would_block
+            ),
+            "proxy_tunnel_send_to_origin_would_block": (
+                row.proxy_tunnel_send_to_origin_would_block
+            ),
+            "proxy_tunnel_client_to_origin_queue_bytes_max": (
+                row.proxy_tunnel_client_to_origin_queue_bytes_max
+            ),
+            "proxy_tunnel_origin_to_client_queue_bytes_max": (
+                row.proxy_tunnel_origin_to_client_queue_bytes_max
+            ),
             "origin_connections": row.origin_connections,
             "origin_requests": row.origin_requests,
             "origin_tls_connections": row.origin_tls_connections,
@@ -1512,6 +1839,8 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
         df["concurrency"] = 1
     if "ylong_concurrency_model" not in df:
         df["ylong_concurrency_model"] = "threaded"
+    if "fixture_kind" not in df:
+        df["fixture_kind"] = "unknown"
     for column in ("proxy_tls_fingerprints", "origin_tls_fingerprints"):
         if column not in df:
             df[column] = "-"
@@ -1531,6 +1860,14 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
         "proxy_tunnel_send_to_client_events",
         "proxy_tunnel_send_to_origin_us",
         "proxy_tunnel_send_to_origin_events",
+        "proxy_tunnel_poll_calls",
+        "proxy_tunnel_poll_timeouts",
+        "proxy_tunnel_client_read_would_block",
+        "proxy_tunnel_origin_read_would_block",
+        "proxy_tunnel_send_to_client_would_block",
+        "proxy_tunnel_send_to_origin_would_block",
+        "proxy_tunnel_client_to_origin_queue_bytes_max",
+        "proxy_tunnel_origin_to_client_queue_bytes_max",
         "origin_connections",
         "origin_requests",
         "origin_tls_connections",
@@ -1602,6 +1939,7 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
             cpu_us_per_request_std=("cpu_us_per_request", "std"),
             rss_peak_bytes_max=("rss_peak_bytes", "max"),
             errors_sum=("errors", "sum"),
+            fixture_kind=("fixture_kind", unique_text_values),
             proxy_connections_mean=("proxy_connections", "mean"),
             proxy_forward_requests_mean=("proxy_forward_requests", "mean"),
             proxy_connect_requests_mean=("proxy_connect_requests", "mean"),
@@ -1621,6 +1959,32 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
             proxy_tunnel_send_to_origin_us_mean=("proxy_tunnel_send_to_origin_us", "mean"),
             proxy_tunnel_send_to_origin_events_mean=(
                 "proxy_tunnel_send_to_origin_events",
+                "mean",
+            ),
+            proxy_tunnel_poll_calls_mean=("proxy_tunnel_poll_calls", "mean"),
+            proxy_tunnel_poll_timeouts_mean=("proxy_tunnel_poll_timeouts", "mean"),
+            proxy_tunnel_client_read_would_block_mean=(
+                "proxy_tunnel_client_read_would_block",
+                "mean",
+            ),
+            proxy_tunnel_origin_read_would_block_mean=(
+                "proxy_tunnel_origin_read_would_block",
+                "mean",
+            ),
+            proxy_tunnel_send_to_client_would_block_mean=(
+                "proxy_tunnel_send_to_client_would_block",
+                "mean",
+            ),
+            proxy_tunnel_send_to_origin_would_block_mean=(
+                "proxy_tunnel_send_to_origin_would_block",
+                "mean",
+            ),
+            proxy_tunnel_client_to_origin_queue_bytes_max_mean=(
+                "proxy_tunnel_client_to_origin_queue_bytes_max",
+                "mean",
+            ),
+            proxy_tunnel_origin_to_client_queue_bytes_max_mean=(
+                "proxy_tunnel_origin_to_client_queue_bytes_max",
                 "mean",
             ),
             origin_connections_mean=("origin_connections", "mean"),
@@ -1712,6 +2076,8 @@ def normalize_benchmark_df(df: pd.DataFrame) -> pd.DataFrame:
         df["latency_ms"] = df["elapsed_ms"] / df["requests"]
     if "throughput_rps" not in df:
         df["throughput_rps"] = df["requests"] / (df["elapsed_ms"] / 1000.0)
+    if "fixture_kind" not in df:
+        df["fixture_kind"] = "unknown"
     for column, default in (
         ("p50_us", 0),
         ("p95_us", 0),
@@ -1719,6 +2085,8 @@ def normalize_benchmark_df(df: pd.DataFrame) -> pd.DataFrame:
         ("rss_peak_bytes", 0),
         ("errors", 0),
         ("proxy_response_send_us", 0),
+        ("proxy_tunnel_send_to_client_us", 0),
+        ("origin_response_send_us", 0),
         ("client_order_policy", "unknown"),
         ("client_order_seed", 0),
         ("client_order_position", 0),
@@ -1778,9 +2146,16 @@ def paired_compare_to_baseline(
         "rss_peak_bytes",
         "errors",
         "proxy_response_send_us",
+        "proxy_tunnel_send_to_client_us",
+        "origin_response_send_us",
     ]
-    baseline_rows = df[df["client"] == baseline][PAIR_KEYS + metric_columns].rename(
-        columns={column: f"{column}_baseline" for column in metric_columns}
+    baseline_rows = df[df["client"] == baseline][
+        PAIR_KEYS + ["fixture_kind"] + metric_columns
+    ].rename(
+        columns={
+            "fixture_kind": "fixture_kind_baseline",
+            **{column: f"{column}_baseline" for column in metric_columns},
+        }
     )
     if baseline_rows.empty:
         return pd.DataFrame()
@@ -1810,16 +2185,26 @@ def paired_compare_to_baseline(
                 group["cpu_us_per_request_baseline"],
             )
         )
-        candidate_proxy_send_ms = group["proxy_response_send_us"] / 1000.0
-        baseline_proxy_send_ms = group["proxy_response_send_us_baseline"] / 1000.0
-        candidate_send_share = safe_divide(candidate_proxy_send_ms, group["elapsed_ms"])
+        candidate_response_path_send_ms = (
+            group["proxy_response_send_us"]
+            + group["proxy_tunnel_send_to_client_us"]
+            + group["origin_response_send_us"]
+        ) / 1000.0
+        baseline_response_path_send_ms = (
+            group["proxy_response_send_us_baseline"]
+            + group["proxy_tunnel_send_to_client_us_baseline"]
+            + group["origin_response_send_us_baseline"]
+        ) / 1000.0
+        candidate_send_share = safe_divide(
+            candidate_response_path_send_ms, group["elapsed_ms"]
+        )
         baseline_send_share = safe_divide(
-            baseline_proxy_send_ms,
+            baseline_response_path_send_ms,
             group["elapsed_ms_baseline"],
         )
         elapsed_delta_ms = (group["elapsed_ms"] - group["elapsed_ms_baseline"]).abs()
         proxy_send_delta_ms = (
-            candidate_proxy_send_ms - baseline_proxy_send_ms
+            candidate_response_path_send_ms - baseline_response_path_send_ms
         ).abs()
         explained_fraction = safe_divide(proxy_send_delta_ms, elapsed_delta_ms).replace(
             [np.inf, -np.inf],
@@ -1829,18 +2214,28 @@ def paired_compare_to_baseline(
         baseline_share_mean = float(baseline_send_share.fillna(0.0).mean())
         max_send_share = max(candidate_share_mean, baseline_share_mean)
         explained_fraction_mean = float(explained_fraction.fillna(0.0).mean())
-        proxy_send_anomaly = (
-            max_send_share > proxy_send_share_threshold
-            or explained_fraction_mean > proxy_send_explained_fraction_threshold
+        fixture_kind = unique_text_values(group["fixture_kind"])
+        baseline_fixture_kind = unique_text_values(group["fixture_kind_baseline"])
+        noncanonical_fixture = fixture_kind != "rust" or baseline_fixture_kind != "rust"
+        proxy_send_share_exceeds = max_send_share > proxy_send_share_threshold
+        proxy_send_delta_explains = (
+            explained_fraction_mean > proxy_send_explained_fraction_threshold
         )
-        if max_send_share > proxy_send_share_threshold:
+        proxy_send_anomaly = proxy_send_delta_explains or (
+            noncanonical_fixture and proxy_send_share_exceeds
+        )
+        if proxy_send_delta_explains:
+            proxy_send_anomaly_reason = (
+                "server_response_path_send_delta_explains_elapsed_delta"
+            )
+        elif proxy_send_anomaly and proxy_send_share_exceeds:
             proxy_send_anomaly_reason = "server_send_share_exceeds_threshold"
-        elif explained_fraction_mean > proxy_send_explained_fraction_threshold:
-            proxy_send_anomaly_reason = "server_send_delta_explains_elapsed_delta"
         else:
             proxy_send_anomaly_reason = "-"
         errors_sum = int(group["errors"].sum() + group["errors_baseline"].sum())
-        if proxy_send_anomaly:
+        if noncanonical_fixture:
+            sota_gate = "reject_noncanonical_fixture"
+        elif proxy_send_anomaly:
             sota_gate = "reject_proxy_send_anomaly"
         elif errors_sum:
             sota_gate = "reject_errors"
@@ -1859,6 +2254,8 @@ def paired_compare_to_baseline(
                 "concurrency": concurrency,
                 "ylong_concurrency_model": ylong_concurrency_model,
                 "client": client,
+                "fixture_kind": fixture_kind,
+                "fixture_kind_baseline": baseline_fixture_kind,
                 "paired_sample_count": sample_count,
                 "paired_elapsed_ms_ratio_geomean": elapsed_ratio,
                 "paired_elapsed_ms_ratio_ci95_low": elapsed_low,
@@ -1879,6 +2276,12 @@ def paired_compare_to_baseline(
                 "proxy_send_elapsed_share_baseline_mean": baseline_share_mean,
                 "proxy_send_elapsed_share_max": max_send_share,
                 "proxy_send_elapsed_delta_explained_fraction": explained_fraction_mean,
+                "response_path_send_elapsed_share_candidate_mean": candidate_share_mean,
+                "response_path_send_elapsed_share_baseline_mean": baseline_share_mean,
+                "response_path_send_elapsed_share_max": max_send_share,
+                "response_path_send_elapsed_delta_explained_fraction": (
+                    explained_fraction_mean
+                ),
                 "proxy_send_anomaly": bool(proxy_send_anomaly),
                 "proxy_send_anomaly_reason": proxy_send_anomaly_reason,
                 "paired_errors_sum": errors_sum,
@@ -1903,6 +2306,10 @@ def benchmark_comparison(df: pd.DataFrame, *, baseline: str) -> pd.DataFrame:
             on=[*COMPARISON_KEYS, "client"],
             how="left",
         )
+        comparison = coalesce_suffixed_columns(
+            comparison,
+            ["fixture_kind", "fixture_kind_baseline"],
+        )
     else:
         comparison["paired_throughput_rps_ratio_geomean"] = np.nan
     comparison["throughput_rps_ratio"] = comparison[
@@ -1919,6 +2326,30 @@ def benchmark_comparison(df: pd.DataFrame, *, baseline: str) -> pd.DataFrame:
     )
 
 
+def coalesce_suffixed_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    df = df.copy()
+    for column in columns:
+        sources = [
+            source
+            for source in (f"{column}_y", column, f"{column}_x")
+            if source in df.columns
+        ]
+        if not sources:
+            continue
+        combined = df[sources[0]]
+        for source in sources[1:]:
+            combined = combined.combine_first(df[source])
+        df[column] = combined
+        df = df.drop(
+            columns=[
+                source
+                for source in (f"{column}_x", f"{column}_y")
+                if source in df.columns
+            ]
+        )
+    return df
+
+
 def compare_to_baseline(summary: pd.DataFrame, *, baseline: str) -> pd.DataFrame:
     baseline_rows = summary[summary["client"] == baseline][
         [
@@ -1926,6 +2357,7 @@ def compare_to_baseline(summary: pd.DataFrame, *, baseline: str) -> pd.DataFrame
             "requests",
             "concurrency",
             "ylong_concurrency_model",
+            "fixture_kind",
             "elapsed_ms_mean",
             "latency_ms_mean",
             "throughput_rps_mean",
@@ -2048,7 +2480,163 @@ def benchmark_ratio_plot_data(
         "throughput_geomean": float(np.exp(np.log(throughput).mean())),
         "throughput_worst": float(throughput.min()),
         "errors_sum": int(candidate_rows["errors_sum"].sum()),
+        "gate_counts": Counter(candidate_rows.get("sota_gate", [])),
     }
+
+
+def gate_label(gate: str) -> str:
+    labels = {
+        "pass_sota20": "pass 1.20x gate",
+        "inconclusive_ci": "CI inconclusive",
+        "reject_proxy_send_anomaly": "rejected by send anomaly gate",
+        "reject_noncanonical_fixture": "rejected: noncanonical fixture",
+        "reject_errors": "rejected: errors",
+        "diagnostic_low_sample": "diagnostic: low sample",
+        "fail_sota20": "fails 1.20x gate",
+    }
+    return labels.get(gate, gate.replace("_", " "))
+
+
+def plot_gate_summary(plot_data: dict[str, object], *, figure_dir: Path) -> None:
+    candidate_rows = plot_data["comparison"].copy()
+    scenarios = plot_data["scenarios"]
+    request_counts = plot_data["requests"]
+    order = {
+        (scenario_name, request_count): index
+        for index, (scenario_name, request_count) in enumerate(
+            (scenario_name, request_count)
+            for scenario_name in scenarios
+            for request_count in request_counts
+        )
+    }
+    candidate_rows["_plot_order"] = candidate_rows.apply(
+        lambda row: order.get((row["scenario"], row["requests"]), len(order)),
+        axis=1,
+    )
+    candidate_rows = candidate_rows.sort_values("_plot_order").reset_index(drop=True)
+
+    gate_colors = {
+        "pass_sota20": "#0072B2",
+        "inconclusive_ci": "#E69F00",
+        "fail_sota20": "#D55E00",
+        "reject_proxy_send_anomaly": "#7F7F7F",
+        "reject_noncanonical_fixture": "#7F7F7F",
+        "reject_errors": "#7F7F7F",
+        "diagnostic_low_sample": "#CC79A7",
+    }
+    gate_order = [
+        "pass_sota20",
+        "inconclusive_ci",
+        "fail_sota20",
+        "reject_proxy_send_anomaly",
+        "reject_noncanonical_fixture",
+        "reject_errors",
+        "diagnostic_low_sample",
+    ]
+
+    values = candidate_rows["throughput_rps_ratio"].astype(float).to_numpy()
+    ci_low = candidate_rows.get(
+        "paired_throughput_rps_ratio_ci95_low",
+        candidate_rows["throughput_rps_ratio"],
+    ).astype(float)
+    ci_high = candidate_rows.get(
+        "paired_throughput_rps_ratio_ci95_high",
+        candidate_rows["throughput_rps_ratio"],
+    ).astype(float)
+    left_err = np.maximum(0.0, values - ci_low.to_numpy())
+    right_err = np.maximum(0.0, ci_high.to_numpy() - values)
+    xerr = np.vstack([left_err, right_err])
+    labels = [
+        f"{scenario_label(str(row.scenario)).replace(chr(10), ' ')} / {int(row.requests)}"
+        for row in candidate_rows.itertuples(index=False)
+    ]
+    y_positions = np.arange(len(candidate_rows))
+
+    fig, ax = plt.subplots(figsize=(9.7, 5.5), constrained_layout=True)
+    colors = [
+        gate_colors.get(str(gate), "#999999")
+        for gate in candidate_rows["sota_gate"].fillna("not_gated")
+    ]
+    bars = ax.barh(y_positions, values, color=colors, edgecolor="#222222", linewidth=0.5)
+    for bar, gate in zip(bars, candidate_rows["sota_gate"].fillna("not_gated")):
+        if str(gate).startswith("reject_"):
+            bar.set_hatch("////")
+
+    ax.errorbar(
+        values,
+        y_positions,
+        xerr=xerr,
+        fmt="none",
+        ecolor="#222222",
+        elinewidth=1.0,
+        capsize=3,
+        capthick=1.0,
+        zorder=3,
+    )
+    ax.axvline(1.0, color="#4D4D4D", linewidth=1.0)
+    ax.axvline(1.2, color="#0072B2", linestyle="--", linewidth=1.2)
+    ax.text(1.205, -0.7, "1.20x SOTA gate", color="#0072B2", fontsize=8.5)
+    ax.set_yticks(y_positions, labels)
+    ax.invert_yaxis()
+    ax.set_xlabel(
+        "Paired throughput ratio: ylong_http_client_sync / libcurl "
+        "(throughput uplift = ratio - 1)"
+    )
+    ax.set_title(
+        "HTTPS proxy benchmark decision matrix\n"
+        "Rust fixture, same-process libcurl baseline; rejected bars are not SOTA evidence",
+        loc="left",
+        fontweight="bold",
+        fontsize=10.0,
+    )
+
+    max_x = max(1.25, float(np.nanmax(ci_high)) * 1.18)
+    ax.set_xlim(0.0, max_x)
+    for y, value, high, gate in zip(
+        y_positions,
+        values,
+        ci_high,
+        candidate_rows["sota_gate"].fillna("not_gated"),
+    ):
+        uplift = (value - 1.0) * 100.0
+        label = f"{value:.2f}x ({uplift:+.0f}%)"
+        if str(gate).startswith("reject_"):
+            label += " rejected"
+        elif str(gate) == "inconclusive_ci":
+            label += " inconclusive"
+        elif str(gate) == "fail_sota20":
+            label += " fail"
+        ax.text(
+            min(float(high) + 0.04, max_x - 0.03),
+            y,
+            label,
+            va="center",
+            ha="left",
+            fontsize=8.3,
+        )
+
+    gate_counts: Counter[str] = plot_data["gate_counts"]
+    handles = [
+        Patch(
+            facecolor=gate_colors.get(gate, "#999999"),
+            edgecolor="#222222",
+            hatch="////" if gate.startswith("reject_") else "",
+            label=f"{gate_label(gate)} ({gate_counts[gate]})",
+        )
+        for gate in gate_order
+        if gate_counts.get(gate, 0)
+    ]
+    ax.legend(
+        handles=handles,
+        loc="lower right",
+        frameon=False,
+        fontsize=8.2,
+    )
+    ax.grid(axis="x", color="#DDDDDD", linewidth=0.7)
+    ax.tick_params(axis="y", length=0)
+    fig.savefig(figure_dir / "https_proxy_bench_gate_summary.pdf")
+    fig.savefig(figure_dir / "https_proxy_bench_gate_summary.png", dpi=300)
+    plt.close(fig)
 
 
 def ci95_half_width(std: float, count: int) -> float:
@@ -2110,6 +2698,7 @@ def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
             "ps.fonttype": 42,
         }
     )
+    plot_gate_summary(plot_data, figure_dir=figure_dir)
     client_labels = {
         "ylong_http_client": "ylong_http_client",
         "ylong_http_client_sync": "ylong_http_client sync",
@@ -2202,11 +2791,11 @@ def plot(df: pd.DataFrame, *, figure_dir: Path = FIG_DIR) -> None:
     summary = (
         f"{client_labels.get(str(plot_data['candidate']), str(plot_data['candidate']))} vs "
         f"{client_labels.get(str(plot_data['baseline']), str(plot_data['baseline']))}: "
-        f"paired throughput geomean {float(plot_data['throughput_geomean']):.3f}x, "
-        f"worst cell {float(plot_data['throughput_worst']):.3f}x, "
+        "raw ratio matrix; SOTA decision uses gate summary\n"
+        f"all-cell throughput geomean {float(plot_data['throughput_geomean']):.3f}x, "
         f"errors {int(plot_data['errors_sum'])}"
     )
-    fig.suptitle(summary, fontsize=10.5, fontweight="bold")
+    fig.suptitle(summary, fontsize=9.2, fontweight="bold")
 
     fig.savefig(figure_dir / "https_proxy_bench_performance.pdf")
     fig.savefig(figure_dir / "https_proxy_bench_performance.png", dpi=300)
@@ -2230,7 +2819,22 @@ def tool_version(cmd: list[str]) -> str:
         return f"unavailable: {exc}"
 
 
-def main() -> None:
+def evidence_path(value: str | Path) -> str:
+    path = Path(value)
+    if not str(path):
+        return ""
+    candidate = path if path.is_absolute() else ROOT / path
+    try:
+        return str(candidate.resolve().relative_to(ROOT))
+    except ValueError:
+        return path.name
+
+
+def fixture_choices() -> tuple[str, ...]:
+    return FIXTURE_CHOICES
+
+
+def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--requests", default="200,1000,3000")
     parser.add_argument("--repeats", type=int, default=5)
@@ -2284,6 +2888,21 @@ def main() -> None:
         help="Path to the built https_proxy_bench binary.",
     )
     parser.add_argument(
+        "--fixture",
+        choices=fixture_choices(),
+        default="rust",
+        help=(
+            "Server/proxy fixture implementation. rust is the canonical benchmark "
+            "fixture; python-smoke keeps the historical Python fixture for diagnostics."
+        ),
+    )
+    parser.add_argument(
+        "--fixture-bin",
+        type=Path,
+        default=FIXTURE_BIN,
+        help="Path to the built https_proxy_fixture binary used by --fixture rust.",
+    )
+    parser.add_argument(
         "--scenario",
         choices=[*SCENARIOS, "all"],
         default="http-over-https-proxy",
@@ -2306,12 +2925,19 @@ def main() -> None:
         default=FIG_DIR,
         help="Directory for generated benchmark figures.",
     )
+    return parser
+
+
+def main() -> None:
+    parser = build_arg_parser()
     args = parser.parse_args()
 
     if args.concurrency < 1:
         raise RuntimeError("--concurrency must be at least 1")
     if not args.bench_bin.exists():
         raise RuntimeError(f"benchmark binary not found: {args.bench_bin}")
+    if args.fixture == "rust" and not args.fixture_bin.exists():
+        raise RuntimeError(f"benchmark fixture binary not found: {args.fixture_bin}")
     curl = str(Path("D:/msys64/mingw64/bin/curl.exe"))
     if not Path(curl).exists():
         found = shutil.which("curl")
@@ -2332,25 +2958,39 @@ def main() -> None:
         with contextlib.ExitStack() as stack:
             proxy_mtls = scenario == "proxy-mtls-https-origin"
             origin_tls = scenario in {"https-over-https-proxy", "proxy-mtls-https-origin"}
-            if origin_tls:
-                origin = stack.enter_context(
-                    LocalOriginServer(
+            origin: LocalOriginServer | None = None
+            if args.fixture == "rust":
+                proxy = stack.enter_context(
+                    RustHttpsProxyFixture(
+                        args.fixture_bin,
+                        certs,
                         BODY,
-                        cert_file=certs.origin_cert_file,
-                        key_file=certs.origin_key_file,
+                        scenario=scenario,
+                        proxy_mtls=proxy_mtls,
+                        origin_tls=origin_tls,
                     )
                 )
-                target_url = origin.url
+                target_url = proxy.target_url
             else:
-                target_url = TARGET_URL
-            proxy = stack.enter_context(
-                LocalHttpsProxy(
-                    certs.proxy_cert_file,
-                    certs.proxy_key_file,
-                    BODY,
-                    client_ca_file=certs.ca_file if proxy_mtls else None,
+                if origin_tls:
+                    origin = stack.enter_context(
+                        LocalOriginServer(
+                            BODY,
+                            cert_file=certs.origin_cert_file,
+                            key_file=certs.origin_key_file,
+                        )
+                    )
+                    target_url = origin.url
+                else:
+                    target_url = TARGET_URL
+                proxy = stack.enter_context(
+                    LocalHttpsProxy(
+                        certs.proxy_cert_file,
+                        certs.proxy_key_file,
+                        BODY,
+                        client_ca_file=certs.ca_file if proxy_mtls else None,
+                    )
                 )
-            )
             time.sleep(0.2)
             for requests in request_counts:
                 for repeat in range(1, args.repeats + 1):
@@ -2368,7 +3008,7 @@ def main() -> None:
                         before_proxy = proxy.snapshot(scenario, client_label(client))
                         before_origin = (
                             origin.snapshot(scenario, client_label(client))
-                            if origin_tls
+                            if origin is not None
                             else empty_trace(scenario, client_label(client))
                         )
                         rows, stdout = run_benchmark(
@@ -2392,13 +3032,14 @@ def main() -> None:
                         after_proxy = proxy.snapshot(scenario, client_label(client))
                         after_origin = (
                             origin.snapshot(scenario, client_label(client))
-                            if origin_tls
+                            if origin is not None
                             else empty_trace(scenario, client_label(client))
                         )
                         trace = after_proxy.delta(before_proxy)
                         trace.add_origin(after_origin.delta(before_origin))
                         attach_trace(rows, trace)
                         for row in rows:
+                            row.fixture_kind = args.fixture
                             row.client_order_policy = args.client_order
                             row.client_order_seed = args.client_order_seed
                             row.client_order_position = client_position
@@ -2433,7 +3074,7 @@ def main() -> None:
     env = {
         "platform": platform.platform(),
         "python": sys.version.split()[0],
-        "conda_prefix": os.environ.get("CONDA_PREFIX", ""),
+        "conda_prefix": evidence_path(os.environ.get("CONDA_PREFIX", "")),
         "matplotlib": __import__("matplotlib").__version__,
         "pandas": pd.__version__,
         "numpy": np.__version__,
@@ -2441,7 +3082,9 @@ def main() -> None:
         "cargo": tool_version(["cargo", "--version"]),
         "curl_cli": tool_version([curl, "--version"]) if curl else "not requested",
         "libcurl": tool_version(["curl-config", "--version"]),
-        "bench_binary": str(args.bench_bin),
+        "bench_binary": evidence_path(args.bench_bin),
+        "fixture": args.fixture,
+        "fixture_binary": evidence_path(args.fixture_bin) if args.fixture == "rust" else "",
         "baseline": args.baseline,
         "scenario": args.scenario,
         "scenarios": scenarios,

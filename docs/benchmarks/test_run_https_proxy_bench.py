@@ -444,6 +444,253 @@ class HttpsProxyHarnessTest(unittest.TestCase):
             self.assertEqual(int(ylong["client_order_seed"]), 42)
             self.assertEqual(int(ylong["client_order_position"]), 2)
 
+    def test_default_fixture_is_rust_and_python_is_smoke_only(self) -> None:
+        parser = bench.build_arg_parser()
+
+        self.assertEqual(parser.parse_args([]).fixture, "rust")
+        self.assertEqual(
+            set(bench.fixture_choices()),
+            {"rust", "python-smoke"},
+        )
+        self.assertEqual(
+            parser.parse_args(["--fixture", "python-smoke"]).fixture,
+            "python-smoke",
+        )
+
+    def test_curl_cli_client_label_is_normalized(self) -> None:
+        self.assertEqual(bench.client_label("curl"), "curl_cli")
+        self.assertEqual(bench.client_label("curl-cli"), "curl_cli")
+        self.assertEqual(bench.client_label("curl_cli"), "curl_cli")
+
+    def test_evidence_path_redacts_external_absolute_paths(self) -> None:
+        self.assertEqual(
+            bench.evidence_path(bench.ROOT / "target/release/https_proxy_bench"),
+            "target/release/https_proxy_bench",
+        )
+        self.assertEqual(
+            bench.evidence_path("target/release/https_proxy_fixture"),
+            "target/release/https_proxy_fixture",
+        )
+        self.assertEqual(bench.evidence_path("/home/example/miniforge3"), "miniforge3")
+
+    def test_write_results_persists_fixture_metadata(self) -> None:
+        rows = [
+            bench.BenchResult(
+                scenario="s",
+                requests=3,
+                repeat=1,
+                client="ylong_http_client",
+                elapsed_ms=1.5,
+                fixture_kind="rust",
+            ),
+            bench.BenchResult(
+                scenario="s",
+                requests=3,
+                repeat=1,
+                client="libcurl",
+                elapsed_ms=1.2,
+                fixture_kind="rust",
+            ),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            df = bench.write_results(rows, result_dir=Path(tmp))
+            self.assertIn("fixture_kind", df.columns)
+            self.assertEqual(set(df["fixture_kind"]), {"rust"})
+
+    def test_rust_fixture_process_ready_protocol(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            script = tmp_path / "fake_fixture.py"
+            script.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env python3",
+                        "import json",
+                        "import time",
+                        "print(json.dumps({",
+                        "  'type': 'ready',",
+                        "  'proxy_url': 'https://127.0.0.1:4567',",
+                        "  'target_url': 'http://127.0.0.1:5678/bench',",
+                        "  'admin_addr': '127.0.0.1:6789',",
+                        "}), flush=True)",
+                        "time.sleep(60)",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            script.chmod(0o755)
+            certs = bench.BenchmarkCertificates(
+                ca_file=tmp_path / "ca.crt",
+                ca_key_file=tmp_path / "ca.key",
+                proxy_cert_file=tmp_path / "proxy.crt",
+                proxy_key_file=tmp_path / "proxy.key",
+                origin_cert_file=tmp_path / "origin.crt",
+                origin_key_file=tmp_path / "origin.key",
+                client_cert_file=tmp_path / "client.crt",
+                client_key_file=tmp_path / "client.key",
+            )
+
+            with bench.RustHttpsProxyFixture(
+                script,
+                certs,
+                bench.BODY,
+                scenario="http-over-https-proxy",
+                proxy_mtls=False,
+                origin_tls=False,
+            ) as fixture:
+                self.assertEqual(fixture.url, "https://127.0.0.1:4567")
+                self.assertEqual(fixture.target_url, "http://127.0.0.1:5678/bench")
+                self.assertEqual(fixture.admin_addr, ("127.0.0.1", 6789))
+                self.assertIsNotNone(fixture.process)
+
+    def test_sota_gate_rejects_noncanonical_fixture(self) -> None:
+        df = bench.pd.DataFrame(
+            [
+                {
+                    "scenario": "s",
+                    "requests": 100,
+                    "repeat": 1,
+                    "client": "ylong_http_client",
+                    "elapsed_ms": 70.0,
+                    "latency_ms": 0.7,
+                    "throughput_rps": 1428.571,
+                    "p50_us": 700,
+                    "p95_us": 900,
+                    "cpu_us_per_request": 20.0,
+                    "rss_peak_bytes": 1000,
+                    "errors": 0,
+                    "proxy_response_send_us": 100,
+                    "fixture_kind": "python-smoke",
+                },
+                {
+                    "scenario": "s",
+                    "requests": 100,
+                    "repeat": 1,
+                    "client": "libcurl",
+                    "elapsed_ms": 100.0,
+                    "latency_ms": 1.0,
+                    "throughput_rps": 1000.0,
+                    "p50_us": 1000,
+                    "p95_us": 1000,
+                    "cpu_us_per_request": 25.0,
+                    "rss_peak_bytes": 1100,
+                    "errors": 0,
+                    "proxy_response_send_us": 100,
+                    "fixture_kind": "python-smoke",
+                },
+            ]
+        )
+
+        paired = bench.paired_compare_to_baseline(
+            df,
+            baseline="libcurl",
+            min_sota_samples=1,
+        )
+        row = paired[paired["client"] == "ylong_http_client"].iloc[0]
+
+        self.assertEqual(row["fixture_kind"], "python-smoke")
+        self.assertEqual(row["sota_gate"], "reject_noncanonical_fixture")
+
+    def test_benchmark_comparison_keeps_stable_fixture_metadata_columns(self) -> None:
+        df = bench.pd.DataFrame(
+            [
+                {
+                    "scenario": "s",
+                    "requests": 100,
+                    "repeat": 1,
+                    "client": "ylong_http_client",
+                    "elapsed_ms": 70.0,
+                    "latency_ms": 0.7,
+                    "throughput_rps": 1428.571,
+                    "p50_us": 700,
+                    "p95_us": 900,
+                    "cpu_us_per_request": 20.0,
+                    "rss_peak_bytes": 1000,
+                    "errors": 0,
+                    "fixture_kind": "rust",
+                },
+                {
+                    "scenario": "s",
+                    "requests": 100,
+                    "repeat": 1,
+                    "client": "curl_cli",
+                    "elapsed_ms": 100.0,
+                    "latency_ms": 1.0,
+                    "throughput_rps": 1000.0,
+                    "p50_us": 1000,
+                    "p95_us": 1000,
+                    "cpu_us_per_request": 25.0,
+                    "rss_peak_bytes": 1100,
+                    "errors": 0,
+                    "fixture_kind": "rust",
+                },
+            ]
+        )
+
+        comparison = bench.benchmark_comparison(df, baseline="curl_cli")
+
+        self.assertIn("fixture_kind", comparison.columns)
+        self.assertIn("fixture_kind_baseline", comparison.columns)
+        self.assertNotIn("fixture_kind_x", comparison.columns)
+        self.assertNotIn("fixture_kind_y", comparison.columns)
+        row = comparison[comparison["client"] == "ylong_http_client"].iloc[0]
+        self.assertEqual(row["fixture_kind"], "rust")
+        self.assertEqual(row["fixture_kind_baseline"], "rust")
+
+    def test_rust_fixture_send_share_alone_does_not_reject_sota_gate(self) -> None:
+        df = bench.pd.DataFrame(
+            [
+                {
+                    "scenario": "s",
+                    "requests": 50,
+                    "repeat": 1,
+                    "client": "ylong_http_client_sync",
+                    "elapsed_ms": 2.3,
+                    "latency_ms": 0.046,
+                    "throughput_rps": 21739.13,
+                    "p50_us": 40,
+                    "p95_us": 55,
+                    "cpu_us_per_request": 12.0,
+                    "rss_peak_bytes": 1000,
+                    "errors": 0,
+                    "proxy_response_send_us": 660,
+                    "fixture_kind": "rust",
+                },
+                {
+                    "scenario": "s",
+                    "requests": 50,
+                    "repeat": 1,
+                    "client": "libcurl",
+                    "elapsed_ms": 3.4,
+                    "latency_ms": 0.068,
+                    "throughput_rps": 14705.88,
+                    "p50_us": 60,
+                    "p95_us": 75,
+                    "cpu_us_per_request": 18.0,
+                    "rss_peak_bytes": 1100,
+                    "errors": 0,
+                    "proxy_response_send_us": 710,
+                    "fixture_kind": "rust",
+                },
+            ]
+        )
+
+        paired = bench.paired_compare_to_baseline(
+            df,
+            baseline="libcurl",
+            min_sota_samples=1,
+        )
+        row = paired[paired["client"] == "ylong_http_client_sync"].iloc[0]
+
+        self.assertGreater(float(row["proxy_send_elapsed_share_max"]), 0.20)
+        self.assertLess(
+            float(row["proxy_send_elapsed_delta_explained_fraction"]),
+            0.50,
+        )
+        self.assertFalse(bool(row["proxy_send_anomaly"]))
+        self.assertEqual(row["sota_gate"], "pass_sota20")
+
     def test_paired_comparison_reports_ci_and_proxy_send_anomaly(self) -> None:
         df = bench.pd.DataFrame(
             [
@@ -505,6 +752,7 @@ class HttpsProxyHarnessTest(unittest.TestCase):
                 },
             ]
         )
+        df["fixture_kind"] = "rust"
 
         paired = bench.paired_compare_to_baseline(df, baseline="libcurl")
         row = paired[paired["client"] == "ylong_http_client"].iloc[0]
@@ -515,6 +763,91 @@ class HttpsProxyHarnessTest(unittest.TestCase):
         self.assertIn("paired_throughput_rps_ratio_ci95_high", paired.columns)
         self.assertGreater(float(row["paired_throughput_rps_ratio_geomean"]), 1.2)
         self.assertTrue(bool(row["proxy_send_anomaly"]))
+        self.assertEqual(row["sota_gate"], "reject_proxy_send_anomaly")
+
+    def test_connect_tunnel_send_delta_rejects_sota_gate(self) -> None:
+        df = bench.pd.DataFrame(
+            [
+                {
+                    "scenario": "https-over-https-proxy",
+                    "requests": 100,
+                    "repeat": 1,
+                    "client": "ylong_http_client_sync",
+                    "elapsed_ms": 160.0,
+                    "throughput_rps": 625.0,
+                    "p95_us": 1500,
+                    "cpu_us_per_request": 20.0,
+                    "rss_peak_bytes": 1000,
+                    "errors": 0,
+                    "proxy_response_send_us": 0,
+                    "proxy_tunnel_send_to_client_us": 80_000,
+                    "origin_response_send_us": 20_000,
+                    "fixture_kind": "rust",
+                },
+                {
+                    "scenario": "https-over-https-proxy",
+                    "requests": 100,
+                    "repeat": 2,
+                    "client": "ylong_http_client_sync",
+                    "elapsed_ms": 160.0,
+                    "throughput_rps": 625.0,
+                    "p95_us": 1500,
+                    "cpu_us_per_request": 20.0,
+                    "rss_peak_bytes": 1000,
+                    "errors": 0,
+                    "proxy_response_send_us": 0,
+                    "proxy_tunnel_send_to_client_us": 80_000,
+                    "origin_response_send_us": 20_000,
+                    "fixture_kind": "rust",
+                },
+                {
+                    "scenario": "https-over-https-proxy",
+                    "requests": 100,
+                    "repeat": 1,
+                    "client": "libcurl",
+                    "elapsed_ms": 200.0,
+                    "throughput_rps": 500.0,
+                    "p95_us": 1800,
+                    "cpu_us_per_request": 30.0,
+                    "rss_peak_bytes": 1100,
+                    "errors": 0,
+                    "proxy_response_send_us": 0,
+                    "proxy_tunnel_send_to_client_us": 10_000,
+                    "origin_response_send_us": 5_000,
+                    "fixture_kind": "rust",
+                },
+                {
+                    "scenario": "https-over-https-proxy",
+                    "requests": 100,
+                    "repeat": 2,
+                    "client": "libcurl",
+                    "elapsed_ms": 200.0,
+                    "throughput_rps": 500.0,
+                    "p95_us": 1800,
+                    "cpu_us_per_request": 30.0,
+                    "rss_peak_bytes": 1100,
+                    "errors": 0,
+                    "proxy_response_send_us": 0,
+                    "proxy_tunnel_send_to_client_us": 10_000,
+                    "origin_response_send_us": 5_000,
+                    "fixture_kind": "rust",
+                },
+            ]
+        )
+
+        paired = bench.paired_compare_to_baseline(df, baseline="libcurl")
+        row = paired[paired["client"] == "ylong_http_client_sync"].iloc[0]
+
+        self.assertGreater(float(row["paired_throughput_rps_ratio_geomean"]), 1.2)
+        self.assertGreater(
+            float(row["response_path_send_elapsed_delta_explained_fraction"]),
+            0.50,
+        )
+        self.assertTrue(bool(row["proxy_send_anomaly"]))
+        self.assertEqual(
+            row["proxy_send_anomaly_reason"],
+            "server_response_path_send_delta_explains_elapsed_delta",
+        )
         self.assertEqual(row["sota_gate"], "reject_proxy_send_anomaly")
 
     def test_ratio_plot_data_keeps_all_scenarios_and_uses_throughput_ratio(self) -> None:
@@ -674,7 +1007,7 @@ class HttpsProxyHarnessTest(unittest.TestCase):
                 [
                     "proxy_trace: scenario=s client=ylong_http_client connections=1 forward_requests=3 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0",
                     "origin_trace: scenario=s client=ylong_http_client connections=0 requests=0 tls_connections=0",
-                    "proxy_trace: scenario=s client=libcurl connections=1 forward_requests=3 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0 request_header_bytes=120 request_body_bytes=0 response_body_bytes=12288 response_send_us=700 response_send_events=3 tunnel_send_to_client_us=900 tunnel_send_to_client_events=4 tunnel_send_to_origin_us=120 tunnel_send_to_origin_events=2",
+                    "proxy_trace: scenario=s client=libcurl connections=1 forward_requests=3 connect_requests=0 tunnel_bytes_from_client=0 tunnel_bytes_from_origin=0 tls_client_auth_failures=0 request_header_bytes=120 request_body_bytes=0 response_body_bytes=12288 response_send_us=700 response_send_events=3 tunnel_send_to_client_us=900 tunnel_send_to_client_events=4 tunnel_send_to_origin_us=120 tunnel_send_to_origin_events=2 tunnel_poll_calls=11 tunnel_poll_timeouts=1 tunnel_client_read_would_block=2 tunnel_origin_read_would_block=3 tunnel_send_to_client_would_block=4 tunnel_send_to_origin_would_block=5 tunnel_client_to_origin_queue_bytes_max=600 tunnel_origin_to_client_queue_bytes_max=700",
                     "origin_trace: scenario=s client=libcurl connections=0 requests=0 tls_connections=0 request_header_bytes=0 request_body_bytes=0 response_body_bytes=0 response_send_us=500 response_send_events=3",
                 ]
             )
@@ -688,6 +1021,9 @@ class HttpsProxyHarnessTest(unittest.TestCase):
         self.assertEqual(by_client["libcurl"].proxy_response_send_us, 700)
         self.assertEqual(by_client["libcurl"].proxy_tunnel_send_to_client_us, 900)
         self.assertEqual(by_client["libcurl"].proxy_tunnel_send_to_origin_events, 2)
+        self.assertEqual(by_client["libcurl"].proxy_tunnel_poll_calls, 11)
+        self.assertEqual(by_client["libcurl"].proxy_tunnel_send_to_client_would_block, 4)
+        self.assertEqual(by_client["libcurl"].proxy_tunnel_origin_to_client_queue_bytes_max, 700)
         self.assertEqual(by_client["libcurl"].origin_response_send_us, 500)
         self.assertEqual(by_client["libcurl"].origin_response_send_events, 3)
         self.assertIn("libcurl", by_client)
@@ -719,6 +1055,14 @@ class HttpsProxyHarnessTest(unittest.TestCase):
                     "proxy_tunnel_send_to_client_events": 4,
                     "proxy_tunnel_send_to_origin_us": 120,
                     "proxy_tunnel_send_to_origin_events": 2,
+                    "proxy_tunnel_poll_calls": 11,
+                    "proxy_tunnel_poll_timeouts": 1,
+                    "proxy_tunnel_client_read_would_block": 2,
+                    "proxy_tunnel_origin_read_would_block": 3,
+                    "proxy_tunnel_send_to_client_would_block": 4,
+                    "proxy_tunnel_send_to_origin_would_block": 5,
+                    "proxy_tunnel_client_to_origin_queue_bytes_max": 600,
+                    "proxy_tunnel_origin_to_client_queue_bytes_max": 700,
                     "origin_connections": 0,
                     "origin_requests": 0,
                     "origin_tls_connections": 0,
@@ -738,6 +1082,8 @@ class HttpsProxyHarnessTest(unittest.TestCase):
         self.assertIn("proxy_response_send_us_mean", summary.columns)
         self.assertIn("proxy_tunnel_send_to_client_us_mean", summary.columns)
         self.assertIn("origin_response_send_us_mean", summary.columns)
+        self.assertIn("proxy_tunnel_poll_calls_mean", summary.columns)
+        self.assertIn("proxy_tunnel_origin_to_client_queue_bytes_max_mean", summary.columns)
 
     def test_trace_output_records_tls_fingerprints(self) -> None:
         rows = bench.parse_trace_output(
