@@ -88,7 +88,13 @@ async fn request_via_https_proxy() -> Result<(), Box<dyn std::error::Error + Sen
 ## Benchmark
 
 The `https_proxy_bench` binary measures `ylong_http_client` in a local HTTPS
-proxy topology. It supports two separately named baselines:
+proxy topology. The benchmark harness uses a native Rust `https_proxy_fixture`
+by default so local proxy/origin timing is not dominated by Python TLS
+`sendall` scheduling. The previous Python fixture is still available as
+`--fixture python-smoke` for diagnostics only; it is not accepted by the SOTA
+gate.
+
+The harness supports two separately named baselines:
 
 - `curl_cli`: a curl executable process baseline, enabled with `YLONG_CURL`.
 - `libcurl`: a same-process libcurl library baseline, enabled with
@@ -103,16 +109,29 @@ cargo build -p ylong_http_client --no-default-features `
   --features "async,http1_1,ylong_base,c_openssl_3_0,libcurl_bench" `
   --release --bin https_proxy_bench
 
+cargo build -p ylong_http_client --no-default-features `
+  --features "bench_fixture" `
+  --release --bin https_proxy_fixture
+
 conda run -n base python docs\benchmarks\run_https_proxy_bench.py `
   --baseline libcurl --ylong-client sync --scenario all `
   --requests "200,1000,3000" --repeats 5 --warmup 50 `
-  --client-order interleaved --client-order-seed 20260707
+  --client-order interleaved --client-order-seed 20260707 `
+  --fixture rust --fixture-bin target\release\https_proxy_fixture.exe
 ```
 
-![HTTPS proxy benchmark ratio matrix](docs/figures/https_proxy_bench_performance.png)
+![HTTPS proxy benchmark gate summary](docs/figures/https_proxy_bench_gate_summary.png)
 
-Checked-in repaired trust-gated matrix setup:
+![HTTPS proxy benchmark raw ratio matrix](docs/figures/https_proxy_bench_performance.png)
 
+The gate summary is the decision figure. The raw ratio matrix is a supporting
+metric view for throughput, p95 latency, CPU/request, and RSS peak. A throughput
+ratio of `2.208x` means `+120.8%` throughput and about `-54.7%` elapsed time;
+it should not be described as only "20% faster".
+
+Current canonical local benchmark requirements:
+
+- fixture: native Rust `https_proxy_fixture`
 - response body: 4096 bytes
 - request body: 0 bytes
 - warmup: 50 requests
@@ -128,6 +147,47 @@ Checked-in repaired trust-gated matrix setup:
 - connection reuse trace: ylong and libcurl both reuse one proxy connection per
   repeat; HTTPS-origin scenarios also use one CONNECT tunnel and one origin TLS
   connection per repeat
+
+Latest checked-in Rust fixture full-matrix evidence:
+
+- raw output:
+  `docs/benchmarks/results/tunnel-gate-libcurl-sync-full/https_proxy_bench_results.csv`
+- summary output:
+  `docs/benchmarks/results/tunnel-gate-libcurl-sync-full/https_proxy_bench_summary.csv`
+- ratio output:
+  `docs/benchmarks/results/tunnel-gate-libcurl-sync-full/https_proxy_bench_comparison.csv`
+- environment:
+  `docs/benchmarks/results/tunnel-gate-libcurl-sync-full/https_proxy_bench_env.json`
+
+Latest Rust fixture matrix results:
+
+| Scenario | Requests | Throughput ratio | Throughput uplift | Elapsed reduction | 95% CI | p95 latency | CPU/request | RSS peak | Gate |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| HTTP over HTTPS proxy | 200 | 2.208x | +120.8% | -54.7% | [1.565x, 3.114x] | 0.435x | 0.381x | 1.058x | `pass_sota20` |
+| HTTP over HTTPS proxy | 1000 | 2.027x | +102.7% | -50.7% | [1.444x, 2.845x] | 0.541x | 0.409x | 1.062x | `pass_sota20` |
+| HTTP over HTTPS proxy | 3000 | 1.355x | +35.5% | -26.2% | [0.852x, 2.157x] | 0.652x | 0.622x | 1.063x | `inconclusive_ci` |
+| HTTPS origin over HTTPS proxy | 200 | 1.785x | +78.5% | -44.0% | [1.346x, 2.367x] | 0.529x | 0.457x | 1.066x | `pass_sota20` |
+| HTTPS origin over HTTPS proxy | 1000 | 1.231x | +23.1% | -18.8% | [0.800x, 1.895x] | 0.640x | 0.705x | 1.053x | `reject_proxy_send_anomaly` |
+| HTTPS origin over HTTPS proxy | 3000 | 1.172x | +17.2% | -14.7% | [0.719x, 1.911x] | 0.902x | 0.663x | 1.059x | `reject_proxy_send_anomaly` |
+| proxy mTLS with HTTPS origin | 200 | 1.302x | +30.2% | -23.2% | [0.896x, 1.891x] | 0.753x | 0.633x | 1.061x | `inconclusive_ci` |
+| proxy mTLS with HTTPS origin | 1000 | 1.171x | +17.1% | -14.6% | [0.846x, 1.621x] | 0.610x | 0.690x | 1.055x | `fail_sota20` |
+| proxy mTLS with HTTPS origin | 3000 | 1.219x | +21.9% | -17.9% | [1.042x, 1.426x] | 0.657x | 0.702x | 1.062x | `inconclusive_ci` |
+
+This Rust fixture run verifies the same-process libcurl baseline path, verified
+proxy TLS, HTTPS-origin tunneling, proxy mTLS, metric columns, scenario-ratio
+output, connection-reuse trace, client order metadata, paired aggregation, and
+response-path send anomaly gates. The gate result is mixed: 3 cells pass the
+`1.20x` throughput gate, 3 cells are CI-inconclusive, 2 cells are rejected by
+the response-path send anomaly gate, and 1 cell fails the `1.20x` gate. Because
+the matrix still has rejected and failing cells, it does not support a full
+matrix SOTA claim; it supports the narrower claim shown by the three
+`pass_sota20` cells.
+
+Checked-in `gen006-benchmark-trust-repaired` results are historical
+counterexample evidence from the Python fixture era. They explain why the old
+figure could not support a SOTA claim, but they are not the canonical Rust
+fixture matrix:
+
 - raw output:
   `docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_results.csv`
 - summary output:
@@ -136,31 +196,6 @@ Checked-in repaired trust-gated matrix setup:
   `docs/benchmarks/results/gen006-benchmark-trust-repaired/https_proxy_bench_comparison.csv`
 - old gen005 data recomputed with repaired gates:
   `docs/benchmarks/results/gen006-benchmark-trust-repaired/gen005_recomputed_with_repaired_gates.csv`
-
-Latest repaired matrix results:
-
-| Scenario | Requests | Paired throughput | 95% CI | p95 latency | CPU/request | RSS peak | Gate |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| HTTP over HTTPS proxy | 200 | 1.111x | [0.512x, 2.413x] | 0.785x | 0.705x | 1.055x | reject_proxy_send_anomaly |
-| HTTP over HTTPS proxy | 1000 | 1.299x | [1.021x, 1.654x] | 0.821x | 0.598x | 1.052x | reject_proxy_send_anomaly |
-| HTTP over HTTPS proxy | 3000 | 1.064x | [0.852x, 1.329x] | 0.826x | 0.740x | 1.057x | reject_proxy_send_anomaly |
-| HTTPS origin over HTTPS proxy | 200 | 1.171x | [0.913x, 1.502x] | 0.718x | 0.670x | 1.065x | fail_sota20 |
-| HTTPS origin over HTTPS proxy | 1000 | 0.911x | [0.529x, 1.571x] | 0.938x | 0.808x | 1.058x | fail_sota20 |
-| HTTPS origin over HTTPS proxy | 3000 | 1.016x | [0.802x, 1.289x] | 0.945x | 0.756x | 1.062x | fail_sota20 |
-| proxy mTLS with HTTPS origin | 200 | 0.909x | [0.545x, 1.515x] | 1.033x | 0.781x | 1.054x | fail_sota20 |
-| proxy mTLS with HTTPS origin | 1000 | 1.348x | [0.968x, 1.877x] | 0.727x | 0.577x | 1.056x | inconclusive_ci |
-| proxy mTLS with HTTPS origin | 3000 | 1.196x | [0.748x, 1.913x] | 0.809x | 0.651x | 1.056x | fail_sota20 |
-
-The repaired matrix verifies the same-process libcurl baseline path, verified
-proxy TLS, HTTPS-origin tunneling, proxy mTLS, metric columns, scenario-ratio
-output, connection-reuse trace, client order metadata, paired aggregation, and
-proxy-send anomaly gates. Under the repaired gate, the SOTA claim is withdrawn:
-the paired throughput geomean is 1.104x, which is below the 1.20x threshold, and
-no cell reaches `pass_sota20`. All HTTP-over-HTTPS-proxy cells are rejected by
-the proxy-send anomaly gate because Python TLS proxy send time is large enough
-to pollute client-attribution. The old gen005 matrix remains historical
-evidence only: its original ratio-of-means geomean was 1.228x, but recomputing
-that data with repaired gates yields no `pass_sota20` cells.
 
 Historical fair-matrix and counterexample runs remain under
 `docs/benchmarks/results/`, including `tokio-full/`, but they are not the
